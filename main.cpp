@@ -5,7 +5,9 @@
 class CalculateDragAndDrop : public QApplication {
 	Q_OBJECT
 public:
-	explicit CalculateDrogAndDrop() : QAplication(){
+	explicit CalculateDragAndDrop( \
+			int argc, char *argv[] \
+	) : QApplication(argc, argv) {
 		setStyleSheet(R"(
 			QMenu {
                 background: transparent;
@@ -34,7 +36,7 @@ public:
                 border: none;
                 padding: 0px auto;
                 margin: 0px;
-                color: trnsparent;
+                color: transparent;
             }
             QTabBar {
                 background: transparent;
@@ -66,11 +68,17 @@ public:
                 alignment: center;
             }
         )");
-		Window *win = Window();
+		createWindow();
+	}
+	void createWindow() const {
+		Window *win = new Window(this);
 		win->show();
 	}
+};
 		
-int main(){
-	CalculateDragAndDrop app();
-	return app.exec();
+int main(int argc, char *argv[]) {
+	CalculateDragAndDrop *app = new CalculateDragAndDrop(argc, argv);
+	app->exec();
+	delete app;
+	return 0;
 }
