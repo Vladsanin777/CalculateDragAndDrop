@@ -12,14 +12,14 @@ class MainLayout : public QVBoxLayout {
 	Q_OBJECT
 public:
 	explicit MainLayout( \
-			auto *app, Window *window \
+			const QApplication *app, const QWidget *window \
 	) : QVBoxLayout() {
 		setContentsMargins(0, 0, 0, 0);
 		setSpacing(0);
 		addLayout(TitleBar(app, window));
 		HistoriScroll *globalHistori;
 		window->setGlobalHistori( \
-				globalHistori = HistoriScroll() \
+				globalHistori = new HistoriScroll() \
 		);
 		addWidget(globalHistori);
 		addWidget(MainTabWidget(window));
@@ -32,8 +32,8 @@ class Window : public QWidget {
 	Q_OBJECT
 private:
 	vector<HistoriScroll *> _localHistori = {};
+	vector<HistoriWidget *> _resizeLocalHistori = {};
 	vector<HistoriVBox *> _addLocalHistori = {};
-	vecror<HistoriWidget *> _resizeLocalHistori = {};
 	vector<vector<LineEdit *>> _lineEdit = {{}, {}, {}, {}, {}};
 	short _inputtin[2] = {0, 0};
 	vector<vector<string> _result = {
@@ -45,9 +45,9 @@ private:
 
 public:
 	explicit Window( \
-			auto *parent = nullptr \
-	) : QWidget(parent) {
-		setLayout(new MainLayout(parent, &this));
+			const QApplication *app = nullptr \
+	) : QWidget() {
+		setLayout(new MainLayout(app, static_cast<const QWidget *>(this)));
 		setWindowTitle("CalculateDragAndDrop");
 		resize(400, 800);
 		setObjectName("Window");

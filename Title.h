@@ -112,7 +112,7 @@ public:
 		return;
 	}
 	void localHistoriReplacement() const final {
-		_localHistoriReplasment->setVisible( \
+		_localHistoriReplacment->setVisible( \
 				!_localHistoriReplacement->isVisible()
 		);
 		return;
