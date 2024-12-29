@@ -40,10 +40,10 @@ private:
 	QScrollArea *_localHistoriIntegral   = nullptr;
 	QScrollArea *_localHistoriDerivative = nullptr;
 	QScrollArea *_localHistoriIntegrate  = nullptr;
-	QScrollArea *_localHistoriReplacment = nullptr;
+	QScrollArea *_localHistoriReplacement = nullptr;
 public:
 	explicit TitleBar( \
-			const QApplication *app, QWidget *window \
+			const QApplication *app, const QWidget *window \
 	) : window(window), QHBoxLayout() {
 		setFixedHeight(35);
 		addWidget(ButtonBase("+ Add", window, 15, app->addWindow);
@@ -63,22 +63,22 @@ public:
 					localHistoriIntegrateVisible \
 			),
 			new ButtonBase("Replacement", window, 15, \
-					localHistoriReplacementVisible
+					localHistoriReplacementVisible \
 			),
 		}, vectorButtonView = {
 			new ButtonBase("Global Histori", window, 15, \
-					localHistoriGlobalHistoriVisible),
+					globalHistoriVisible),
 			new ButtonBase("Local Histori",  window, 15, \
 					nullptr, "keybord", Menu(vectorButtonLocalHistori))
 		};
 		addWidget(ButtonBase("Basic", window, 15, \
 				nullptr, "keybord", Menu(vectorButtonView)));
-		_globalHistori          = window->getGlobalHistori();
-		_localHistoriBasic      = window->getLocalHistori(0);
-		_localHistoriIntegral   = window->getLocalHistori(1);
-		_localHistoriDerivative = window->getLocalHistori(2);
-		_localHistoriIntegrate  = window->getLocalHistori(3);
-		_localHistoriReplasment = window->getLocalHistori(4);
+		_globalHistori           = window->getGlobalHistori();
+		_localHistoriBasic       = window->getLocalHistori(0);
+		_localHistoriIntegral    = window->getLocalHistori(1);
+		_localHistoriDerivative  = window->getLocalHistori(2);
+		_localHistoriIntegrate   = window->getLocalHistori(3);
+		_localHistoriReplacement = window->getLocalHistori(4);
 		return;
 	}
 	void globalHistoriVisible() const final {
@@ -112,7 +112,7 @@ public:
 		return;
 	}
 	void localHistoriReplacement() const final {
-		_localHistoriReplacment->setVisible( \
+		_localHistoriReplacement->setVisible( \
 				!_localHistoriReplacement->isVisible()
 		);
 		return;

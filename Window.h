@@ -16,7 +16,7 @@ public:
 	) : QVBoxLayout() {
 		setContentsMargins(0, 0, 0, 0);
 		setSpacing(0);
-		addLayout(TitleBar(app, window));
+		addLayout(new TitleBar(app, window));
 		HistoriScroll *globalHistori;
 		window->setGlobalHistori( \
 				globalHistori = new HistoriScroll() \
