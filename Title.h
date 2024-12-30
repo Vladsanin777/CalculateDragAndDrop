@@ -7,6 +7,8 @@
 #include <QWidgetAction>
 #include "Button.h"
 
+class Window;
+
 class Action : public QWidgetAction {
     Q_OBJECT
 public:
@@ -43,31 +45,31 @@ private:
 	QScrollArea *_localHistoriReplacement = nullptr;
 public:
 	explicit TitleBar( \
-			const QApplication *app, const QWidget *window \
+			const QApplication *app, Window *window \
 	) : window(window), QHBoxLayout() {
 		setFixedHeight(35);
-		addWidget(ButtonBase("+ Add", window, 15, app->addWindow);
-		addWidget(ButtonBase("EN",    window, 15, window->changeLanguage);
-		addWidget(ButtonBase("Fon",   window, 15, app->changeFon);
+		addWidget(ButtonBase("+ Add", window, 15, &app::addWindow);
+		addWidget(ButtonBase("EN",    window, 15, &window::changeLanguage);
+		addWidget(ButtonBase("Fon",   window, 15, &app::changeFon);
 		vector<ButtonBase *> vectorButtonLocalHistori = {
 			new ButtonBase("Basic",       window, 15, \
-					localHistoriBasicVisible \
+					&TitleBar::localHistoriBasicVisible \
 			),
 			new ButtonBase("Integral",    window, 15, \
-					localHistoriIntegralVisible \
+					&TitleBar::localHistoriIntegralVisible \
 			),
 			new ButtonBase("Derivative",  window, 15, \
-					localHistoriDerivativeVisible \
+					&TitleBar::localHistoriDerivativeVisible \
 			),
 			new ButtonBase("Integrate",   window, 15, \
-					localHistoriIntegrateVisible \
+					&TitleBar::localHistoriIntegrateVisible \
 			),
 			new ButtonBase("Replacement", window, 15, \
-					localHistoriReplacementVisible \
+					&TitleBar::localHistoriReplacementVisible \
 			),
 		}, vectorButtonView = {
 			new ButtonBase("Global Histori", window, 15, \
-					globalHistoriVisible),
+					&TitleBar::globalHistoriVisible),
 			new ButtonBase("Local Histori",  window, 15, \
 					nullptr, "keybord", Menu(vectorButtonLocalHistori))
 		};
@@ -99,19 +101,19 @@ public:
 		);
 		return;
 	}
-	void localHistoriDerivative() const final {
+	void localHistoriDerivativeVisible() const final {
 		_localHistoriDerivative->setVisible( \
 				!_localHistoriDerivative->isVisible() \
 		);
 		return;
 	}
-	void localHistoriIntegrate() const final {
+	void localHistoriIntegrateVisible() const final {
 		_localHistoriIntegrate->setVisible( \
 				!_localHistoriIntegrate->isVisible()
 		);
 		return;
 	}
-	void localHistoriReplacement() const final {
+	void localHistoriReplacementVisible() const final {
 		_localHistoriReplacement->setVisible( \
 				!_localHistoriReplacement->isVisible()
 		);

@@ -1,12 +1,17 @@
 #include <QLineEdit>
+#include <QFocusEvent>
 #include <cstring>
 #include "GradientFont.h"
 
+class Window;
+
 class  LineEdit : public QLineEdit {
-	const QWidget *_window;
-	const int *_inputtin;
+private:
+	Window *_window;
+	const short _inputtin;
+public:
 	explicit LineEdit ( \
-			const Qwidget *window, \
+			Window *window, \
 			int *inputtin[2], char *text[] \
 	) : _window(window), _inputtin(inputtin), \
 	QLineEdit() {
@@ -19,7 +24,7 @@ class  LineEdit : public QLineEdit {
 		);
 		setObjectName("keybord");
 		textChanged.connect(onLineEditChanged);
-		QFont *font = font();
+		const QFont font = this->font();
 		font.setPointSize(25);
 		setFont(font);
 		setMaximumHeight(40);
@@ -29,8 +34,8 @@ class  LineEdit : public QLineEdit {
 	void focusInEvent( \
 			QFocusEvent *event \
 	) override {
-		if (event.reason())
-			_window.setInputtin(_inputtin);
+		if (event->reason())
+			_window->setInputtin(_inputtin);
 		QLineEdit::focusInEvent(event);
 	}
 	void onLineEditChanged( \

@@ -1,59 +1,39 @@
 #include <vector>
-#include <string>
 #include <QApplication>
 #include <QWidget>
 #include <QVBoxLayout>
 #include "Title.h"
 #include "CreateHistori.h"
+#include "LineEdit.h"
 
 using namespace std;
 
-class MainLayout : public QVBoxLayout {
-	Q_OBJECT
-public:
-	explicit MainLayout( \
-			const QApplication *app, const QWidget *window \
-	) : QVBoxLayout() {
-		setContentsMargins(0, 0, 0, 0);
-		setSpacing(0);
-		addLayout(new TitleBar(app, window));
-		HistoriScroll *globalHistori;
-		window->setGlobalHistori( \
-				globalHistori = new HistoriScroll() \
-		);
-		addWidget(globalHistori);
-		addWidget(MainTabWidget(window));
-		addLayout(GridCalculateCommon(window));
-		addWidget(TabWidgetKeybord(window));
-	}
-};
 
 class Window : public QWidget {
-	Q_OBJECT
 private:
 	vector<HistoriScroll *> _localHistori = {};
 	vector<HistoriWidget *> _resizeLocalHistori = {};
 	vector<HistoriVBox *> _addLocalHistori = {};
 	vector<vector<LineEdit *>> _lineEdit = {{}, {}, {}, {}, {}};
 	short _inputtin[2] = {0, 0};
-	vector<vector<string> _result = {
+	vector<vector<const char*>> _result = {
 		{"0"}, {"1", "2", "0"}, {"0"}, {"0"}, {"x", "0", "0"}
 	};
 	HistoriScroll *_globalHistori = nullptr;
 	HistoriVBox *_addGlobalHistori = nullptr;
 	HistoriWidget *_resizeGlobalHistori = nullptr;
-
+	const QApplication *_app = nullptr;
 public:
 	explicit Window( \
 			const QApplication *app = nullptr \
-	) : QWidget() {
-		setLayout(new MainLayout(app, static_cast<const QWidget *>(this)));
+	) : QWidget(), _app(app) {
 		setWindowTitle("CalculateDragAndDrop");
 		resize(400, 800);
 		setObjectName("Window");
 		show();
 		return;
 	}
+	void postInit();
 
 	HistoriScroll* getGlobalHistori( \
 	) const {
@@ -150,6 +130,33 @@ public:
 	) const {
 		if (tab != nullptr && index != nullptr)
 			return _lineEdit.at(*tab).at(*index);
-		return; 
+		return nullptr; 
+	}
+	void setInputtin(short inputtin[2]) {
+		_inputtin[0] = inputtin[0];
+		_inputtin[1] = inputtin[1];
 	}
 };
+
+class MainLayout : public QVBoxLayout {
+public:
+	explicit MainLayout( \
+			const QApplication *app, Window *window \
+	) : QVBoxLayout() {
+		setContentsMargins(0, 0, 0, 0);
+		setSpacing(0);
+		addLayout(new TitleBar(app, window));
+		HistoriScroll *globalHistori;
+		window->setGlobalHistori( \
+				globalHistori = new HistoriScroll() \
+		);
+		addWidget(globalHistori);
+		addWidget(MainTabWidget(window));
+		addLayout(GridCalculateCommon(window));
+		addWidget(TabWidgetKeybord(window));
+	}
+};
+
+inline void Window::postInit() {
+    setLayout(new MainLayout(_app, this));
+}

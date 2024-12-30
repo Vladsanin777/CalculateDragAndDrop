@@ -2,31 +2,34 @@
 #include <functional>
 #include <QPushButton>
 #include <QMenu>
+#include "GradientFont.h"
+
+class Window;
 
 class ButtonBase : public QPushButton {
 private:
-	QWidget *_window
+	Window *_window
 public:
 	explicit ButtonBase( \
-		char label[], QWidget *window, short fontSize, \
-		function<void> callback = nullptr, \
+		char label[], Window *window, short fontSize, \
+		auto *callback = nullptr, \
 		cssName = "keybord", QMenu *menu = nullptr \
-	) : window(window), QPushButton(label) {
-		setContentsMargin(0, 0, 0, 0);
-		if (callback) 
-			clicked->connect(callback);
+	) : _window(window), QPushButton(label) {
+		setContentsMargins(0, 0, 0, 0);
+		if (callback != nullptr) 
+			connect(this, &QPushButton::clicked, &QWidget, callback);
 		if (menu)
 			setMenu(menu);
 		if (css_name)
 			setObjectName(css_name);
-		setfixedHeight(35);
+		setFixedHeight(35);
 		setMinimumWidth(64);
 		QFont *font = font();
 		font.setPointSize(fontSize);
 		setFont(font);
 	}
-	void paintEvent(event) const override final {
-		StyleButton(this, window);
+	void paintEvent(event) const override {
+		StyleButton(this, _window);
 		QPushButton::paintEvent();
 		return;
 	}
@@ -35,21 +38,21 @@ public:
 class ButtonDrag : public ButtonBase {
 public:
 	explicit ButtonDrag( \
-			char label[], QWidget *window, short fontSize, \
+			char label[], Window *window, short fontSize, \
 			function<void> callback = nullptr, \
 			cssName = "keybord", QMenu *menu = nullptr \
-	) : window(window), ButtonBase(
+	) : ButtonBase(
 		label, window, fontSize, css_name, menu
 	) {}
 	void mousePressEvent( \
 			QMouseEvent *event \
-	) override const final {
+	) override const {
 		_start_pos = event->pos();
 		ButtonBase::mousePressEvent(event);
 	}
 	void mouseMoveEvent( \
 			QMouseEvent *event \
-	) const final override {
+	) const override {
 		if ( \
 				(event->pos() - _start_pos).manhattanLength() \
 				> QApplication::startDragDistance() \
@@ -64,23 +67,24 @@ public:
 	}
 };
 
-class ButtonDragAndDrop : public ButtonDrag final {
+class ButtonDragAndDrop : public ButtonDrag {
+public:
 	explicit ButtonDragAndDrop( \
-			char label[], QWidget *window, short fontSize, \
+			char label[], Window *window, short fontSize, \
 			function<void> callback = nullptr, \
 			cssName = "keybord", QMenu *menu = nullptr \
-	) : window(window), ButtonBase( \
+	) : ButtonBase( \
 		label, window, fontSize, css_name, menu \
 	) {}
 	void dragEnterEvent( \
 			QMouseEvent *event \
-	) override final const {
+	) override const {
 		if (event->mimeData()->hasText())
 			event->acceptProposedAction();
 	}
 	void dropEvent( \
 			QMouseEvent *event \
-	) override final {
+	) override {
 		setText(event->mimeData()->text());
 		event->acceptProposedAction();
 	}

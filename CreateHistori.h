@@ -2,6 +2,7 @@
 #include <QWidget>
 #include <QScrollArea>
 
+class Window;
 
 
 class HistoriVBox : public QVBoxLayout {

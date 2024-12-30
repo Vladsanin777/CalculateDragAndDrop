@@ -1,4 +1,5 @@
-// g++ -o main main.cpp -I/usr/include/qt6 -I/usr/include/qt6/QtWidgets
+// g++ -o main main.cpp -I/usr/include/qt6 -I/usr/include/qt6/QtWidgets -I/usr/include/qt6/QtGui -lQt6Widgets -lQt6Gui -lQt6Core
+
 #include <QApplication>
 #include "Window.h"
 
@@ -72,6 +73,7 @@ public:
 	}
 	void createWindow() const {
 		Window *win = new Window(this);
+		win->postInit();
 		win->show();
 	}
 };
