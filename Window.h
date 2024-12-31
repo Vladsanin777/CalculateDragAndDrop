@@ -1,34 +1,31 @@
 #include <vector>
+#include <tuple>
+#include <cstdint>
 #include <QPushButton>
 #include <QApplication>
 #include <QWidget>
+#include <QPointF>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QScrollArea>
+#include <QMenu>
 
 
-namespace CreateHistori {
-	class HistoriScroll, HistoriWidget, \
-		  HistoriVBox;
-}
-namespace LineEdit {
-	class LineEdit;
-}
-using namespace std, CreateHistori, LineEdit;
+using namespace std;
 
 class Window : public QWidget {
 private:
-	vector<HistoriScroll *> _localHistori = {};
-	vector<HistoriWidget *> _resizeLocalHistori = {};
-	vector<HistoriVBox *> _addLocalHistori = {};
-	vector<vector<LineEdit *>> _lineEdit = {{}, {}, {}, {}, {}};
+	vector<uintptr_t> _localHistori = {};
+	vector<uintptr_t> _resizeLocalHistori = {};
+	vector<uintptr_t> _addLocalHistori = {};
+	vector<vector<uintptr_t>> _lineEdit = {{}, {}, {}, {}, {}};
 	short _inputtin[2] = {0, 0};
 	vector<vector<const char*>> _result = {
 		{"0"}, {"1", "2", "0"}, {"0"}, {"0"}, {"x", "0", "0"}
 	};
-	HistoriScroll *_globalHistori = nullptr;
-	HistoriVBox *_addGlobalHistori = nullptr;
-	HistoriWidget *_resizeGlobalHistori = nullptr;
+	uintptr_t _globalHistori;
+	uintptr_t _addGlobalHistori;
+	uintptr_t _resizeGlobalHistori;
 	const QApplication *_app = nullptr;
 public:
 	explicit Window( \
@@ -42,47 +39,38 @@ public:
 	}
 	void postInit();
 
-	HistoriScroll* getGlobalHistori( \
+	uintptr_t getGlobalHistori( \
 	) const {
 		return _globalHistori;
 	}
 	void setGlobalHistori( \
-			HistoriScroll *newGlobalHistori \
+			uintptr_t newGlobalHistori \
 	) {
-		if (newGlobalHistori == nullptr) {
-			_globalHistori = newGlobalHistori;
-			setResizeGlobalHistori( \
-					newGlobalHistori->getResizeHistori() \
-			);
-		}
+		_globalHistori = newGlobalHistori;
 		return;
 	}	
-	HistoriWidget* getResizeGlobalHistori( \
+	uintptr_t getResizeGlobalHistori( \
 	) const {
 		return _resizeGlobalHistori;
 	}
 	void setResizeGlobalHistori( \
-			HistoriWidget *newResizeGlobalHistori \
+			uintptr_t newResizeGlobalHistori \
 	) {
-		if (newResizeGlobalHistori == nullptr) {
-			_resizeGlobalHistori = newResizeGlobalHistori;
-			setAddGlobalHistori(newResizeGlobalHistori->getAddHistori());
-		}
+		_resizeGlobalHistori = newResizeGlobalHistori;
 		return;
 	}
 
-	HistoriVBox* getAddGlobalHistori( \
+	uintptr_t getAddGlobalHistori( \
 	) const {
 		return _addGlobalHistori;
 	}
 	void setAddGlobalHistori( \
-			HistoriVBox *newAddGlobalHistori \
+			uintptr_t newAddGlobalHistori \
 	) {
-		if (newAddGlobalHistori == nullptr)
-			_addGlobalHistori = newAddGlobalHistori;
+		_addGlobalHistori = newAddGlobalHistori;
 		return;
 	}
-	HistoriScroll* getLocalHistori( \
+	uintptr_t getLocalHistori( \
 			unsigned short *index = nullptr \
 	) const {
 		if (index == nullptr)
@@ -91,15 +79,12 @@ public:
 			return _localHistori.at(*index);
 	}
 	void setLocalHistori( \
-			HistoriScroll *newLocalHistori \
+			uintptr_t newLocalHistori \
 	) {
-		if (newLocalHistori == nullptr) {
-			_localHistori.push_back(newLocalHistori);
-			setResizeLocalHistori(newLocalHistori->getResizeHistori());
-		}
+		_localHistori.push_back(newLocalHistori);
 		return;
 	}	
-	HistoriWidget* getResizeLocalHistori( \
+	uintptr_t getResizeLocalHistori( \
 			unsigned short *index = nullptr \
 	) const {
 		if (index == nullptr)
@@ -108,16 +93,13 @@ public:
 			return _resizeLocalHistori.at(_inputtin[0]);
 	}
 	void setResizeLocalHistori( \
-			HistoriWidget *newResizeLocalHistori \
+			uintptr_t newResizeLocalHistori \
 	) {
-		if (newResizeLocalHistori == nullptr) {
-			_resizeLocalHistori.push_back(newResizeLocalHistori);
-			setAddLocalHistori(newResizeLocalHistori->getAddHistori());
-		}
+		_resizeLocalHistori.push_back(newResizeLocalHistori);
 		return;
 	}
 
-	HistoriVBox* getAddLocalHistori( \
+	uintptr_t getAddLocalHistori( \
 			unsigned short *index = nullptr \
 	) const {
 		if (index == nullptr)
@@ -126,18 +108,17 @@ public:
 			return _addLocalHistori.at(*index);
 	}
 	void setAddLocalHistori( \
-			HistoriVBox *newAddLocalHistori \
+			uintptr_t newAddLocalHistori \
 	) {
-		if (newAddLocalHistori == nullptr)
-			_addLocalHistori.push_back(newAddLocalHistori);
+		_addLocalHistori.push_back(newAddLocalHistori);
 		return;
 	}
-	LineEdit* getLineEdit( \
+	uintptr_t getLineEdit( \
 			unsigned short *tab, unsigned short *index \
 	) const {
 		if (tab != nullptr && index != nullptr)
 			return _lineEdit.at(*tab).at(*index);
-		return nullptr; 
+		return 0; 
 	}
 	void setInputtin(short inputtin[2]) {
 		_inputtin[0] = inputtin[0];
@@ -154,21 +135,21 @@ namespace GradientFont {
 		explicit CreateGradient( \
 			Window *window, \
 			QWidget *widget = nullptr, \
-			vector<vector<int, QColor*>> = gradient\
+			vector<tuple<int, QColor*>> = gradient\
 				{
 					{0, Qt::GlobalColor::red}, 
 					{1, Qt::GlobalColor::blue}
 				}
 		) {
-			int width = window.width();
-			int height = window.height();
+			int width = window->width();
+			int height = window->height();
 			if (widget != nullptr) {
-				QPoint *positionWidget = \
-					widget.mapToGlobal(QPoint(0, 0));
-				QPoint *positionWindow = \
-					window.mapToGlobal(QPoint(0, 0));
-				int y = positionWidget.y() - positionWindow.y();
-				int x = positionWidget.x() - positionWindow.x();
+				QPoint positionWidget = \
+						widget->mapToGlobal(QPoint(0, 0)), \
+					positionWindow = \
+						window->mapToGlobal(QPoint(0, 0));
+				int y = positionWidget->y() - positionWindow->y();
+				int x = positionWidget->x() - positionWindow->x();
 				QLinearGradient(-x, -y, width / 2, height / 2);
 			} else
 				QLinearGradient(0, 0, width, height);
@@ -233,7 +214,7 @@ namespace GradientFont {
 		) {
 			function<int(QWidget *, QFontMetrics *)> textX = \
 			[](QWidget *parent, QFontMetrics *metrics) {
-				if (metrics->horizontalAdvace(parent->text()) < parent->width())
+				if (metrics->horizontalAdvance(parent->text()) < parent->width())
 					return (parent->width() - \
 						metrics.horizontalAdvance(parent->text())) / 2;
 				return 0;
@@ -293,9 +274,9 @@ namespace Button {
 		Window *_window
 	public:
 		explicit ButtonBase( \
-			char label[], Window *window, short fontSize, \
-			auto *callback = nullptr, \
-			cssName = "keybord", QMenu *menu = nullptr \
+			const char label[], Window *window, short fontSize, \
+			function<void(QPushButton)> *callback = nullptr, \
+			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : _window(window), QPushButton(label) {
 			setContentsMargins(0, 0, 0, 0);
 			if (callback != nullptr) 
@@ -320,9 +301,9 @@ namespace Button {
 	class ButtonDrag : public ButtonBase {
 	public:
 		explicit ButtonDrag( \
-				char label[], Window *window, short fontSize, \
-				function<void> callback = nullptr, \
-				cssName = "keybord", QMenu *menu = nullptr \
+				const char label[], Window *window, short fontSize, \
+				function<void(QPushButton)> callback = nullptr, \
+				const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonBase(
 			label, window, fontSize, css_name, menu
 		) {}
@@ -352,9 +333,9 @@ namespace Button {
 	class ButtonDragAndDrop : public ButtonDrag {
 	public:
 		explicit ButtonDragAndDrop( \
-				char label[], Window *window, short fontSize, \
-				function<void> callback = nullptr, \
-				cssName = "keybord", QMenu *menu = nullptr \
+				const char *label[], Window *window, short fontSize, \
+				function<void(QPushButton)> callback = nullptr, \
+				const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonBase( \
 			label, window, fontSize, css_name, menu \
 		) {}
@@ -420,79 +401,102 @@ namespace CreateHistori {
 }
 
 namespace Title {
-	using namespace Button;
 	class Action : public QWidgetAction {
-		Q_OBJECT
 	public:
-		explicit Action(Menu *parent, ButtonBase *button)
+		explicit Action(Menu *parent, Button::ButtonBase *button)
 			: QWidgetAction(parent) {
 			setDefaultWidget(button); // Add semicolon here
 		}
 	};
 	class Menu : public QMenu {
-		Q_OBJECT
-	private:
+	public:
 		explicit Menu( \
-				vector<ButtonBase *> buttons \
+				vector<Button::ButtonBase *> buttons \
 		) : QMenu() {
 			setAttribute( \
 					Qt.WidgetAttribute.WA_TranslucentBackground \
 			);
-			for (button : buttons) {
-				addAction(Action(this, button))
-			}
+			short buttons_lenght = buttons.lenght;
+			for (short index = 0; index != buttons_lenght; index++)
+				addAction(Action(this, buttons.at(index)));
 		}
 	};
 
 
 	class TitleBar : public QHBoxLayout {
-		Q_OBJECT
 	private:
-		QWidget    *_window                 = nullptr;
-		QScrollArea *_globalHistori          = nullptr;
-		QScrollArea *_localHistoriBasic      = nullptr;
-		QScrollArea *_localHistoriIntegral   = nullptr;
-		QScrollArea *_localHistoriDerivative = nullptr;
-		QScrollArea *_localHistoriIntegrate  = nullptr;
-		QScrollArea *_localHistoriReplacement = nullptr;
+		Window                       *_window                  = nullptr;
+		CreateHistori::HistoriScroll *_globalHistori           = nullptr;
+		CreateHistori::HistoriScroll *_localHistoriBasic       = nullptr;
+		CreateHistori::HistoriScroll *_localHistoriIntegral    = nullptr;
+		CreateHistori::HistoriScroll *_localHistoriDerivative  = nullptr;
+		CreateHistori::HistoriScroll *_localHistoriIntegrate   = nullptr;
+		CreateHistori::HistoriScroll *_localHistoriReplacement = nullptr;
 	public:
 		explicit TitleBar( \
 				const QApplication *app, Window *window \
 		) : window(window), QHBoxLayout() {
 			setFixedHeight(35);
-			addWidget(ButtonBase("+ Add", window, 15, &app::addWindow);
-			addWidget(ButtonBase("EN",    window, 15, &window::changeLanguage);
-			addWidget(ButtonBase("Fon",   window, 15, &app::changeFon);
-			vector<ButtonBase *> vectorButtonLocalHistori = {
-				new ButtonBase("Basic",       window, 15, \
-						&TitleBar::localHistoriBasicVisible \
+			addWidget(Button::ButtonBase("+ Add", window, 15, &bind(&CalculateDragAndDrop::addWindow, app);
+			addWidget(Button::ButtonBase("EN",    window, 15, &bind(&Window::changeLanguage, this));
+			addWidget(Button::ButtonBase("Fon",   window, 15, &bind(&Window::changeFon, this)));
+			vector<Button::ButtonBase *> vectorButtonLocalHistori = {
+				new Button::ButtonBase("Basic",       window, 15, \
+						&bind(&TitleBar::localHistoriBasicVisible, this) \
 				),
-				new ButtonBase("Integral",    window, 15, \
-						&TitleBar::localHistoriIntegralVisible \
+				new Button::ButtonBase("Integral",    window, 15, \
+						&bind(&TitleBar::localHistoriIntegralVisible, this) \
 				),
-				new ButtonBase("Derivative",  window, 15, \
-						&TitleBar::localHistoriDerivativeVisible \
+				new Button::ButtonBase("Derivative",  window, 15, \
+						&bind(&TitleBar::localHistoriDerivativeVisible, this) \
 				),
-				new ButtonBase("Integrate",   window, 15, \
-						&TitleBar::localHistoriIntegrateVisible \
+				new Button::ButtonBase("Integrate",   window, 15, \
+						&bind(&TitleBar::localHistoriIntegrateVisible, this) \
 				),
-				new ButtonBase("Replacement", window, 15, \
-						&TitleBar::localHistoriReplacementVisible \
+				new Button::ButtonBase("Replacement", window, 15, \
+						&bind(&TitleBar::localHistoriReplacementVisible, this) \
 				),
 			}, vectorButtonView = {
-				new ButtonBase("Global Histori", window, 15, \
-						&TitleBar::globalHistoriVisible),
-				new ButtonBase("Local Histori",  window, 15, \
-						nullptr, "keybord", Menu(vectorButtonLocalHistori))
+				new Button::ButtonBase("Global Histori", window, 15, \
+						&bind(&TitleBar::globalHistoriVisible, this) \
+				),
+				new Button::ButtonBase( \
+					"Local Histori",  window, 15, nullptr, \
+					"keybord", static_cast<QMenu *>( \
+						new Menu(vectorButtonLocalHistori) \
+					) \
+				) \
 			};
-			addWidget(ButtonBase("Basic", window, 15, \
-					nullptr, "keybord", Menu(vectorButtonView)));
-			_globalHistori           = window->getGlobalHistori();
-			_localHistoriBasic       = window->getLocalHistori(0);
-			_localHistoriIntegral    = window->getLocalHistori(1);
-			_localHistoriDerivative  = window->getLocalHistori(2);
-			_localHistoriIntegrate   = window->getLocalHistori(3);
-			_localHistoriReplacement = window->getLocalHistori(4);
+			addWidget( \
+				new Button::ButtonBase( \
+					"View", window, 15, nullptr, \
+					"keybord", static_cast<QMenu *>(new Menu(vectorButtonView)) \
+				) \
+			);
+			_globalHistori           = \
+				reinterpret_cast<CreateHistori::HistoriScroll *>( \
+					window->getGlobalHistori() \
+				);
+			_localHistoriBasic       = \
+				reinterpret_cast<CreateHistori::HistoriScroll *>( \
+					window->getLocalHistori(new unsigned short(0))
+				);
+			_localHistoriIntegral    = \
+				reinterpret_cast<CreateHistori::HistoriScroll *>( \
+					window->getLocalHistori(new unsigned short(1))
+				);
+			_localHistoriDerivative  = \
+				reinterpret_cast<CreateHistori::HistoriScroll *>( \
+					window->getLocalHistori(new unsigned short(2))
+				);
+			_localHistoriIntegrate   = \
+				reinterpret_cast<CreateHistori::HistoriScroll *>( \
+					window->getLocalHistori(new unsigned short(3))
+				);
+			_localHistoriReplacement = \
+				reinterpret_cast<CreateHistori::HistoriScroll *>( \
+					window->getLocalHistori(new unsigned short(4))
+				);
 			return;
 		}
 		void globalHistoriVisible() const {
@@ -543,9 +547,24 @@ public:
 		setContentsMargins(0, 0, 0, 0);
 		setSpacing(0);
 		addLayout(new Title::TitleBar(app, window));
-		CreateHistori::HistoriScroll *globalHistori = nullptr;
-		globalHistori = new CreateHistori::HistoriScroll();
-		window->setGlobalHistori(static_cast<int*>(globalHistori));
+		HistoriScroll *globalHistori = nullptr;
+		HistoriWidget *resizeGlobalHistori = nullptr;
+		window->setGlobalHistori( \
+			reinterpret_cast<uintptr_t>( \
+				globalHistori = new HistoriScroll() \
+			) \
+		);
+		window->setResizeGlobalHistori( \
+			reinterpret_cast<uintptr_t>(
+				resizeGlobalHistori = \
+					globalHistori->getResizeHistori() \
+			) \
+		);
+		window->setAddGlobalHistori( \
+			reinterpret_cast<uintptr_t>( \
+				resizeGlobalHistori->getAddHistori() \
+			) \
+		);
 		addWidget(globalHistori);
 		addWidget(MainTabWidget(window));
 		addLayout(GridCalculateCommon(window));
