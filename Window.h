@@ -9,6 +9,11 @@
 #include <QHBoxLayout>
 #include <QScrollArea>
 #include <QMenu>
+#include <QPen>
+#include <QPainterPath>
+#include <QPainter>
+#include <QColor>
+#include <QLineEdit>
 
 
 using namespace std;
@@ -135,7 +140,7 @@ namespace GradientFont {
 		explicit CreateGradient( \
 			Window *window, \
 			QWidget *widget = nullptr, \
-			vector<tuple<int, QColor*>> = gradient\
+			vector<tuple<int, QColor>> gradient = \
 				{
 					{0, Qt::GlobalColor::red}, 
 					{1, Qt::GlobalColor::blue}
@@ -148,13 +153,15 @@ namespace GradientFont {
 						widget->mapToGlobal(QPoint(0, 0)), \
 					positionWindow = \
 						window->mapToGlobal(QPoint(0, 0));
-				int y = positionWidget->y() - positionWindow->y();
-				int x = positionWidget->x() - positionWindow->x();
+				int y = positionWidget.y() - positionWindow.y();
+				int x = positionWidget.x() - positionWindow.x();
 				QLinearGradient(-x, -y, width / 2, height / 2);
 			} else
 				QLinearGradient(0, 0, width, height);
-			for (colorAt : gradient) {
-				setColorAt(colorAt.at(0), colorAt.at(1));
+			short gradient_lenght = size(gradient);
+			for (short index = 0; index != gradient_lenght; index++) {
+				tuple<float, QColor> colorAt = gradient.at(index);
+				setColorAt(get<0>(colorAt), get<1>(colorAt));
 			}
 		}
 	};
@@ -168,14 +175,15 @@ namespace GradientFont {
 		}
 	};
 
-	class Pash : public QPainterPash {
+	class Path : public QPainterPath {
 	public:
-		explicit Pash( \
+		explicit Path( \
 				QWidget *parent, \
-				int textX, int textY \
-		) : QPainterPash() {
+				int textX, int textY, \
+				const char *text[]
+		) : QPainterPath() {
 			addText(textX, textY, \
-					parent->font(), parent->text() \
+					parent->font(), *text \
 			);
 		}
 	};
@@ -183,34 +191,32 @@ namespace GradientFont {
 
 
 	class StyleBase : public QPainter {
-		Q_OBJECT
 	public:
-		explicit Style( \
+		StyleBase( \
 				QWidget *parent, Window *window, \
-				Pash *path \
+				Path *path \
 		) : QPainter() {
 			setRenderHint(QPainter::RenderHint::Antialiasing);
-			fillRect(parent.rect(), QColor("transparent"));
-			setFont(parent.font());
-			setPen(new Pen());
+			fillRect(parent->rect(), QColor("transparent"));
+			setFont(parent->font());
+			setPen(Pen());
 			setBrush(Qt::BrushStyle::NoBrush);
-			drawPath(path);
-			CreateGradient *gradient = GreateGradient( \
-					parent, window \
+			drawPath(*path);
+			CreateGradient gradient = CreateGradient( \
+					window, parent \
 			);
-			setBrush(QBrush(gradient));
+			setBrush(QBrush(static_cast<QLinearGradient>(gradient)));
 			setPen(Qt::PenStyle::NoPen);
-			drawPath(path);
+			drawPath(*path);
 			end();
 		}
 	};
 
 
 	class StyleLineEdit : public StyleBase {
-		Q_OBJECT
 	public:
 		explicit StyleLineEdit( \
-				QWidget *parent, Window *window \
+				QLineEdit *parent, Window *window \
 		) {
 			function<int(QWidget *, QFontMetrics *)> textX = \
 			[](QWidget *parent, QFontMetrics *metrics) {
@@ -226,11 +232,12 @@ namespace GradientFont {
 			}
 			QFontMetrics *metrics = new QFontMetrics(parent->font());
 			StyleBase( \
-				parent, window, \
-				new Pash( \
-					parent, \
+				static_cast<QWidget *>(parent), window, \
+				new Path( \
+					static_cast<QWidget *>(parent), \
 					textX(parent, metrics), \
-					textY(parent, metrics) \
+					textY(parent, metrics), \
+					parent->text() \
 				) \
 			);
 		}
@@ -238,10 +245,9 @@ namespace GradientFont {
 
 
 	class StyleButton : public StyleBase {
-		Q_OBJECT
 	public:
-		explicit StyleLineEdit( \
-				QWidget *parent, const QWidget *window \
+		explicit StyleButton( \
+				QPushButton *parent, const QWidget *window \
 		) {
 			function<int(QWidget *, QFontMetrics *)> textX = \
 			[](QWidget *parent, QFontMetrics *metrics) {
@@ -258,10 +264,11 @@ namespace GradientFont {
 			QFontMetrics *metrics = new QFontMetrics(parent.font());
 			StyleBase( \
 				parent, window, \
-				new Pash( \
-					parent, \
+				new Path( \
+					static_cast<QWidget *>(parent), \
 					textX(parent, metrics), \
-					textY(parent, metrics) \
+					textY(parent, metrics), \
+					parent->text() \
 				) \
 			);
 		}
