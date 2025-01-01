@@ -18,6 +18,7 @@
 #include <QLineEdit>
 #include <QString>
 #include <QCursor>
+#include <QFocusEvent>
 
 using namespace std;
 
@@ -139,24 +140,20 @@ namespace LineEdit {
 	class  LineEdit : public QLineEdit {
 	private:
 		Window *_window;
-		int _inputtin[2];
+		short _inputtin[2];
 	public:
 		explicit LineEdit ( \
 				Window *window, \
-				int inputtin[2], char *text[] \
+				short inputtin[2], char text[] \
 		) : _window(window), QLineEdit() {
 			_inputtin[0] = inputtin[0];
 			_inputtin[1] = inputtin[1];
-			setText(text);
-			QSizePolicy *sizePolicyExpanding = nullptr;
-			setSizePolicy( \
-					sizePolicyExpanding = \
-						sizePolicy().Policy.Expanding, \
-					sizePolicyExpanding \
-			);
+			setText(QString::fromUtf8(text));
+			QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+			setSizePolicy(sizePolicy);
 			setObjectName("keybord");
-			textChanged.connect(onLineEditChanged);
-			const QFont font = this->font();
+			connect(this, &QLineEdit::textChanged, this, &LineEdit::onLineEditChanged);
+			QFont font = this->font();
 			font.setPointSize(25);
 			setFont(font);
 			setMaximumHeight(40);
@@ -170,6 +167,9 @@ namespace LineEdit {
 				_window->setInputtin(_inputtin);
 			QLineEdit::focusInEvent(event);
 		}
+		
+		void paintEvent(QPaintEvent *event);
+	private slots:
 		void onLineEditChanged( \
 				char textLineEdit[] \
 		) const {
@@ -184,12 +184,6 @@ namespace LineEdit {
 			else
 				logicCalculate.buttonOther();
 		}
-		void paintEvent( \
-				QPaintEvent *event \
-		) override {
-			StyleLineEdit(this, _window);
-			QLineEdit::paintEvent(event);
-		}
 	};
 }
 
@@ -197,7 +191,7 @@ namespace GradientFont {
 	class CreateGradient : public QLinearGradient {
 	public:
 		explicit CreateGradient( \
-			Window *window, \
+			const Window *window, \
 			QWidget *widget = nullptr, \
 			vector<tuple<int, QColor>> gradient = \
 				{
@@ -254,8 +248,8 @@ namespace GradientFont {
 		explicit StyleBase( \
 		) : QPainter() {}
 		void postInit(
-				QWidget *parent, Window *window, \
-				Path path \
+				QWidget *parent, const Window *window, \
+				GradientFont::Path path \
 		) {
 			setRenderHint(QPainter::RenderHint::Antialiasing);
 			fillRect(parent->rect(), QColor("transparent"));
@@ -308,38 +302,45 @@ namespace GradientFont {
 	class StyleLineEdit : public StyleBase {
 	public:
 		explicit StyleLineEdit( \
-				LineEdit *parent, const QWidget *window \
+				QLineEdit *parent, const Window *window, \
+				QRect *rect
 		) {
-			function<int(QLineEdit *, QFontMetrics *)> textX = \
-			[](LineEdit *parent, QFontMetrics *metrics) {
-				return parent->cursorRect()->x() - \
+			function<int(QLineEdit *, QFontMetrics *, QRect *)> textX = \
+			[](QLineEdit *parent, QFontMetrics *metrics, QRect *rect) {
+				return rect->x() - \
 					metrics->horizontalAdvance( \
 						parent->text()[parent->cursorPosition()] = '\0' \
 					) + 5;
 			};
 			function<int(QLineEdit *, QFontMetrics *)> textY = \
-			[](LineEdit *parent, QFontMetrics *metrics) {
+			[](QLineEdit *parent, QFontMetrics *metrics) {
 				return (parent->height() + metrics->ascent() - \
 					metrics->descent()) / 2;
 			};
-			QFontMetrics *metrics = new QFontMetrics(parent.font());
+			QFontMetrics *metrics = new QFontMetrics(parent->font());
+			Path path(
+				static_cast<QWidget*>(parent),
+				textX(parent, metrics, rect),
+				textY(parent, metrics),
+				parent->text()
+			);
 			StyleBase( \
-				parent, window, \
-				Path( \
-					static_cast<QWidget *>(parent), \
-					textX(parent, metrics), \
-					textY(parent, metrics), \
-					parent->text() \
-				) \
+				static_cast<QWidget *>(parent), \
+				window, path \
 			);
 		}
 	};
 }
-
+inline void LineEdit::LineEdit::paintEvent( \
+		QPaintEvent *event \
+) override {
+	GradientFont::StyleLineEdit(static_cast<QLineEdit *>(this), _window, cursorRect());
+	QLineEdit::paintEvent(event);
+}
 namespace Button {
 	class ButtonBase : public QPushButton {
 	private:
-		Window *_window
+		Window *_window;
 	public:
 		explicit ButtonBase( \
 			const char label[], Window *window, short fontSize, \
@@ -405,7 +406,7 @@ namespace Button {
 				function<void(QPushButton)> callback = nullptr, \
 				const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonBase( \
-			label, window, fontSize, css_name, menu \
+			label, window, fontSize, cssName, menu \
 		) {}
 		void dragEnterEvent( \
 				QMouseEvent *event \
