@@ -1,5 +1,7 @@
 #include <vector>
 #include <tuple>
+#include <functional>
+#include <cstring>
 #include <cstdint>
 #include <QPushButton>
 #include <QApplication>
@@ -14,7 +16,8 @@
 #include <QPainter>
 #include <QColor>
 #include <QLineEdit>
-
+#include <QString>
+#include <QCursor>
 
 using namespace std;
 
@@ -132,7 +135,63 @@ public:
 };
 
 
-
+namespace LineEdit {
+	class  LineEdit : public QLineEdit {
+	private:
+		Window *_window;
+		int _inputtin[2];
+	public:
+		explicit LineEdit ( \
+				Window *window, \
+				int inputtin[2], char *text[] \
+		) : _window(window), QLineEdit() {
+			_inputtin[0] = inputtin[0];
+			_inputtin[1] = inputtin[1];
+			setText(text);
+			QSizePolicy *sizePolicyExpanding = nullptr;
+			setSizePolicy( \
+					sizePolicyExpanding = \
+						sizePolicy().Policy.Expanding, \
+					sizePolicyExpanding \
+			);
+			setObjectName("keybord");
+			textChanged.connect(onLineEditChanged);
+			const QFont font = this->font();
+			font.setPointSize(25);
+			setFont(font);
+			setMaximumHeight(40);
+			setMinimumWidth(40);
+			setContentsMargins(0, 0, 0, 0);
+		}
+		void focusInEvent( \
+				QFocusEvent *event \
+		) override {
+			if (event->reason())
+				_window->setInputtin(_inputtin);
+			QLineEdit::focusInEvent(event);
+		}
+		void onLineEditChanged( \
+				char textLineEdit[] \
+		) const {
+			LogicCalculate *logicCalculate = \
+				new LogicCalculate(textLineEdit, _window);
+			if (strstr(textLineEdit, "_ALL") != nullptr)
+				logicCalculate.button_ALL();
+			else if (strstr(textLineEdit, "_O") != nullptr)
+				logicCalculate.button_O();
+			else if (strstr(textLineEdit, "_RES") != nullptr)
+				logicCalculate.button_RES();
+			else
+				logicCalculate.buttonOther();
+		}
+		void paintEvent( \
+				QPaintEvent *event \
+		) override {
+			StyleLineEdit(this, _window);
+			QLineEdit::paintEvent(event);
+		}
+	};
+}
 
 namespace GradientFont {
 	class CreateGradient : public QLinearGradient {
@@ -180,10 +239,10 @@ namespace GradientFont {
 		explicit Path( \
 				QWidget *parent, \
 				int textX, int textY, \
-				const char *text[]
+				QString text
 		) : QPainterPath() {
 			addText(textX, textY, \
-					parent->font(), *text \
+					parent->font(), text \
 			);
 		}
 	};
@@ -192,48 +251,50 @@ namespace GradientFont {
 
 	class StyleBase : public QPainter {
 	public:
-		StyleBase( \
+		explicit StyleBase( \
+		) : QPainter() {}
+		void postInit(
 				QWidget *parent, Window *window, \
-				Path *path \
-		) : QPainter() {
+				Path path \
+		) {
 			setRenderHint(QPainter::RenderHint::Antialiasing);
 			fillRect(parent->rect(), QColor("transparent"));
 			setFont(parent->font());
 			setPen(Pen());
 			setBrush(Qt::BrushStyle::NoBrush);
-			drawPath(*path);
+			drawPath(path);
 			CreateGradient gradient = CreateGradient( \
 					window, parent \
 			);
 			setBrush(QBrush(static_cast<QLinearGradient>(gradient)));
 			setPen(Qt::PenStyle::NoPen);
-			drawPath(*path);
+			drawPath(path);
 			end();
 		}
 	};
 
 
-	class StyleLineEdit : public StyleBase {
+	class StyleButton : public StyleBase {
 	public:
-		explicit StyleLineEdit( \
-				QLineEdit *parent, Window *window \
-		) {
-			function<int(QWidget *, QFontMetrics *)> textX = \
-			[](QWidget *parent, QFontMetrics *metrics) {
+		explicit StyleButton( \
+				QPushButton *parent, Window *window \
+		) : StyleBase(){
+			function<int(QPushButton *, QFontMetrics *)> textX = \
+			[](QPushButton *parent, QFontMetrics *metrics) {
 				if (metrics->horizontalAdvance(parent->text()) < parent->width())
 					return (parent->width() - \
-						metrics.horizontalAdvance(parent->text())) / 2;
+						metrics->horizontalAdvance(parent->text())) / 2;
 				return 0;
-			}
-			function<int(QWidget *, QFontMetrics *)> textY = \
-			[](QWidget *parent, QFontMetrics *metrics) {
+			};
+			function<int(QPushButton *, QFontMetrics *)> textY = \
+			[](QPushButton *parent, QFontMetrics *metrics) {
 				return (parent->height() + metrics->height()) \
 					/ 2 - metrics->descent();
-			}
+			};
 			QFontMetrics *metrics = new QFontMetrics(parent->font());
-			StyleBase( \
+			StyleBase::postInit( \
 				static_cast<QWidget *>(parent), window, \
-				new Path( \
+				Path( \
 					static_cast<QWidget *>(parent), \
 					textX(parent, metrics), \
 					textY(parent, metrics), \
@@ -244,27 +305,27 @@ namespace GradientFont {
 	};
 
 
-	class StyleButton : public StyleBase {
+	class StyleLineEdit : public StyleBase {
 	public:
-		explicit StyleButton( \
-				QPushButton *parent, const QWidget *window \
+		explicit StyleLineEdit( \
+				LineEdit *parent, const QWidget *window \
 		) {
-			function<int(QWidget *, QFontMetrics *)> textX = \
-			[](QWidget *parent, QFontMetrics *metrics) {
+			function<int(QLineEdit *, QFontMetrics *)> textX = \
+			[](LineEdit *parent, QFontMetrics *metrics) {
 				return parent->cursorRect()->x() - \
 					metrics->horizontalAdvance( \
 						parent->text()[parent->cursorPosition()] = '\0' \
 					) + 5;
-			}
-			function<int(QWidget *, QFontMetrics *)> textY = \
-			[](QWidget *parent, QFontMetrics *metrics) {
+			};
+			function<int(QLineEdit *, QFontMetrics *)> textY = \
+			[](LineEdit *parent, QFontMetrics *metrics) {
 				return (parent->height() + metrics->ascent() - \
 					metrics->descent()) / 2;
-			}
+			};
 			QFontMetrics *metrics = new QFontMetrics(parent.font());
 			StyleBase( \
 				parent, window, \
-				new Path( \
+				Path( \
 					static_cast<QWidget *>(parent), \
 					textX(parent, metrics), \
 					textY(parent, metrics), \
