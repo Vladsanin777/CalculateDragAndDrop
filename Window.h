@@ -26,7 +26,10 @@
 
 using namespace std;
 
-
+enum class CallbackButtonClass {
+	TitleLayout,
+	Window, CalculateDragAndDrop
+}
 
 class CalculateDragAndDrop : public QApplication {
 
@@ -448,7 +451,7 @@ namespace Button {
 		explicit ButtonBase( \
 			const char label[], Window *window, short fontSize, \
 			function<void(QPushButton *)> *callback = nullptr, \
-			QWidget *callback_class = nullptr, \
+			CallbackButtonClass *callback_class = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : _window(window), QPushButton(label) {
 			setContentsMargins(0, 0, 0, 0);
@@ -478,7 +481,7 @@ namespace Button {
 		explicit ButtonDrag( \
 			const char label[], Window *window, short fontSize, \
 			function<void(QPushButton *)> *callback = nullptr, \
-			QWidget *callback_class = nullptr, \
+			CallbackButtonClass *callback_class = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonBase(
 			label, window, fontSize, callback, callback_class, cssName, menu
@@ -511,7 +514,7 @@ namespace Button {
 		explicit ButtonDragAndDrop( \
 			const char label[], Window *window, short fontSize, \
 			function<void(QPushButton *)> *callback = nullptr, \
-			QWidget *callback_class = nullptr, \
+			CallbackButtonClass *callback_class = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonDrag ( \
 			label, window, fontSize, callback, callback_class, cssName, menu \
@@ -533,7 +536,6 @@ namespace Button {
 
 namespace CreateHistori {
 	class HistoriVBox : public QVBoxLayout {
-		Q_OBJECT
 	public:
 		explicit HistoriVBox() : QVBoxLayout() {
 			setSpacing(0);
@@ -558,7 +560,6 @@ namespace CreateHistori {
 	};
 
 	class HistoriScroll : public QScrollArea {
-		Q_OBJECT
 	private:
 		HistoriWidget *_resizeHistori = nullptr;
 	public:
@@ -628,19 +629,19 @@ namespace Title {
 							bind( \
 								&CalculateDragAndDrop::createWindow, app, placeholders::_1 \
 							) \
-						) \
+						), app \
 					) \
 				) \
 			);
 			addWidget( \
 				static_cast<QWidget *>( \
 					new Button::ButtonBase( \
-						"EN",    window, 15, \
+						"EN",    window, 15, window, \
 						new function<void(QPushButton *)>( \
 							bind( \
 								&Window::changeLanguage, window, placeholders::_1 \
 							) \
-						), static_cast<QWidget *>(window)\
+						), window \
 					) \
 				) \
 			);
@@ -652,7 +653,7 @@ namespace Title {
 							bind( \
 								&Window::changeFon, window, placeholders::_1 \
 							) \
-						) \
+						), window \
 					) \
 				) \
 			);
@@ -664,7 +665,7 @@ namespace Title {
 							&TitleLayout::localHistoriBasicVisible, \
 							this, placeholders::_1 \
 						) \
-					) \
+					), this \
 				),
 				new Button::ButtonBase( \
 					"Integral",    window, 15, \
@@ -673,7 +674,7 @@ namespace Title {
 							&TitleLayout::localHistoriIntegralVisible \
 							, this, placeholders::_1 \
 						) \
-					) \
+					), this \
 				),
 				new Button::ButtonBase( \
 					"Derivative",  window, 15, \
@@ -682,7 +683,7 @@ namespace Title {
 							&TitleLayout::localHistoriDerivativeVisible, \
 							this, placeholders::_1 \
 						) \
-					) \
+					), this \
 				),
 				new Button::ButtonBase( \
 					"Integrate",   window, 15, \
@@ -691,7 +692,7 @@ namespace Title {
 							&TitleLayout::localHistoriIntegrateVisible, \
 							this, placeholders::_1 \
 						) \
-					) \
+					), this \
 				),
 				new Button::ButtonBase( \
 					"Replacement", window, 15, \
@@ -700,7 +701,7 @@ namespace Title {
 							&TitleLayout::localHistoriReplacementVisible, \
 							this, placeholders::_1 \
 						) \
-					) \
+					), this \
 				),
 			}, vectorButtonView = {
 				new Button::ButtonBase( \
@@ -710,10 +711,10 @@ namespace Title {
 							&TitleLayout::globalHistoriVisible, \
 							this, placeholders::_1 \
 						) \
-					) \
+					), this \
 				),
 				new Button::ButtonBase( \
-					"Local Histori",  window, 15, nullptr, \
+					"Local Histori",  window, 15, nullptr, nullptr, \
 					"keybord", static_cast<QMenu *>( \
 						new Menu(vectorButtonLocalHistori) \
 					) \
@@ -722,7 +723,7 @@ namespace Title {
 			addWidget( \
 				static_cast<QWidget *>( \
 					new Button::ButtonBase( \
-						"View", window, 15, nullptr, \
+						"View", window, 15, nullptr, nullptr, \
 						"keybord", static_cast<QMenu *>(new Menu(vectorButtonView)) \
 					) \
 				) \
@@ -802,6 +803,7 @@ namespace Title {
 		}
 	};
 }
+
 
 using namespace CreateHistori;
 class MainLayout : public QVBoxLayout {
