@@ -19,8 +19,86 @@
 #include <QString>
 #include <QCursor>
 #include <QFocusEvent>
+#include <QRect>
+#include <QDrag>
+#include <QMimeData>
+#include <QWidgetAction>
 
 using namespace std;
+
+
+
+class CalculateDragAndDrop : public QApplication {
+
+public:
+	explicit CalculateDragAndDrop( \
+			int argc, char *argv[] \
+	) : QApplication(argc, argv) {
+		setStyleSheet(R"(
+			QMenu {
+                background: transparent;
+                border: 1px solid white;
+            }
+            #histori {
+                background-color: transparent;
+            }
+            QTabWidget::pane {
+                border: none;
+                background: transparent;
+            }
+            
+            QTabBar QToolButton {
+                border: none;
+                background: rgba(0, 0, 0, 0.3);
+                color: white; 
+            }
+            QTabWidget {
+                background: transparent;
+                border: none;
+                margin: 0px;
+            }
+            QTabBar::tab {
+                background: transparent;
+                border: none;
+                padding: 0px auto;
+                margin: 0px;
+                color: transparent;
+            }
+            QTabBar {
+                background: transparent;
+                border: none;
+                margin: 0px;
+            }
+            QLineEdit {
+                background: transparent;
+                border: 1px solid white;
+                text-align: center;
+                color: transparent;
+            }
+            QScrollBar:vertical {
+                background: transparent;
+                border: none;
+            }
+            QScrollBar::handle:vertical {
+                background: rgba(255, 255, 255, 0.1);
+                border: none;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical{
+                background: none;
+                height: 0;
+            }
+            QTabWidget::tab-bar {
+                alignment: center;
+            }
+        )");
+		createWindow(nullptr);
+	}
+	void createWindow(QPushButton *button);
+};
+
 
 class Window : public QWidget {
 private:
@@ -35,10 +113,10 @@ private:
 	uintptr_t _globalHistori;
 	uintptr_t _addGlobalHistori;
 	uintptr_t _resizeGlobalHistori;
-	const QApplication *_app = nullptr;
+	CalculateDragAndDrop *_app = nullptr;
 public:
 	explicit Window( \
-			const QApplication *app = nullptr \
+			CalculateDragAndDrop *app = nullptr \
 	) : QWidget(), _app(app) {
 		setWindowTitle("CalculateDragAndDrop");
 		resize(400, 800);
@@ -47,6 +125,10 @@ public:
 		return;
 	}
 	void postInit();
+	
+	void changeLanguage(QPushButton *button) {}
+
+	void changeFon(QPushButton *button) {}
 
 	uintptr_t getGlobalHistori( \
 	) const {
@@ -136,55 +218,12 @@ public:
 };
 
 
-namespace LineEdit {
-	class  LineEdit : public QLineEdit {
-	private:
-		Window *_window;
-		short _inputtin[2];
-	public:
-		explicit LineEdit ( \
-				Window *window, \
-				short inputtin[2], char text[] \
-		) : _window(window), QLineEdit() {
-			_inputtin[0] = inputtin[0];
-			_inputtin[1] = inputtin[1];
-			setText(QString::fromUtf8(text));
-			QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-			setSizePolicy(sizePolicy);
-			setObjectName("keybord");
-			connect(this, &QLineEdit::textChanged, this, &LineEdit::onLineEditChanged);
-			QFont font = this->font();
-			font.setPointSize(25);
-			setFont(font);
-			setMaximumHeight(40);
-			setMinimumWidth(40);
-			setContentsMargins(0, 0, 0, 0);
-		}
-		void focusInEvent( \
-				QFocusEvent *event \
-		) override {
-			if (event->reason())
-				_window->setInputtin(_inputtin);
-			QLineEdit::focusInEvent(event);
-		}
-		
-		void paintEvent(QPaintEvent *event);
-	private slots:
-		void onLineEditChanged( \
-				char textLineEdit[] \
-		) const {
-			LogicCalculate *logicCalculate = \
-				new LogicCalculate(textLineEdit, _window);
-			if (strstr(textLineEdit, "_ALL") != nullptr)
-				logicCalculate.button_ALL();
-			else if (strstr(textLineEdit, "_O") != nullptr)
-				logicCalculate.button_O();
-			else if (strstr(textLineEdit, "_RES") != nullptr)
-				logicCalculate.button_RES();
-			else
-				logicCalculate.buttonOther();
-		}
-	};
+inline void CalculateDragAndDrop::createWindow( \
+	QPushButton * button \
+) {
+	Window *win = new Window(this);
+	win->postInit();
+	win->show();
 }
 
 namespace GradientFont {
@@ -286,7 +325,8 @@ namespace GradientFont {
 					/ 2 - metrics->descent();
 			};
 			QFontMetrics *metrics = new QFontMetrics(parent->font());
-			StyleBase::postInit( \
+			StyleBase *styleBase = new StyleBase();
+			styleBase->postInit( \
 				static_cast<QWidget *>(parent), window, \
 				Path( \
 					static_cast<QWidget *>(parent), \
@@ -303,11 +343,11 @@ namespace GradientFont {
 	public:
 		explicit StyleLineEdit( \
 				QLineEdit *parent, const Window *window, \
-				QRect *rect
+				QRect rect
 		) {
-			function<int(QLineEdit *, QFontMetrics *, QRect *)> textX = \
-			[](QLineEdit *parent, QFontMetrics *metrics, QRect *rect) {
-				return rect->x() - \
+			function<int(QLineEdit *, QFontMetrics *, QRect)> textX = \
+			[](QLineEdit *parent, QFontMetrics *metrics, QRect rect) {
+				return rect.x() - \
 					metrics->horizontalAdvance( \
 						parent->text()[parent->cursorPosition()] = '\0' \
 					) + 5;
@@ -318,25 +358,80 @@ namespace GradientFont {
 					metrics->descent()) / 2;
 			};
 			QFontMetrics *metrics = new QFontMetrics(parent->font());
-			Path path(
-				static_cast<QWidget*>(parent),
-				textX(parent, metrics, rect),
-				textY(parent, metrics),
-				parent->text()
-			);
-			StyleBase( \
+			
+			StyleBase *styleBase = new StyleBase();
+			styleBase->postInit(
 				static_cast<QWidget *>(parent), \
-				window, path \
+				window, 
+				Path(
+					static_cast<QWidget*>(parent),
+					textX(parent, metrics, rect),
+					textY(parent, metrics),
+					parent->text()
+				) \
 			);
 		}
 	};
 }
-inline void LineEdit::LineEdit::paintEvent( \
-		QPaintEvent *event \
-) override {
-	GradientFont::StyleLineEdit(static_cast<QLineEdit *>(this), _window, cursorRect());
-	QLineEdit::paintEvent(event);
+
+
+namespace LineEdit {
+	class  LineEdit : public QLineEdit {
+	private:
+		Window *_window;
+		short _inputtin[2];
+	public:
+		explicit LineEdit ( \
+				Window *window, \
+				short inputtin[2], char text[] \
+		) : _window(window), QLineEdit() {
+			_inputtin[0] = inputtin[0];
+			_inputtin[1] = inputtin[1];
+			setText(QString::fromUtf8(text));
+			QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+			setSizePolicy(sizePolicy);
+			setObjectName("keybord");
+			connect(this, &QLineEdit::textChanged, this, &LineEdit::onLineEditChanged);
+			QFont font = this->font();
+			font.setPointSize(25);
+			setFont(font);
+			setMaximumHeight(40);
+			setMinimumWidth(40);
+			setContentsMargins(0, 0, 0, 0);
+		}
+		void focusInEvent( \
+				QFocusEvent *event \
+		) override {
+			if (event->reason())
+				_window->setInputtin(_inputtin);
+			QLineEdit::focusInEvent(event);
+		}
+		
+		void paintEvent( \
+				QPaintEvent *event \
+		) override {
+			GradientFont::StyleLineEdit(static_cast<QLineEdit *>(this), _window, cursorRect());
+			QLineEdit::paintEvent(event);
+		}
+
+	private slots:
+		void onLineEditChanged( \
+				char textLineEdit[] \
+		) const {
+			LogicCalculate *logicCalculate = \
+				new LogicCalculate(textLineEdit, _window);
+			if (strstr(textLineEdit, "_ALL") != nullptr)
+				logicCalculate.button_ALL();
+			else if (strstr(textLineEdit, "_O") != nullptr)
+				logicCalculate.button_O();
+			else if (strstr(textLineEdit, "_RES") != nullptr)
+				logicCalculate.button_RES();
+			else
+				logicCalculate.buttonOther();
+		}
+	};
 }
+
 namespace Button {
 	class ButtonBase : public QPushButton {
 	private:
@@ -344,53 +439,55 @@ namespace Button {
 	public:
 		explicit ButtonBase( \
 			const char label[], Window *window, short fontSize, \
-			function<void(QPushButton)> *callback = nullptr, \
+			function<void(QPushButton *)> *callback = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : _window(window), QPushButton(label) {
 			setContentsMargins(0, 0, 0, 0);
 			if (callback != nullptr) 
-				connect(this, &QPushButton::clicked, &QWidget, callback);
+				connect(this, &QPushButton::clicked, callback);
 			if (menu)
 				setMenu(menu);
-			if (css_name)
-				setObjectName(css_name);
+			if (cssName)
+				setObjectName(cssName);
 			setFixedHeight(35);
 			setMinimumWidth(64);
-			QFont *font = font();
-			font.setPointSize(fontSize);
-			setFont(font);
+			QFont buttonFont = font();
+			buttonFont.setPointSize(fontSize);
+			setFont(buttonFont);
 		}
-		void paintEvent(event) const override {
-			StyleButton(this, _window);
-			QPushButton::paintEvent();
+		void paintEvent(QPaintEvent *event) override {
+			GradientFont::StyleButton(this, _window);
+			QPushButton::paintEvent(event);
 			return;
 		}
 	};
 
 	class ButtonDrag : public ButtonBase {
+	private:
+		QPoint _start_pos;
 	public:
 		explicit ButtonDrag( \
-				const char label[], Window *window, short fontSize, \
-				function<void(QPushButton)> callback = nullptr, \
-				const char *cssName = "keybord", QMenu *menu = nullptr \
+			const char label[], Window *window, short fontSize, \
+			function<void(QPushButton *)> *callback = nullptr, \
+			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonBase(
-			label, window, fontSize, css_name, menu
+			label, window, fontSize, callback, cssName, menu
 		) {}
 		void mousePressEvent( \
 				QMouseEvent *event \
-		) override const {
+		) override {
 			_start_pos = event->pos();
 			ButtonBase::mousePressEvent(event);
 		}
 		void mouseMoveEvent( \
 				QMouseEvent *event \
-		) const override {
+		) override {
 			if ( \
 					(event->pos() - _start_pos).manhattanLength() \
 					> QApplication::startDragDistance() \
 			) {
-				QDrag *drag = QDrag(this);
-				QMimeData *mime_data = QMimeData();
+				QDrag *drag = new QDrag(this);
+				QMimeData *mime_data = new QMimeData();
 				mime_data->setText(this->text());
 				drag->setMimeData(mime_data);
 				drag->exec(Qt::DropAction::MoveAction);
@@ -402,20 +499,20 @@ namespace Button {
 	class ButtonDragAndDrop : public ButtonDrag {
 	public:
 		explicit ButtonDragAndDrop( \
-				const char *label[], Window *window, short fontSize, \
-				function<void(QPushButton)> callback = nullptr, \
-				const char *cssName = "keybord", QMenu *menu = nullptr \
-		) : ButtonBase( \
-			label, window, fontSize, cssName, menu \
+			const char label[], Window *window, short fontSize, \
+			function<void(QPushButton *)> *callback = nullptr, \
+			const char *cssName = "keybord", QMenu *menu = nullptr \
+		) : ButtonDrag ( \
+			label, window, fontSize, callback, cssName, menu \
 		) {}
 		void dragEnterEvent( \
-				QMouseEvent *event \
-		) override const {
+				QDragEnterEvent *event \
+		) override {
 			if (event->mimeData()->hasText())
 				event->acceptProposedAction();
 		}
 		void dropEvent( \
-				QMouseEvent *event \
+				QDropEvent *event \
 		) override {
 			setText(event->mimeData()->text());
 			event->acceptProposedAction();
@@ -472,9 +569,9 @@ namespace CreateHistori {
 namespace Title {
 	class Action : public QWidgetAction {
 	public:
-		explicit Action(Menu *parent, Button::ButtonBase *button)
+		explicit Action(QMenu *parent, Button::ButtonBase *button)
 			: QWidgetAction(parent) {
-			setDefaultWidget(button); // Add semicolon here
+			setDefaultWidget(static_cast<QPushButton *>(button)); // Add semicolon here
 		}
 	};
 	class Menu : public QMenu {
@@ -483,18 +580,25 @@ namespace Title {
 				vector<Button::ButtonBase *> buttons \
 		) : QMenu() {
 			setAttribute( \
-					Qt.WidgetAttribute.WA_TranslucentBackground \
+					Qt::WidgetAttribute::WA_TranslucentBackground \
 			);
-			short buttons_lenght = buttons.lenght;
+			short buttons_lenght = buttons.size();
 			for (short index = 0; index != buttons_lenght; index++)
-				addAction(Action(this, buttons.at(index)));
+				addAction( \
+					static_cast<QWidgetAction *>( \
+						new Action( \
+							static_cast<QMenu *>(this), \
+							buttons.at(index) \
+						) \
+					) \
+				);
 		}
 	};
 
 
-	class TitleBar : public QHBoxLayout {
+	class TitleLayout : public QHBoxLayout {
 	private:
-		Window                       *_window                  = nullptr;
+		const Window                 *_window                  = nullptr;
 		CreateHistori::HistoriScroll *_globalHistori           = nullptr;
 		CreateHistori::HistoriScroll *_localHistoriBasic       = nullptr;
 		CreateHistori::HistoriScroll *_localHistoriIntegral    = nullptr;
@@ -502,32 +606,100 @@ namespace Title {
 		CreateHistori::HistoriScroll *_localHistoriIntegrate   = nullptr;
 		CreateHistori::HistoriScroll *_localHistoriReplacement = nullptr;
 	public:
-		explicit TitleBar( \
-				const QApplication *app, Window *window \
-		) : window(window), QHBoxLayout() {
-			setFixedHeight(35);
-			addWidget(Button::ButtonBase("+ Add", window, 15, &bind(&CalculateDragAndDrop::addWindow, app);
-			addWidget(Button::ButtonBase("EN",    window, 15, &bind(&Window::changeLanguage, this));
-			addWidget(Button::ButtonBase("Fon",   window, 15, &bind(&Window::changeFon, this)));
+		explicit TitleLayout( \
+				CalculateDragAndDrop *app, Window *window \
+		) : _window(window), QHBoxLayout() {
+			addWidget( \
+				static_cast<QWidget *>( \
+					new Button::ButtonBase( \
+						"+ Add", window, 15, \
+						new function<void(QPushButton *)>( \
+							bind( \
+								&CalculateDragAndDrop::createWindow, app, placeholders::_1 \
+							) \
+						) \
+					) \
+				) \
+			);
+			addWidget( \
+				static_cast<QWidget *>( \
+					new Button::ButtonBase( \
+						"EN",    window, 15, \
+						new function<void(QPushButton *)>( \
+							bind( \
+								&Window::changeLanguage, window, placeholders::_1 \
+							) \
+						) \
+					) \
+				) \
+			);
+			addWidget( \
+				static_cast<QWidget *>( \
+					new Button::ButtonBase( \
+						"Fon",   window, 15, \
+						new function<void(QPushButton *)>( \
+							bind( \
+								&Window::changeFon, window, placeholders::_1 \
+							) \
+						) \
+					) \
+				) \
+			);
 			vector<Button::ButtonBase *> vectorButtonLocalHistori = {
-				new Button::ButtonBase("Basic",       window, 15, \
-						&bind(&TitleBar::localHistoriBasicVisible, this) \
+				new Button::ButtonBase( \
+					"Basic",       window, 15, \
+					new function<void(QPushButton *)>( \
+						bind( \
+							&TitleLayout::localHistoriBasicVisible, \
+							this, placeholders::_1 \
+						) \
+					) \
 				),
-				new Button::ButtonBase("Integral",    window, 15, \
-						&bind(&TitleBar::localHistoriIntegralVisible, this) \
+				new Button::ButtonBase( \
+					"Integral",    window, 15, \
+					new function<void(QPushButton *)>( \
+						bind( \
+							&TitleLayout::localHistoriIntegralVisible \
+							, this, placeholders::_1 \
+						) \
+					) \
 				),
-				new Button::ButtonBase("Derivative",  window, 15, \
-						&bind(&TitleBar::localHistoriDerivativeVisible, this) \
+				new Button::ButtonBase( \
+					"Derivative",  window, 15, \
+					new function<void(QPushButton *)>( \
+						bind( \
+							&TitleLayout::localHistoriDerivativeVisible, \
+							this, placeholders::_1 \
+						) \
+					) \
 				),
-				new Button::ButtonBase("Integrate",   window, 15, \
-						&bind(&TitleBar::localHistoriIntegrateVisible, this) \
+				new Button::ButtonBase( \
+					"Integrate",   window, 15, \
+					new function<void(QPushButton *)>( \
+						bind( \
+							&TitleLayout::localHistoriIntegrateVisible, \
+							this, placeholders::_1 \
+						) \
+					) \
 				),
-				new Button::ButtonBase("Replacement", window, 15, \
-						&bind(&TitleBar::localHistoriReplacementVisible, this) \
+				new Button::ButtonBase( \
+					"Replacement", window, 15, \
+					new function<void(QPushButton *)>( \
+						bind( \
+							&TitleLayout::localHistoriReplacementVisible, \
+							this, placeholders::_1 \
+						) \
+					) \
 				),
 			}, vectorButtonView = {
-				new Button::ButtonBase("Global Histori", window, 15, \
-						&bind(&TitleBar::globalHistoriVisible, this) \
+				new Button::ButtonBase( \
+					"Global Histori", window, 15, \
+					new function<void(QPushButton *)>( \
+						bind(
+							&TitleLayout::globalHistoriVisible, \
+							this, placeholders::_1 \
+						) \
+					) \
 				),
 				new Button::ButtonBase( \
 					"Local Histori",  window, 15, nullptr, \
@@ -537,9 +709,11 @@ namespace Title {
 				) \
 			};
 			addWidget( \
-				new Button::ButtonBase( \
-					"View", window, 15, nullptr, \
-					"keybord", static_cast<QMenu *>(new Menu(vectorButtonView)) \
+				static_cast<QWidget *>( \
+					new Button::ButtonBase( \
+						"View", window, 15, nullptr, \
+						"keybord", static_cast<QMenu *>(new Menu(vectorButtonView)) \
+					) \
 				) \
 			);
 			_globalHistori           = \
@@ -568,41 +742,52 @@ namespace Title {
 				);
 			return;
 		}
-		void globalHistoriVisible() const {
+		void globalHistoriVisible(QPushButton *button) const {
 			_globalHistori->setVisible( \
 					!_globalHistori->isVisible() \
 			);
 			return;
 		}
-		void localHistoriBasicVisible() const {
+		void localHistoriBasicVisible(QPushButton *button) const {
 			_localHistoriBasic->setVisible( \
 					!_localHistoriBasic->isVisible() \
 			);
 			return;
 		}
-		void localHistoriIntegralVisible() const {
+		void localHistoriIntegralVisible(QPushButton *button) const {
 			_localHistoriIntegral->setVisible( \
 					!_localHistoriIntegral->isVisible() \
 			);
 			return;
 		}
-		void localHistoriDerivativeVisible() const {
+		void localHistoriDerivativeVisible(QPushButton *button) const {
 			_localHistoriDerivative->setVisible( \
 					!_localHistoriDerivative->isVisible() \
 			);
 			return;
 		}
-		void localHistoriIntegrateVisible() const {
+		void localHistoriIntegrateVisible(QPushButton *button) const {
 			_localHistoriIntegrate->setVisible( \
 					!_localHistoriIntegrate->isVisible()
 			);
 			return;
 		}
-		void localHistoriReplacementVisible() const {
+		void localHistoriReplacementVisible(QPushButton *button) const {
 			_localHistoriReplacement->setVisible( \
 					!_localHistoriReplacement->isVisible()
 			);
 			return;
+		}
+	};
+	class TitleBar : public QWidget {
+	public:
+		explicit TitleBar( \
+			CalculateDragAndDrop *app, Window *window \
+		) : QWidget() {
+			setFixedHeight(35);
+			setLayout( \
+				static_cast<QHBoxLayout *>(new TitleLayout(app, window)) \
+			);
 		}
 	};
 }
@@ -611,11 +796,11 @@ using namespace CreateHistori;
 class MainLayout : public QVBoxLayout {
 public:
 	explicit MainLayout( \
-			const QApplication *app, Window *window \
+		CalculateDragAndDrop *app, Window *window \
 	) : QVBoxLayout() {
 		setContentsMargins(0, 0, 0, 0);
 		setSpacing(0);
-		addLayout(new Title::TitleBar(app, window));
+		addWidget(new Title::TitleBar(app, window));
 		HistoriScroll *globalHistori = nullptr;
 		HistoriWidget *resizeGlobalHistori = nullptr;
 		window->setGlobalHistori( \
