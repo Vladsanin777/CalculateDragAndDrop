@@ -391,7 +391,15 @@ namespace LineEdit {
 			QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 			setSizePolicy(sizePolicy);
 			setObjectName("keybord");
-			connect(this, &QLineEdit::textChanged, this, &LineEdit::onLineEditChanged);
+			connect( \
+				this, &QLineEdit::textChanged, this, \
+				new function<void(char[])>( \
+					bind( \
+						&LineEdit::onLineEditChanged, \
+						this, placeholders::_1 \
+					) \
+				) \
+			);
 			QFont font = this->font();
 			font.setPointSize(25);
 			setFont(font);
@@ -414,7 +422,7 @@ namespace LineEdit {
 			QLineEdit::paintEvent(event);
 		}
 
-	private slots:
+	private:
 		void onLineEditChanged( \
 				char textLineEdit[] \
 		) const {
@@ -440,6 +448,7 @@ namespace Button {
 		explicit ButtonBase( \
 			const char label[], Window *window, short fontSize, \
 			function<void(QPushButton *)> *callback = nullptr, \
+			QWidget *callback_class = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : _window(window), QPushButton(label) {
 			setContentsMargins(0, 0, 0, 0);
@@ -469,9 +478,10 @@ namespace Button {
 		explicit ButtonDrag( \
 			const char label[], Window *window, short fontSize, \
 			function<void(QPushButton *)> *callback = nullptr, \
+			QWidget *callback_class = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonBase(
-			label, window, fontSize, callback, cssName, menu
+			label, window, fontSize, callback, callback_class, cssName, menu
 		) {}
 		void mousePressEvent( \
 				QMouseEvent *event \
@@ -501,9 +511,10 @@ namespace Button {
 		explicit ButtonDragAndDrop( \
 			const char label[], Window *window, short fontSize, \
 			function<void(QPushButton *)> *callback = nullptr, \
+			QWidget *callback_class = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonDrag ( \
-			label, window, fontSize, callback, cssName, menu \
+			label, window, fontSize, callback, callback_class, cssName, menu \
 		) {}
 		void dragEnterEvent( \
 				QDragEnterEvent *event \
@@ -629,7 +640,7 @@ namespace Title {
 							bind( \
 								&Window::changeLanguage, window, placeholders::_1 \
 							) \
-						) \
+						), static_cast<QWidget *>(window)\
 					) \
 				) \
 			);
