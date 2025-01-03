@@ -3,6 +3,7 @@
 #include <functional>
 #include <cstring>
 #include <cstdint>
+#include <iostream>
 #include <QPushButton>
 #include <QApplication>
 #include <QWidget>
@@ -13,6 +14,7 @@
 #include <QMenu>
 #include <QPen>
 #include <QPainterPath>
+#include <QPaintEvent>
 #include <QPainter>
 #include <QColor>
 #include <QLineEdit>
@@ -26,10 +28,7 @@
 
 using namespace std;
 
-enum class CallbackButtonClass {
-	TitleLayout,
-	Window, CalculateDragAndDrop
-}
+
 
 class CalculateDragAndDrop : public QApplication {
 
@@ -102,6 +101,47 @@ public:
 	void createWindow(QPushButton *button);
 };
 
+class CreateGradient : public QLinearGradient {
+public:
+	explicit CreateGradient( \
+		QWidget *window, \
+		QWidget *widget = nullptr, \
+		vector<tuple<float, QColor>> gradient = \
+			{
+				{0.0f, Qt::GlobalColor::red}, 
+				{1.0f, Qt::GlobalColor::blue}
+			}
+	) : QLinearGradient() {
+		 if (window == nullptr) {
+            // Выводите ошибку или возвращайте пустой объект
+            qWarning("Window is nullptr!");
+            return;
+        }
+
+		int width = window->width();
+		int height = window->height();
+		if (widget != nullptr) {
+			QPoint positionWidget = \
+					widget->mapToGlobal(QPoint(0, 0)), \
+				positionWindow = \
+					window->mapToGlobal(QPoint(0, 0));
+			int y = positionWidget.y() - positionWindow.y();
+			int x = positionWidget.x() - positionWindow.x();
+			setStart(-x, -y);
+			setFinalStop(width / 2, height / 2);
+		} else {
+			setStart(0, 0);
+			setFinalStop(width, height);
+		}
+		short gradient_lenght = gradient.size();
+		for (short index = 0; index != gradient_lenght; index++) {
+			tuple<float, QColor> colorAt = gradient.at(index);
+			// cout << get<0>(colorAt) << endl;
+			setColorAt(get<0>(colorAt), get<1>(colorAt));
+		}
+		// cout<<endl<<endl;
+	}
+};
 
 class Window : public QWidget {
 private:
@@ -127,6 +167,26 @@ public:
 		show();
 		return;
 	}
+
+	void paintEvent(QPaintEvent *event) override {
+        // Создаём QPainter для рисования
+        QPainter painter = QPainter(this);
+        painter.setRenderHint(QPainter::RenderHint::Antialiasing);
+
+        // Применяем градиент как кисть и заполняем окно
+        painter.fillRect( \
+			rect(), \
+            QBrush(CreateGradient( \
+                static_cast<QWidget *>(this), nullptr, \
+                vector<tuple<float, QColor>>{
+					{0.0f, QColor(100, 0, 0)},
+					{0.5f, QColor(0, 0, 0)},
+					{1.0f, QColor(0, 0, 100)}
+				}
+            )) \
+        );
+	}
+
 	void postInit();
 	
 	void changeLanguage(QPushButton *button) {}
@@ -167,10 +227,19 @@ public:
 	uintptr_t getLocalHistori( \
 			unsigned short *index = nullptr \
 	) const {
-		if (index == nullptr)
+		if (index == nullptr) {
+			if (_inputtin[0] >= _localHistori.size()) {
+				std::cerr << "Ошибка: индекс вне диапазона вектора _inputtin или _localHistori!" << std::endl;
+				return 0; // или другое значение по умолчанию
+			}
 			return _localHistori.at(_inputtin[0]);
-		else
+		} else {
+			if (*index >= _localHistori.size()) {
+				std::cerr << "Ошибка: индекс вне диапазона вектора _localHistori!" << std::endl;
+				return 0; // или другое значение по умолчанию
+			}
 			return _localHistori.at(*index);
+		}
 	}
 	void setLocalHistori( \
 			uintptr_t newLocalHistori \
@@ -181,10 +250,19 @@ public:
 	uintptr_t getResizeLocalHistori( \
 			unsigned short *index = nullptr \
 	) const {
-		if (index == nullptr)
-			return _resizeLocalHistori.at(*index);
-		else 
+		if (index == nullptr) {
+			if (_inputtin[0] >= _resizeLocalHistori.size()) {
+				std::cerr << "Ошибка: индекс вне диапазона вектора _inputtin или _localHistori!" << std::endl;
+				return 0; // или другое значение по умолчанию
+			}
 			return _resizeLocalHistori.at(_inputtin[0]);
+		} else {
+			if (*index >= _resizeLocalHistori.size()) {
+				std::cerr << "Ошибка: индекс вне диапазона вектора _localHistori!" << std::endl;
+				return 0; // или другое значение по умолчанию
+			}
+			return _resizeLocalHistori.at(*index);
+		}
 	}
 	void setResizeLocalHistori( \
 			uintptr_t newResizeLocalHistori \
@@ -196,10 +274,19 @@ public:
 	uintptr_t getAddLocalHistori( \
 			unsigned short *index = nullptr \
 	) const {
-		if (index == nullptr)
+		if (index == nullptr) {
+			if (_inputtin[0] >= _addLocalHistori.size()) {
+				std::cerr << "Ошибка: индекс вне диапазона вектора _inputtin или _localHistori!" << std::endl;
+				return 0; // или другое значение по умолчанию
+			}
 			return _addLocalHistori.at(_inputtin[0]);
-		else
+		} else {
+			if (*index >= _addLocalHistori.size()) {
+				std::cerr << "Ошибка: индекс вне диапазона вектора _localHistori!" << std::endl;
+				return 0; // или другое значение по умолчанию
+			}
 			return _addLocalHistori.at(*index);
+		}
 	}
 	void setAddLocalHistori( \
 			uintptr_t newAddLocalHistori \
@@ -230,37 +317,7 @@ inline void CalculateDragAndDrop::createWindow( \
 }
 
 namespace GradientFont {
-	class CreateGradient : public QLinearGradient {
-	public:
-		explicit CreateGradient( \
-			const Window *window, \
-			QWidget *widget = nullptr, \
-			vector<tuple<int, QColor>> gradient = \
-				{
-					{0, Qt::GlobalColor::red}, 
-					{1, Qt::GlobalColor::blue}
-				}
-		) {
-			int width = window->width();
-			int height = window->height();
-			if (widget != nullptr) {
-				QPoint positionWidget = \
-						widget->mapToGlobal(QPoint(0, 0)), \
-					positionWindow = \
-						window->mapToGlobal(QPoint(0, 0));
-				int y = positionWidget.y() - positionWindow.y();
-				int x = positionWidget.x() - positionWindow.x();
-				QLinearGradient(-x, -y, width / 2, height / 2);
-			} else
-				QLinearGradient(0, 0, width, height);
-			short gradient_lenght = size(gradient);
-			for (short index = 0; index != gradient_lenght; index++) {
-				tuple<float, QColor> colorAt = gradient.at(index);
-				setColorAt(get<0>(colorAt), get<1>(colorAt));
-			}
-		}
-	};
-
+	
 	class Pen : public QPen {
 	public:
 		explicit Pen(int width = 2)
@@ -290,9 +347,13 @@ namespace GradientFont {
 		explicit StyleBase( \
 		) : QPainter() {}
 		void postInit(
-				QWidget *parent, const Window *window, \
+				QWidget *parent, Window *window, \
 				GradientFont::Path path \
 		) {
+			if (!begin(parent)) {  // Активируем QPainter для родительского виджета
+				qWarning() << "Failed to begin QPainter";
+				return;
+			}
 			setRenderHint(QPainter::RenderHint::Antialiasing);
 			fillRect(parent->rect(), QColor("transparent"));
 			setFont(parent->font());
@@ -300,7 +361,7 @@ namespace GradientFont {
 			setBrush(Qt::BrushStyle::NoBrush);
 			drawPath(path);
 			CreateGradient gradient = CreateGradient( \
-					window, parent \
+				static_cast<QWidget *>(window), parent \
 			);
 			setBrush(QBrush(static_cast<QLinearGradient>(gradient)));
 			setPen(Qt::PenStyle::NoPen);
@@ -345,7 +406,7 @@ namespace GradientFont {
 	class StyleLineEdit : public StyleBase {
 	public:
 		explicit StyleLineEdit( \
-				QLineEdit *parent, const Window *window, \
+				QLineEdit *parent, Window *window, \
 				QRect rect
 		) {
 			function<int(QLineEdit *, QFontMetrics *, QRect)> textX = \
@@ -396,12 +457,7 @@ namespace LineEdit {
 			setObjectName("keybord");
 			connect( \
 				this, &QLineEdit::textChanged, this, \
-				new function<void(char[])>( \
-					bind( \
-						&LineEdit::onLineEditChanged, \
-						this, placeholders::_1 \
-					) \
-				) \
+				&LineEdit::onLineEditChanged \
 			);
 			QFont font = this->font();
 			font.setPointSize(25);
@@ -427,18 +483,27 @@ namespace LineEdit {
 
 	private:
 		void onLineEditChanged( \
-				char textLineEdit[] \
+				const QString& text \
 		) const {
+
+			// Преобразуем QString в QByteArray
+			QByteArray byteArray = text.toUtf8();
+
+			// Копируем данные QByteArray в char[]
+			char textCh[byteArray.size() + 1]; // +1 для нулевого завершающего символа
+			strcpy(textCh, byteArray.constData());
+			/*
 			LogicCalculate *logicCalculate = \
-				new LogicCalculate(textLineEdit, _window);
-			if (strstr(textLineEdit, "_ALL") != nullptr)
+				new LogicCalculate(textCh, _window);
+			if (strstr(textCh, "_ALL") != nullptr)
 				logicCalculate.button_ALL();
-			else if (strstr(textLineEdit, "_O") != nullptr)
+			else if (strstr(textCh, "_O") != nullptr)
 				logicCalculate.button_O();
-			else if (strstr(textLineEdit, "_RES") != nullptr)
+			else if (strstr(textCh, "_RES") != nullptr)
 				logicCalculate.button_RES();
 			else
 				logicCalculate.buttonOther();
+			*/
 		}
 	};
 }
@@ -451,12 +516,15 @@ namespace Button {
 		explicit ButtonBase( \
 			const char label[], Window *window, short fontSize, \
 			function<void(QPushButton *)> *callback = nullptr, \
-			CallbackButtonClass *callback_class = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : _window(window), QPushButton(label) {
 			setContentsMargins(0, 0, 0, 0);
 			if (callback != nullptr) 
-				connect(this, &QPushButton::clicked, callback);
+				connect(this, &QPushButton::clicked, [this, callback](bool) {
+					if (callback) {
+						(*callback)(this);
+					}
+				});
 			if (menu)
 				setMenu(menu);
 			if (cssName)
@@ -481,10 +549,9 @@ namespace Button {
 		explicit ButtonDrag( \
 			const char label[], Window *window, short fontSize, \
 			function<void(QPushButton *)> *callback = nullptr, \
-			CallbackButtonClass *callback_class = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonBase(
-			label, window, fontSize, callback, callback_class, cssName, menu
+			label, window, fontSize, callback, cssName, menu
 		) {}
 		void mousePressEvent( \
 				QMouseEvent *event \
@@ -514,10 +581,9 @@ namespace Button {
 		explicit ButtonDragAndDrop( \
 			const char label[], Window *window, short fontSize, \
 			function<void(QPushButton *)> *callback = nullptr, \
-			CallbackButtonClass *callback_class = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonDrag ( \
-			label, window, fontSize, callback, callback_class, cssName, menu \
+			label, window, fontSize, callback, cssName, menu \
 		) {}
 		void dragEnterEvent( \
 				QDragEnterEvent *event \
@@ -545,7 +611,6 @@ namespace CreateHistori {
 	};
 
 	class HistoriWidget : public QWidget {
-		Q_OBJECT
 	private:
 		HistoriVBox *_addHistori = nullptr;
 	public:
@@ -594,6 +659,11 @@ namespace Title {
 			setAttribute( \
 					Qt::WidgetAttribute::WA_TranslucentBackground \
 			);
+			// Проверка на пустой вектор
+			if (buttons.empty()) {
+				std::cerr << "Ошибка: передан пустой вектор кнопок!" << std::endl;
+				return;
+			}
 			short buttons_lenght = buttons.size();
 			for (short index = 0; index != buttons_lenght; index++)
 				addAction( \
@@ -621,6 +691,8 @@ namespace Title {
 		explicit TitleLayout( \
 				CalculateDragAndDrop *app, Window *window \
 		) : _window(window), QHBoxLayout() {
+			setContentsMargins(0, 0, 0, 0);
+        	setSpacing(0);
 			addWidget( \
 				static_cast<QWidget *>( \
 					new Button::ButtonBase( \
@@ -629,19 +701,19 @@ namespace Title {
 							bind( \
 								&CalculateDragAndDrop::createWindow, app, placeholders::_1 \
 							) \
-						), app \
+						) \
 					) \
 				) \
 			);
 			addWidget( \
 				static_cast<QWidget *>( \
 					new Button::ButtonBase( \
-						"EN",    window, 15, window, \
+						"EN",    window, 15, \
 						new function<void(QPushButton *)>( \
 							bind( \
 								&Window::changeLanguage, window, placeholders::_1 \
 							) \
-						), window \
+						) \
 					) \
 				) \
 			);
@@ -653,7 +725,7 @@ namespace Title {
 							bind( \
 								&Window::changeFon, window, placeholders::_1 \
 							) \
-						), window \
+						) \
 					) \
 				) \
 			);
@@ -665,7 +737,7 @@ namespace Title {
 							&TitleLayout::localHistoriBasicVisible, \
 							this, placeholders::_1 \
 						) \
-					), this \
+					) \
 				),
 				new Button::ButtonBase( \
 					"Integral",    window, 15, \
@@ -674,7 +746,7 @@ namespace Title {
 							&TitleLayout::localHistoriIntegralVisible \
 							, this, placeholders::_1 \
 						) \
-					), this \
+					) \
 				),
 				new Button::ButtonBase( \
 					"Derivative",  window, 15, \
@@ -683,7 +755,7 @@ namespace Title {
 							&TitleLayout::localHistoriDerivativeVisible, \
 							this, placeholders::_1 \
 						) \
-					), this \
+					) \
 				),
 				new Button::ButtonBase( \
 					"Integrate",   window, 15, \
@@ -692,7 +764,7 @@ namespace Title {
 							&TitleLayout::localHistoriIntegrateVisible, \
 							this, placeholders::_1 \
 						) \
-					), this \
+					) \
 				),
 				new Button::ButtonBase( \
 					"Replacement", window, 15, \
@@ -701,7 +773,7 @@ namespace Title {
 							&TitleLayout::localHistoriReplacementVisible, \
 							this, placeholders::_1 \
 						) \
-					), this \
+					) \
 				),
 			}, vectorButtonView = {
 				new Button::ButtonBase( \
@@ -711,10 +783,10 @@ namespace Title {
 							&TitleLayout::globalHistoriVisible, \
 							this, placeholders::_1 \
 						) \
-					), this \
+					) \
 				),
 				new Button::ButtonBase( \
-					"Local Histori",  window, 15, nullptr, nullptr, \
+					"Local Histori",  window, 15, nullptr, \
 					"keybord", static_cast<QMenu *>( \
 						new Menu(vectorButtonLocalHistori) \
 					) \
@@ -723,7 +795,7 @@ namespace Title {
 			addWidget( \
 				static_cast<QWidget *>( \
 					new Button::ButtonBase( \
-						"View", window, 15, nullptr, nullptr, \
+						"View", window, 15, nullptr, \
 						"keybord", static_cast<QMenu *>(new Menu(vectorButtonView)) \
 					) \
 				) \
@@ -833,9 +905,11 @@ public:
 			) \
 		);
 		addWidget(globalHistori);
+		/*
 		addWidget(MainTabWidget(window));
 		addLayout(GridCalculateCommon(window));
 		addWidget(TabWidgetKeybord(window));
+		*/
 	}
 };
 
