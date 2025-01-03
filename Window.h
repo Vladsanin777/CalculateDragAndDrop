@@ -4,6 +4,7 @@
 #include <cstring>
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <QPushButton>
 #include <QApplication>
 #include <QWidget>
@@ -156,6 +157,9 @@ private:
 	vector<vector<uintptr_t>> _lineEdit = {{}, {}, {}, {}, {}};
 	short _inputtin[2] = {0, 0};
 	vector<vector<const char*>> _result = {
+		{"0"}, {"1", "2", "0"}, {"0"}, {"0"}, {"x", "0", "0"}
+	};
+	vector<vector<char[]> _result = {
 		{"0"}, {"1", "2", "0"}, {"0"}, {"0"}, {"x", "0", "0"}
 	};
 	uintptr_t _globalHistori;
@@ -882,46 +886,86 @@ namespace Title {
 }
 
 namespace Grid {
-	class BuildingGridKeybord():
-		def __init__(self, list_button: list[list[str]], grid: QGridLayout, window, row: int = 0, *, button = ButtonDrag):
-			for row_labels_for_button in list_button:
-				column: int = 0
-				for one_button in row_labels_for_button:
-					grid.addWidget(button(one_button, callback = LogicCalculate.inputing_line_edit, window = window), row, column, 1, 1)
-					column += 1
-				row += 1
+	class BuildingGridKeyboard {
+		template <typename ButtonCreator>
+		explicit BuildingGridKeyboard( \
+			vector<vector<char[]>> buttons, \
+			QGridLayout *grid, \
+			Window *window, short row = short(0), \
+			ButtonCreator createButton = []( \
+				const std::string& label, \
+				void (*callback)(const std::string&), \
+				Window *window\
+			) {
+				return make_unique<ButtonDrag>(label, callback, window);
+			} \
+		) {
+			short buttonsLenght = buttons.size();
+			for ( \
+				short index = short(0); \
+				index != buttonsLenght; index++ \
+			) {
+				short column = short(0);
+				vector<char[]> rowLabelsButton = buttons.at(index);
+				for ( \
+					short rowIndex = short(0); \
+					rowIndex != buttonLenght; rowIndex++ \
+				) {
+					char labelButton[] = rowLabelsButton.at(rowIndex);
+					grid->addWidget(createButton( \
+						labelButton, \
+						&LogicCalculate::inputing_line_edit, \
+						window \
+					), row, column, 1, 1);
+					column++;
+				}
+				row++;
+			}
+		}
+	};
 
-	class GridCalculateKeybord(QGridLayout):
-		def __init__(self, list_button: list[list[str]], window):
-			super().__init__()
+	class GridCalculateKeybord : public QGridLayout {
+	public:
+		explicit GridCalculateKeyboard( \
+			vector<vector<char[]>> buttons, \
+			Window *window
+		) {
+			setContentsMargins(0, 0, 0, 0);
+			setSpacing(0);
+			BuildingGridKeybord(list_button, self, window);
+		}
+	};
 
-			self.setContentsMargins(0, 0, 0, 0)
-			self.setSpacing(0)
-			BuildingGridKeybord(list_button, self, window)
 
+	class GridCalculateCommon : public QGridLayout {
+	private:
+		Window *_window = nullptr;
+	public:
+		explicit GridCalculateCommon( \
+			Window *window
+		) {
+			setSpacing(0);
+			setContentsMargins(0, 0, 0, 0);
 
-	class GridCalculateCommon(QGridLayout):
-		def __init__(self, window):
-			super().__init__()
-			self.setSpacing(0)
-			self.setContentsMargins(0, 0, 0, 0)
+			_window = window;
 
-			self.window = window
+			button("_ALL", 0, 0);
 
-			self.button("_ALL", 0, 0)
-
-			self.button("_DO", 0, 1)
-			self.button("_RES", 0, 2)
-			self.button("_POS", 0, 3)
-			self.button("_O", 0, 4)
-			BuildingGridKeybord([
-				["()", "(", ")", "mod", "_PI"], 
-				["7", "8", "9", ":", "sqrt"], 
-				["4", "5", "6", "*", "^"], 
-				["1", "2", "3", "-", "!"], 
-				["0", ".", "%", "+", "_E"],
-				["", "", "", "", ""]
-			], self, window, 1, button = ButtonDragAndDrop)
+			button("_DO", 0, 1);
+			button("_RES", 0, 2);
+			button("_POS", 0, 3);
+			button("_O", 0, 4);
+			BuildingGridKeybord( \
+				vector<vector<char[]>>{
+					{"()", "(", ")", "mod", "_PI"}, 
+					{"7", "8", "9", ":", "sqrt"}, 
+					{"4", "5", "6", "*", "^"}, 
+					{"1", "2", "3", "-", "!"}, 
+					{"0", ".", "%", "+", "_E"},
+					{"", "", "", "", ""}
+				}, self, window, 1, \
+				button = ButtonDragAndDrop \
+			);
 			window.set_for_result = ButtonDrag(window.result[0][0], window = window)
 			self.addWidget(window.set_for_result, 7, 0, 1, 5) 
 
