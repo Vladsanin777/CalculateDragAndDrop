@@ -156,12 +156,10 @@ private:
 	vector<uintptr_t> _addLocalHistori = {};
 	vector<vector<uintptr_t>> _lineEdit = {{}, {}, {}, {}, {}};
 	short _inputtin[2] = {0, 0};
-	vector<vector<const char*>> _result = {
+	vector<vector<const char *>> _result = {
 		{"0"}, {"1", "2", "0"}, {"0"}, {"0"}, {"x", "0", "0"}
 	};
-	vector<vector<char[]> _result = {
-		{"0"}, {"1", "2", "0"}, {"0"}, {"0"}, {"x", "0", "0"}
-	};
+	uintptr_t _resultButton;
 	uintptr_t _globalHistori;
 	uintptr_t _addGlobalHistori;
 	uintptr_t _resizeGlobalHistori;
@@ -314,6 +312,16 @@ public:
 		_inputtin[0] = inputtin[0];
 		_inputtin[1] = inputtin[1];
 	}
+	uintptr_t getResultButton() {
+		return _resultButton;
+	}
+	void setResultButton( \
+		uintptr_t resultButton \
+	) {
+		_resultButton = resultButton;
+		return;
+	}
+
 };
 
 
@@ -523,7 +531,7 @@ namespace Button {
 		Window *_window;
 	public:
 		explicit ButtonBase( \
-			const char label[], Window *window, short fontSize, \
+			const char *label, Window *window, short fontSize, \
 			function<void(QPushButton *)> *callback = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : _window(window), QPushButton(label) {
@@ -556,7 +564,7 @@ namespace Button {
 		QPoint _start_pos;
 	public:
 		explicit ButtonDrag( \
-			const char label[], Window *window, short fontSize, \
+			const char *label, Window *window, short fontSize, \
 			function<void(QPushButton *)> *callback = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonBase(
@@ -588,7 +596,7 @@ namespace Button {
 	class ButtonDragAndDrop : public ButtonDrag {
 	public:
 		explicit ButtonDragAndDrop( \
-			const char label[], Window *window, short fontSize, \
+			const char *label, Window *window, short fontSize, \
 			function<void(QPushButton *)> *callback = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonDrag ( \
@@ -887,17 +895,23 @@ namespace Title {
 
 namespace Grid {
 	class BuildingGridKeyboard {
-		template <typename ButtonCreator>
+	public:
 		explicit BuildingGridKeyboard( \
-			vector<vector<char[]>> buttons, \
+			vector<vector<const char *>> buttons, \
 			QGridLayout *grid, \
 			Window *window, short row = short(0), \
-			ButtonCreator createButton = []( \
-				const std::string& label, \
-				void (*callback)(const std::string&), \
-				Window *window\
-			) {
-				return make_unique<ButtonDrag>(label, callback, window);
+			std::function<QWidget*( \
+				const char*, function<void(QPushButton *)> *, Window* \
+			)> createButton = []( \
+				const char* label, \
+				function<void(QPushButton *)> *callback, \
+				Window *window \
+			) -> QWidget* {
+				return static_cast<QWidget *>( \
+					new Button::ButtonDrag( \
+						label, window, 20, callback \
+					) \
+				);
 			} \
 		) {
 			short buttonsLenght = buttons.size();
@@ -906,12 +920,12 @@ namespace Grid {
 				index != buttonsLenght; index++ \
 			) {
 				short column = short(0);
-				vector<char[]> rowLabelsButton = buttons.at(index);
+				vector<const char *> rowLabelsButton = buttons.at(index);
 				for ( \
 					short rowIndex = short(0); \
-					rowIndex != buttonLenght; rowIndex++ \
+					rowIndex != buttonsLenght; rowIndex++ \
 				) {
-					char labelButton[] = rowLabelsButton.at(rowIndex);
+					const char *labelButton = rowLabelsButton.at(rowIndex);
 					grid->addWidget(createButton( \
 						labelButton, \
 						&LogicCalculate::inputing_line_edit, \
@@ -924,15 +938,19 @@ namespace Grid {
 		}
 	};
 
-	class GridCalculateKeybord : public QGridLayout {
+	class GridCalculateKeyboard : public QGridLayout {
 	public:
 		explicit GridCalculateKeyboard( \
-			vector<vector<char[]>> buttons, \
+			vector<vector<const char *>> buttons, \
 			Window *window
 		) {
 			setContentsMargins(0, 0, 0, 0);
 			setSpacing(0);
-			BuildingGridKeybord(list_button, self, window);
+			BuildingGridKeyboard( \
+				buttons, \
+				static_cast<QGridLayout *>(this), \
+				window \
+			);
 		}
 	};
 
@@ -949,84 +967,188 @@ namespace Grid {
 
 			_window = window;
 
-			button("_ALL", 0, 0);
+			createButton("_ALL", 0, 0);
+			createButton("_DO", 0, 1);
+			createButton("_RES", 0, 2);
+			createButton("_POS", 0, 3);
+			createButton("_O", 0, 4);
 
-			button("_DO", 0, 1);
-			button("_RES", 0, 2);
-			button("_POS", 0, 3);
-			button("_O", 0, 4);
-			BuildingGridKeybord( \
-				vector<vector<char[]>>{
+			BuildingGridKeyboard( \
+				vector<vector<const char *>>{
 					{"()", "(", ")", "mod", "_PI"}, 
 					{"7", "8", "9", ":", "sqrt"}, 
 					{"4", "5", "6", "*", "^"}, 
 					{"1", "2", "3", "-", "!"}, 
 					{"0", ".", "%", "+", "_E"},
 					{"", "", "", "", ""}
-				}, self, window, 1, \
-				button = ButtonDragAndDrop \
+				}, this, window, 1, \
+				[]( \
+					const char* label, \
+					function<void(QPushButton *)> *callback, \
+					Window *window \
+				) -> QWidget* {
+					return static_cast<QWidget *>( \
+						new Button::ButtonDragAndDrop( \
+							label, window, 20, callback \
+						) \
+					);
+				} \
 			);
-			window.set_for_result = ButtonDrag(window.result[0][0], window = window)
-			self.addWidget(window.set_for_result, 7, 0, 1, 5) 
+			Button::ButtonDrag *resultButton = \
+				nullptr;
+			window->setResultButton( \
+				resultButton = \
+					new Button::ButtonDrag( \
+						window->getResult(0, 0), \
+						window = window \
+					) \
+			);
+			addWidget( \
+				resultButton, \
+				7, 0, 1, 5 \
+			);
+		}
 
-		def button(self, label: str, row: int, column: int, *, button = ButtonDrag) -> None:
-			self.addWidget(button(label, css_name = "keybord", callback = LogicCalculate.inputing_line_edit, window = self.window), row, column, 1, 1)
+		void createButton( \
+			const char *label, short row, \
+			short column, \
+			function<QWidget *( \
+				const char *, short, Window *, \
+				function<void(QPushButton *)> *, const char * \
+			)> creatorButton = []( \
+				const char *label, \
+				short fontSize, \
+				Window *window, \
+				function<void(QPushButton *)> *callback, \
+				const char *cssName \
+			) {
+				return static_cast<QWidget *>( \
+					new Button::ButtonDrag( \
+						label, window, fontSize, \
+						callback, cssName \
+					) \
+				);
+			} \
+		) {
+			addWidget(creatorButton( \
+				label, 20, \
+				window = _window \
+				callback = &LogicCalculate.inputing_line_edit, \
+				"keybord", \
+			), row, column, 1, 1);
+		}
+	};
 
-	class GridBaseCalc(QGridLayout):
-		def __init__(self, window):
-			super().__init__()
-			self.setSpacing(0)
-			self.setContentsMargins(0, 0, 0, 0)
-			local_histori = HistoriScroll()
-			window.local_histori = local_histori
-			self.addWidget(local_histori, 0, 0, 1, 6)
+	class GridBaseCalc : public QGridLayout {
+		explicit GridBaseCalc( \
+			Window *window \
+		) : QGridLayout() {
+			setSpacing(0)
+			setContentsMargins(0, 0, 0, 0)
+			CreateHistori::HistoriScroll *local_histori = nullptr;
+			window->setLocal_histori( \
+				reinterpret_cast<uintptr_t>( \
+					local_histori = \
+						CreateHistori::HistoriScroll()
+				) \
+			);
+			CreateHistori::HistoriWidget *resizeLocalHistori = nullptr;
+			window->setResizeLocalHistori( \
+				reinterpret_cast<uintptr_t>(
+					resizeLocalHistori = \
+						globalHistori->getResizeHistori() \
+				) \
+			);
+			window->setAddLocalHistori( \
+				reinterpret_cast<uintptr_t>( \
+					resizeGlobalHistori->getAddHistori() \
+				) \
+			);
+			addWidget(local_histori, 0, 0, 1, 6);
+		}
+	};
 
 	class GridBasicCalc(GridBaseCalc):
-		def __init__(self, window):
-			super().__init__(window)
-			line_edit = LineEdit(window, (0, 0))
-			window.line_edit = 0, line_edit
-			self.addWidget(line_edit)
+		explicit GridBasicCalc( \
+			Window *window \
+		) : GridBaseCalc(window) {
+			lineEdit = LineEdit::LineEdit(window, (0, 0));
+			window.setLineEdit(0, lineEdit);
+			self.addWidget(lineEdit);
+		}
+	};
 
 
 	class GridIntegralCalc(GridBaseCalc):
-		def __init__(self, window):
-			super().__init__(window)
+		explicit GridBasicCalc( \
+			Window *window \
+		) : GridBaseCalc(window) {
+			self.addWidget( \
+				Button::ButtonBase( \
+					"a = ", 20, window, \
+					nullptr, "calculate" \
+				), 1, 0, 1, 1 \
+			);
+			LineEdit *aLineEdit = \
+				new LineEdit(window, {1, 0}, "1");
+			window->setLineEdit(1, aLineEdit);
+			addWidget(aLineEdit, 1, 1, 1, 2);
+			addWidget( \
+				Button::ButtonBase( \
+					"b = ", css_name = "calculate", \
+					width = 64, window = window \
+				), 1, 3, 1, 1 \
+			);
+			LineEdit *bLineEdit = \
+				new LineEdit(window, {1, 1}, "2");
+			window->setLineEdit(1, b_line_edit);
+			addWidget(bLineEdit, 1, 4, 1, 2);
+			main_line_edit = new LineEdit(window, {1, 2});
+			window->line_edit(1, main_line_edit);
+			addWidget(main_line_edit, 2, 0, 1, 6);
+		}
+	};
 
-			self.addWidget(ButtonBase("a = ", css_name = "calculate", width = 64, window = window), 1, 0, 1, 1)
-			a_line_edit = LineEdit(window, (1, 0), text = "1")
-			window.line_edit = 1, a_line_edit
-			self.addWidget(a_line_edit, 1, 1, 1, 2)
-			self.addWidget(ButtonBase("b = ", css_name = "calculate", width = 64, window = window), 1, 3, 1, 1)
-			b_line_edit = LineEdit(window, (1, 1), text = "2")
-			window.line_edit = 1, b_line_edit
-			self.addWidget(b_line_edit, 1, 4, 1, 2)
-			main_line_edit = LineEdit(window, (1, 2))
-			window.line_edit = 1, main_line_edit
-			self.addWidget(main_line_edit, 2, 0, 1, 6)
-
-	class GridDerivativeOrIntegrateCalc(GridBaseCalc):
-		def __init__(self: Self, window, number_tab: int):
-			super().__init__(window)
-			line_edit = LineEdit(window, (number_tab, 0))
-			window.line_edit = number_tab, line_edit
-			self.addWidget(line_edit)
-	class GridReplacementCalc(GridBaseCalc):
-		def __init__(self: Self, window):
-			super().__init__(window)
-			self.addWidget(ButtonBase("with =", css_name = "calculate", width = 100, window = window), 1, 0, 1, 1)
-			with_line_edit = LineEdit(window, (4, 0), text = "x")
-			window.line_edit = 4, with_line_edit
-			self.addWidget(with_line_edit, 1, 1, 1, 2)
-			self.addWidget(ButtonBase("on =", css_name = "calculate", width = 100, window = window), 1, 3, 1, 1)
-			on_line_edit = LineEdit(window, (4, 1), text = "0")
-			window.line_edit = 4, on_line_edit
-			self.addWidget(on_line_edit, 1, 4, 1, 2)
-			main_line_edit = LineEdit(window, (4, 2))
-			window.line_edit = 4, main_line_edit
-			self.addWidget(main_line_edit, 2, 0, 1, 6) 
-
-
+	class GridDerivativeOrIntegrateCalc : public GridBaseCalc {
+		explicit GridDerivativeOrIntergateCalc( \
+			Window *window, short numberTab \
+		) : GridBaseCalc(window) {
+			LineEdit *line_edit = \
+				LineEdit(window, (number_tab, 0));
+			window->setLineEdit( \
+				number_tab, line_edit \
+			);
+			addWidget(line_edit);
+	class GridReplacementCalc : public GridBaseCalc {
+		explicit GridReplacementCalc( \
+			Window *window \
+		) : GridBaseCalc(window) {
+			addWidget( \
+				ButtonBase( \
+					"with =", 20, window, \
+					nullptr, "calculate" \
+				), 1, 0, 1, 1 \
+			);
+			LineEdit *withLineEdit = \
+				new LineEdit(window, {4, 0}, "x");
+			window->setLineEdit(4, withLineEdit);
+			addWidget(withLineEdit, 1, 1, 1, 2);
+			addWidget( \
+				ButtonBase( \
+					"on =", css_name = "calculate", \
+					width = 100, window = window \
+				), 1, 3, 1, 1 \
+			);
+			LineEdit *onLineEdit = \
+				new LineEdit(window, (4, 1), "0");
+			window->setLineEdit(4, onLineEdit);
+			addWidget(onLineEdit, 1, 4, 1, 2);
+			LineEdit *mainLineEdit = \
+				new LineEdit(window, (4, 2));
+			window->setLineEdit(4, mainLineEdit);
+			addWidget(mainLineEdit, 2, 0, 1, 6);
+		}
+	};
 }
 
 
@@ -1241,12 +1363,12 @@ public:
 		setSpacing(0);
 		addWidget(new Title::TitleBar(app, window));
 		HistoriScroll *globalHistori = nullptr;
-		HistoriWidget *resizeGlobalHistori = nullptr;
 		window->setGlobalHistori( \
 			reinterpret_cast<uintptr_t>( \
 				globalHistori = new HistoriScroll() \
 			) \
 		);
+		HistoriWidget *resizeGlobalHistori = nullptr;
 		window->setResizeGlobalHistori( \
 			reinterpret_cast<uintptr_t>(
 				resizeGlobalHistori = \
@@ -1259,7 +1381,7 @@ public:
 			) \
 		);
 		addWidget(globalHistori);
-		addWidget(MainTabWidget(window));
+		addWidget(TabWindow::MainTabWidget(window));
 		/*
 		addLayout(GridCalculateCommon(window));
 		addWidget(TabWidgetKeybord(window));
