@@ -302,11 +302,14 @@ public:
 		return;
 	}
 	uintptr_t getLineEdit( \
-			unsigned short *tab, unsigned short *index \
+			short tab, short index \
 	) const {
-		if (tab != nullptr && index != nullptr)
-			return _lineEdit.at(*tab).at(*index);
-		return 0; 
+		return _lineEdit.at(tab).at(index);
+	}
+	void setLineEdit( \
+			short tab, uintptr_t newLineEdit \
+	) const {
+		_lineEdit.at(tab).push_back(newLineEdit);
 	}
 	void setInputtin(short inputtin[2]) {
 		_inputtin[0] = inputtin[0];
@@ -321,7 +324,18 @@ public:
 		_resultButton = resultButton;
 		return;
 	}
-
+	const char *getResult( \
+		short tab, short index \
+	) {
+		return _result.at(tab).at(index);
+	}
+	void setResult( \
+		short tab, short index, \
+		const char *newResult
+	) {
+		_result.at(tab).at(index) = \
+			newResult;
+	}
 };
 
 
@@ -464,7 +478,7 @@ namespace LineEdit {
 	public:
 		explicit LineEdit ( \
 				Window *window, \
-				short inputtin[2], char text[] \
+				short inputtin[2], const char *text = "" \
 		) : _window(window), QLineEdit() {
 			_inputtin[0] = inputtin[0];
 			_inputtin[1] = inputtin[1];
@@ -997,11 +1011,13 @@ namespace Grid {
 			Button::ButtonDrag *resultButton = \
 				nullptr;
 			window->setResultButton( \
-				resultButton = \
-					new Button::ButtonDrag( \
-						window->getResult(0, 0), \
-						window = window \
-					) \
+				reinterpret_cast<uintptr_t>(
+					resultButton = \
+						new Button::ButtonDrag( \
+							window->getResult(0, 0), \
+							window, 20 \
+						) \
+				) \
 			);
 			addWidget( \
 				resultButton, \
@@ -1031,55 +1047,59 @@ namespace Grid {
 			} \
 		) {
 			addWidget(creatorButton( \
-				label, 20, \
-				window = _window \
-				callback = &LogicCalculate.inputing_line_edit, \
-				"keybord", \
+				label, 20, _window, \
+				&LogicCalculate::inputing_line_edit, \
+				"keybord" \
 			), row, column, 1, 1);
 		}
 	};
 
 	class GridBaseCalc : public QGridLayout {
+	public:
 		explicit GridBaseCalc( \
 			Window *window \
 		) : QGridLayout() {
-			setSpacing(0)
-			setContentsMargins(0, 0, 0, 0)
-			CreateHistori::HistoriScroll *local_histori = nullptr;
-			window->setLocal_histori( \
+			setSpacing(0);
+			setContentsMargins(0, 0, 0, 0);
+			CreateHistori::HistoriScroll *localHistori = nullptr;
+			window->setLocalHistori( \
 				reinterpret_cast<uintptr_t>( \
-					local_histori = \
-						CreateHistori::HistoriScroll()
+					localHistori = \
+						new CreateHistori::HistoriScroll()
 				) \
 			);
 			CreateHistori::HistoriWidget *resizeLocalHistori = nullptr;
 			window->setResizeLocalHistori( \
 				reinterpret_cast<uintptr_t>(
 					resizeLocalHistori = \
-						globalHistori->getResizeHistori() \
+						localHistori->getResizeHistori() \
 				) \
 			);
 			window->setAddLocalHistori( \
 				reinterpret_cast<uintptr_t>( \
-					resizeGlobalHistori->getAddHistori() \
+					resizeLocalHistori->getAddHistori() \
 				) \
 			);
-			addWidget(local_histori, 0, 0, 1, 6);
+			addWidget(localHistori, 0, 0, 1, 6);
 		}
 	};
 
-	class GridBasicCalc(GridBaseCalc):
+	class GridBasicCalc : public GridBaseCalc {
+	public:
 		explicit GridBasicCalc( \
 			Window *window \
 		) : GridBaseCalc(window) {
-			lineEdit = LineEdit::LineEdit(window, (0, 0));
-			window.setLineEdit(0, lineEdit);
-			self.addWidget(lineEdit);
+			short input[2] = {0, 0};
+			LineEdit::LineEdit lineEdit = \
+				LineEdit::LineEdit(window, input);
+			window->setLineEdit(0, lineEdit);
+			addWidget(lineEdit);
 		}
 	};
 
 
-	class GridIntegralCalc(GridBaseCalc):
+	class GridIntegralCalc : public GridBaseCalc {
+	public:
 		explicit GridBasicCalc( \
 			Window *window \
 		) : GridBaseCalc(window) {
@@ -1110,6 +1130,7 @@ namespace Grid {
 	};
 
 	class GridDerivativeOrIntegrateCalc : public GridBaseCalc {
+	public:
 		explicit GridDerivativeOrIntergateCalc( \
 			Window *window, short numberTab \
 		) : GridBaseCalc(window) {
@@ -1120,6 +1141,7 @@ namespace Grid {
 			);
 			addWidget(line_edit);
 	class GridReplacementCalc : public GridBaseCalc {
+	public:
 		explicit GridReplacementCalc( \
 			Window *window \
 		) : GridBaseCalc(window) {
