@@ -26,6 +26,8 @@
 #include <QDrag>
 #include <QMimeData>
 #include <QWidgetAction>
+#include <QTabBar>
+#include <QTabWidget>
 
 using namespace std;
 
@@ -346,6 +348,176 @@ inline void CalculateDragAndDrop::createWindow( \
 	win->postInit();
 	win->show();
 }
+
+
+class LogicCalculate {
+private:
+    char *_lineEditText = "";
+	Window *_window = nullptr;
+public:
+	explicit LogicCalculate( \
+		char *lineEditText, \
+		Window *window \
+	) : _lineEditText(lineEditText) \
+	_window(window) {}
+
+	void button_ALL() {
+		char* pos;
+
+		// Удаляем "_ALL" из строки
+		while ((pos = strstr(_lineEditText, "_ALL")) != nullptr) {
+			memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
+		}
+
+		if (strlen(_lineEditText) > 0) {
+			strcpy(_lineEditText, pos); // Обновляем текст
+			window->setResult(pos);  // Устанавливаем результат
+			
+			buttonOther();                         // Вызываем другую функцию
+			addHistori(_window, _lineEditText);    // Добавляем в историю
+
+			_window->getResult("0");            // Сбрасываем результат
+		}
+
+		reinterpret_cast<QLineEdit *>( \
+			_window->getLineEdit \
+		)->setText(""); // Очищаем поле ввода
+	}
+
+	void button_DO() {
+		char* pos;
+		// Удаляем "_DO" из строки
+		while ((pos = strstr(_lineEditText, "_DO")) != nullptr) {
+			memmove(pos, pos + 3, strlen(pos + 3) + 1); // Сдвигаем остаток строки влево
+		}
+
+		if (strlen(_lineEditText) > 0) {
+			strcpy(_lineEditText, pos);
+			_window->setResult(pos);
+			buttonOther();
+			addHistori(_window, _lineEditText);
+		}
+		_window->
+    def button__DO(self):
+        if (line_edit_text := "".join(line_edit_text_list := self.line_edit_text.split("_DO"))) != "":
+            self.line_edit_text = line_edit_text
+            self.window.result = line_edit_text
+            self.button_other()
+            self.add_histori(self.window, line_edit_text)
+        self.window.line_edit.setText(line_edit_text_list[1])
+
+    def button__POS(self):
+        if (line_edit_text := "".join(line_edit_text_list := self.line_edit_text.split("_POS"))) != "":
+            self.line_edit_text = line_edit_text
+            self.window.result = line_edit_text
+            self.button_other()
+            self.add_histori(self.window, line_edit_text)
+        self.window.line_edit.setText(line_edit_text_list[0])
+
+    def button__RES(self):
+        window = self.window
+        result = window.result
+        if (line_edit_text := "".join(line_edit_text_list := self.line_edit_text.split("_RES"))) != "":
+            self.line_edit_text = line_edit_text
+            self.window.result = line_edit_text
+            self.button_other()
+            self.add_histori(window, line_edit_text)
+        line_edit = self.window.line_edit
+        line_edit.setText(result)
+        line_edit.setCursorPosition(len(result)-1)
+    def add_histori(self, window, line_edit_text):
+        tab = window.inputtin[0]
+        match tab:
+            case 1:
+
+                cls = lambda: CustomBoxHistoriElement(
+                    line_edit_text, self.window, 
+                    number_tab = 1, name_operation = "Integral",
+                    label_1 = "a", text_1 = window.getResult(1, 0),
+                    label_2 = "b", text_2 = window.getResult(1, 1)
+                )
+            case 4:
+                cls = lambda: CustomBoxHistoriElement(
+                    line_edit_text, self.window, 
+                    number_tab = 4, name_operation = "Replacement",
+                    label_1 = "with", text_1 = window.getResult(4, 0),
+                    label_2 = "on", text_2 = window.getResult(4, 1)
+                )
+            case _:
+                lst_tabs: dict = {0: "Basic", 2: "Derivate", 3: "Integrate"}
+                cls = lambda: BasicBoxHistoriElement(
+                    line_edit_text, self.window,
+                    result = window.result, name_operation = lst_tabs[tab]
+                )
+        self.window.add_global_histori.addLayout(cls())
+        self.window.resize_global_histori.adjustSize()
+        self.window.global_histori.verticalScrollBar().setValue(self.window.global_histori.verticalScrollBar().maximum())
+        self.window.add_local_histori.addLayout(cls())
+        self.window.resize_local_histori.adjustSize()
+        scroll_histori = self.window.local_histori
+        scroll_histori.verticalScrollBar().setValue(scroll_histori.verticalScrollBar().maximum())
+
+
+    def button__O(self) -> None:
+        if (line_edit_text := "".join(line_edit_text_list := self.line_edit_text.split("_O"))) != "":
+            element_position = len(line_edit_text_list[0])-1
+            print(element_position, "22")
+            self.window.line_edit.setText(self.line_edit_text[:element_position] + self.line_edit_text[element_position+3:])
+            
+    def button_other(self) -> None:
+        print(self.line_edit_text, 'line_edit_text')
+        print(3)
+        window = self.window
+        result: Union[Calculate, Derivative, Integral, str] = window.result
+        print(str(window.inputtin), "op")
+        def integral():
+            print(window.getLineEdit(1, 2))
+            window.setResult(
+                (1, 2),
+                str(
+                    Integral(
+                        a = window.getResult(1, 0), 
+                        b = window.getResult(1, 1), 
+                        equation = window.getLineEdit(1, 2).text().replace("_DO", "").replace("_ALL", "").replace("_POS", "").replace("_RES", "").replace("_O", "")
+                    )
+                )
+            )
+        def other_tab():
+                window.result = str(Calculate(self.line_edit_text))
+        match window.inputtin:
+            case (1, 0) | (1, 1):
+                other_tab()
+                integral()
+            case (1, 2): 
+                integral()
+            case (2, 0):
+                window.result = str(Derivative(self.line_edit_text))
+            case (3, 0):
+                window.result = str(Derivative(self.line_edit_text, True))
+            case (4, 0) | (4, 1):
+                window.result = self.line_edit_text
+            case (4, 2):
+                window.result = str(
+                    Calculate(
+                        self.line_edit_text.replace(
+                            window.getResult(4, 0), 
+                            window.getResult(4, 1)
+                        )
+                    )
+                )
+            case _:
+                other_tab()
+        window.set_for_result.setText(window.result)
+    
+    @staticmethod
+    def inputing_line_edit(button, window) -> None:
+        label: str = button.text()
+        line_edit = window.line_edit
+        text: str = line_edit.text()
+        position_cursor: int = line_edit.cursorPosition()
+        line_edit.setText(text[:position_cursor] + label + text[position_cursor:])
+        line_edit.setCursorPosition(position_cursor + len(label))
+
 
 namespace GradientFont {
 	
@@ -907,6 +1079,8 @@ namespace Title {
 	};
 }
 
+
+
 namespace Grid {
 	class BuildingGridKeyboard {
 	public:
@@ -1102,32 +1276,47 @@ namespace Grid {
 
 	class GridIntegralCalc : public GridBaseCalc {
 	public:
-		explicit GridBasicCalc( \
+		explicit GridIntegralCalc( \
 			Window *window \
 		) : GridBaseCalc(window) {
-			self.addWidget( \
-				Button::ButtonBase( \
-					"a = ", 20, window, \
+			addWidget( \
+				new Button::ButtonBase( \
+					"a = ", window, 20, \
 					nullptr, "calculate" \
 				), 1, 0, 1, 1 \
 			);
-			LineEdit *aLineEdit = \
-				new LineEdit(window, {1, 0}, "1");
-			window->setLineEdit(1, aLineEdit);
+			short input[2] = {1, 0};
+			LineEdit::LineEdit *aLineEdit = \
+				new LineEdit::LineEdit(window, input, "1");
+			window->setLineEdit( \
+				1, reinterpret_cast<uintptr_t>( \
+					aLineEdit \
+				) \
+			);
 			addWidget(aLineEdit, 1, 1, 1, 2);
 			addWidget( \
-				Button::ButtonBase( \
-					"b = ", 20, window, \
-					nullptr, "calculate", \
+				new Button::ButtonBase( \
+					"b = ", window, 20, \
+					nullptr, "calculate" \
 				), 1, 3, 1, 1 \
 			);
-			LineEdit *bLineEdit = \
-				new LineEdit(window, {1, 1}, "2");
-			window->setLineEdit(1, b_line_edit);
+			input[0] = 1, input[1] = 1;
+			LineEdit::LineEdit *bLineEdit = \
+				new LineEdit::LineEdit(window, input, "2");
+			window->setLineEdit( \
+				1, reinterpret_cast<uintptr_t>( \
+					bLineEdit \
+				) \
+			);
 			addWidget(bLineEdit, 1, 4, 1, 2);
+			input[0] = 1, input[1] = 2;
 			LineEdit::LineEdit *mainLineEdit = \
-				new LineEdit::LineEdit(window, {1, 2});
-			window->line_edit(1, mainLineEdit);
+				new LineEdit::LineEdit(window, input);
+			window->setLineEdit( \
+				1, reinterpret_cast<uintptr_t>( \
+					mainLineEdit \
+				) \
+			);
 			addWidget(mainLineEdit, 2, 0, 1, 6);
 		}
 	};
@@ -1153,28 +1342,43 @@ namespace Grid {
 			Window *window \
 		) : GridBaseCalc(window) {
 			addWidget( \
-				Button::ButtonBase( \
-					"with =", 20, window, \
+				new Button::ButtonBase( \
+					"with =", window, 20, \
 					nullptr, "calculate" \
 				), 1, 0, 1, 1 \
 			);
-			LineEdit *withLineEdit = \
-				new LineEdit(window, {4, 0}, "x");
-			window->setLineEdit(4, withLineEdit);
+			short input[2] = {4, 0};
+			LineEdit::LineEdit *withLineEdit = \
+				new LineEdit::LineEdit(window, input, "x");
+			window->setLineEdit( \
+				4, reinterpret_cast<uintptr_t>( \
+					withLineEdit \
+				) \
+			);
 			addWidget(withLineEdit, 1, 1, 1, 2);
 			addWidget( \
-				Button::ButtonBase( \
-					"on =", css_name = "calculate", \
-					width = 100, window = window \
+				new Button::ButtonBase( \
+					"on =", window, 20, \
+					nullptr, "calculate" \
 				), 1, 3, 1, 1 \
 			);
-			LineEdit *onLineEdit = \
-				new LineEdit(window, (4, 1), "0");
-			window->setLineEdit(4, onLineEdit);
+			input[1] = 1;
+			LineEdit::LineEdit *onLineEdit = \
+				new LineEdit::LineEdit(window, input, "0");
+			window->setLineEdit( \
+				4, reinterpret_cast<uintptr_t>( \
+					onLineEdit \
+				) \
+			);
 			addWidget(onLineEdit, 1, 4, 1, 2);
-			LineEdit *mainLineEdit = \
-				new LineEdit(window, (4, 2));
-			window->setLineEdit(4, mainLineEdit);
+			input[1] = 2;
+			LineEdit::LineEdit *mainLineEdit = \
+				new LineEdit::LineEdit(window, input);
+			window->setLineEdit( \
+				4, reinterpret_cast<uintptr_t>( \
+					mainLineEdit \
+				) \
+			);
 			addWidget(mainLineEdit, 2, 0, 1, 6);
 		}
 	};
@@ -1199,54 +1403,54 @@ namespace TabWindow {
 			setFont(fontTabBar);
 		}
 
-		void create_style() {
+		void createStyle() {
 			// Задаем градиенты
-			_gradient = CreateGradient(_tabWidget, _window)
+			_gradient = new CreateGradient(_tabWidget, _window);
 		}
 		void paintEvent(QPaintEvent *event) override {
-			painter = QPainter(this);
-			painter.setRenderHint(QPainter::RenderHint::Antialiasing);
+			QPainter *painter = new QPainter(this);
+			painter->setRenderHint(QPainter::RenderHint::Antialiasing);
 			short countTabs = static_cast<short>(count());
 			for (int index; index != count(); index++) {
 				QRect rect = tabRect(index);
-				bool is_selected = currentIndex() == index;
 
 				// Установка шрифта
 				QFont fontTabBar = font();
-				painter.setFont(fontTabBar);
+				painter->setFont(fontTabBar);
 
 				// Получение текста вкладки
-				QString text = self.tabText(index);
-				QFontMetrics metrics = QFontMetrics(font);
-				short textWidth = metrics.horizontalAdvance(text);
-				short textHeight = metrics.height();
+				QString text = tabText(index);
+				QFontMetrics *metrics = new QFontMetrics(fontTabBar);
+				short textWidth = metrics->horizontalAdvance(text);
+				short textHeight = metrics->height();
 
 				// Центрирование текста внутри вкладки
-				short x = rect.x() + (rect.width() - text_width) / 2;
-				short y = rect.y() + (rect.height() + text_height) \
-					/ 2 - metrics.descent();
+				short x = rect.x() + (rect.width() - textWidth) / 2;
+				short y = rect.y() + (rect.height() + textHeight) \
+					/ 2 - metrics->descent();
 
 				// Создаём путь текста
-				QPainterPash path = QPainterPath();
-				path.addText(x, y, font, text);
+				QPainterPath path = QPainterPath();
+				path.addText(x, y, fontTabBar, text);
 
 				// Рисуем текст разным цветом для активной вкладки
 				QPen pen = QPen();
 				pen.setColor(QColor("white"));  // Цвет текста неактивной вкладки
+				bool isSelected = currentIndex() == index;
 				if (isSelected)
 					pen.setWidth(4);
 				else
 					pen.setWidth(2);
-				painter.setPen(pen);
-				painter.setBrush(Qt::BrushStyle::NoBrush);
-				painter.drawPath(path);
+				painter->setPen(pen);
+				painter->setBrush(Qt::BrushStyle::NoBrush);
+				painter->drawPath(path);
 
 				// Установка градиента для вкладки
-				painter.setBrush(QBrush(_gradient));
-				painter.setPen(Qt::PenStyle::NoPen);
-				painter.drawPath(path);
+				painter->setBrush(QBrush(*_gradient));
+				painter->setPen(Qt::PenStyle::NoPen);
+				painter->drawPath(path);
 			}
-			painter.end();
+			painter->end();
 		}
 	};
 
@@ -1255,7 +1459,7 @@ namespace TabWindow {
 	class TabQWidget : public QWidget {
 	public:
 		explicit TabQWidget( \
-			Grid::GridCalculateKeybord tab \
+			QGridLayout *tab \
 		) : QWidget() {
 			setLayout(tab);
 		}
@@ -1265,71 +1469,71 @@ namespace TabWindow {
 	class TabWidgetKeyboard : public QTabWidget {
 	private:
 		Window *_window = nullptr;
-		CustomTabBar _tabBar;
+		CustomTabBar *_tabBar;
 	public:
 		explicit TabWidgetKeyboard( \
 			Window *window \
 		) : QTabWidget() {
 			_window = window;
 			setFixedHeight(110);
-			_tabBar = CustomTabBar(this, window);
-			setTabBar(tab_bar);  // Устанавливаем кастомный TabBar
-			addTab(TabQWidget( \
-				GridCalculateKeybord( \
-					vector<vector<char[]>>{
+			_tabBar = new CustomTabBar(this, window);
+			setTabBar(_tabBar);  // Устанавливаем кастомный TabBar
+			addTab(new TabQWidget( \
+				new Grid::GridCalculateKeyboard( \
+					vector<vector<const char *>>{
 						{"1", "2", "3", "4", "5"},
 						{"6", "7", "8", "9", "0"}
 					}, window \
 				) \
 			), "digits 10");
-			addTab(TabQWidget( \
-				GridCalculateKeybord( \
-					vector<vector<char[]>>{
+			addTab(new TabQWidget( \
+				new Grid::GridCalculateKeyboard( \
+					vector<vector<const char *>>{
 						{"A", "B", "C"},
 						{"D", "E", "F"}
 					}, window \
 				) \
 			), "digits 16");
-			addTab(TabQWidget( \
-				GridCalculateKeybord( \
-					vector<vector<char[]>{
+			addTab(new TabQWidget( \
+				new Grid::GridCalculateKeyboard( \
+					vector<vector<const char *>>{
 						{"+", "-", ":", "*", "^"},
 						{"!", "sqrt", "ln", "log", "lg"}
 					}, window \
 				) \
 			), "operators");
-			addTab(TabQWidget( \
-				GridCalculateKeybord( \
-					vector<vector<char[]>>{
+			addTab(new TabQWidget( \
+				new Grid::GridCalculateKeyboard( \
+					vector<vector<const char *>>{
 						{"_E", "_PI"}
 					}, window \
 				) \
 			), "consts");
-			addTab(TabQWidget( \
-				GridCalculateKeybord( \
-					vector<vector<char[]>>{
+			addTab(new TabQWidget( \
+				new Grid::GridCalculateKeyboard( \
+					vector<vector<const char *>>{
 						{"sin(", "cos(", "tan("},
 						{"sec(", "csc(", "cot("}
 					}, window \
 				) \
 			), "trigonometric functions");
-			addTab(TabQWidget( \
-				GridCalculateKeybord( \
-					vector<vector<char[]>>{
+			addTab(new TabQWidget( \
+				new Grid::GridCalculateKeyboard( \
+					vector<vector<const char *>>{
 						{"sgn(", "abs(", "mod"}
 					}, window \
 				) \
 			), "other functions");
-			addTab(TabQWidget( \
-				GridCalculateKeybord( \
-					vector<vector<char[]>>{
+			addTab(new TabQWidget( \
+				new Grid::GridCalculateKeyboard( \
+					vector<vector<const char *>>{
 						{"0x", "0b", "0t"}
 					}, window \
 				) \
 			), "number system");
-			addTab(TabQWidget( \
-				GridCalculateKeybord( \
-					vector<vector<char[]>>{
+			addTab(new TabQWidget( \
+				new Grid::GridCalculateKeyboard( \
+					vector<vector<const char *>>{
 						{"%", "mod", ".", "|"}
 					}, window \
 				) \
@@ -1339,7 +1543,7 @@ namespace TabWindow {
 		void paintEvent( \
 			QPaintEvent *event \
 		) override {
-			_tabBar.set_style();
+			_tabBar->createStyle();
 		}
 	};
 
@@ -1347,41 +1551,41 @@ namespace TabWindow {
 
 	//Main TabWidget
 
-	class MainTabWidget(QTabWidget):
+	class MainTabWidget : public QTabWidget {
 	private:
-		CustomTabBar _tabBar;
+		CustomTabBar *_tabBar;
 	public:
 		explicit MainTabWidget( \
 			Window *window \
 		) : QTabWidget() {
-			_tabBar = CustomTabBar(this, window);
+			_tabBar = new CustomTabBar(this, window);
 			setTabBar(_tabBar);  // Устанавливаем кастомный TabBar
-			addTab(TabQWidget( \
-				GridBasicCalc(window) \
+			addTab(new TabQWidget( \
+				new Grid::GridBasicCalc(window) \
 			), "Basic");
-			addTab(TabQWidget( \
-				GridIntegralCalc(window) \
+			addTab(new TabQWidget( \
+				new Grid::GridIntegralCalc(window) \
 			), "Integral");
-			addTab(TabQWidget( \
-				GridDerivativeOrIntegrateCalc(window, 2) \
+			addTab(new TabQWidget( \
+				new Grid::GridDerivativeOrIntegrateCalc(window, 2) \
 				), "Derivative");
-			addTab(TabQWidget( \
-				GridDerivativeOrIntegrateCalc(window, 3) \
+			addTab(new TabQWidget( \
+				new Grid::GridDerivativeOrIntegrateCalc(window, 3) \
 			), "Integrate");
-			addTab(TabQWidget( \
-				GridReplacementCalc(window) \
+			addTab(new TabQWidget( \
+				new Grid::GridReplacementCalc(window) \
 			), "Replacement");
+		}
 
 		void paintEvent( \
 			QPaintEvent *event \
 		) override {
-			_tabBar.set_style();
+			_tabBar->createStyle();
 		}
 	};
 }
 
 
-using namespace CreateHistori;
 class MainLayout : public QVBoxLayout {
 public:
 	explicit MainLayout( \
@@ -1390,13 +1594,13 @@ public:
 		setContentsMargins(0, 0, 0, 0);
 		setSpacing(0);
 		addWidget(new Title::TitleBar(app, window));
-		HistoriScroll *globalHistori = nullptr;
+		CreateHistori::HistoriScroll *globalHistori = nullptr;
 		window->setGlobalHistori( \
 			reinterpret_cast<uintptr_t>( \
-				globalHistori = new HistoriScroll() \
+				globalHistori = new CreateHistori::HistoriScroll() \
 			) \
 		);
-		HistoriWidget *resizeGlobalHistori = nullptr;
+		CreateHistori::HistoriWidget *resizeGlobalHistori = nullptr;
 		window->setResizeGlobalHistori( \
 			reinterpret_cast<uintptr_t>(
 				resizeGlobalHistori = \
@@ -1409,11 +1613,9 @@ public:
 			) \
 		);
 		addWidget(globalHistori);
-		addWidget(TabWindow::MainTabWidget(window));
-		/*
-		addLayout(GridCalculateCommon(window));
-		addWidget(TabWidgetKeybord(window));
-		*/
+		addWidget(new TabWindow::MainTabWidget(window));
+		addLayout(new Grid::GridCalculateCommon(window));
+		addWidget(new TabWindow::TabWidgetKeyboard(window));
 	}
 };
 
