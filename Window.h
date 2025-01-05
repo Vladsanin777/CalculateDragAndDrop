@@ -154,7 +154,7 @@ private:
 	vector<uintptr_t> _localHistori = {};
 	vector<uintptr_t> _resizeLocalHistori = {};
 	vector<uintptr_t> _addLocalHistori = {};
-	vector<vector<uintptr_t>> _lineEdit = {{}, {}, {}, {}, {}};
+	mutable vector<vector<uintptr_t>> _lineEdit = {{}, {}, {}, {}, {}};
 	short _inputtin[2] = {0, 0};
 	vector<vector<const char *>> _result = {
 		{"0"}, {"1", "2", "0"}, {"0"}, {"0"}, {"x", "0", "0"}
@@ -1090,9 +1090,11 @@ namespace Grid {
 			Window *window \
 		) : GridBaseCalc(window) {
 			short input[2] = {0, 0};
-			LineEdit::LineEdit lineEdit = \
-				LineEdit::LineEdit(window, input);
-			window->setLineEdit(0, lineEdit);
+			LineEdit::LineEdit *lineEdit = \
+				new LineEdit::LineEdit(window, input);
+			window->setLineEdit( \
+				0, reinterpret_cast<uintptr_t>(lineEdit) \
+			);
 			addWidget(lineEdit);
 		}
 	};
@@ -1115,38 +1117,43 @@ namespace Grid {
 			addWidget(aLineEdit, 1, 1, 1, 2);
 			addWidget( \
 				Button::ButtonBase( \
-					"b = ", css_name = "calculate", \
-					width = 64, window = window \
+					"b = ", 20, window, \
+					nullptr, "calculate", \
 				), 1, 3, 1, 1 \
 			);
 			LineEdit *bLineEdit = \
 				new LineEdit(window, {1, 1}, "2");
 			window->setLineEdit(1, b_line_edit);
 			addWidget(bLineEdit, 1, 4, 1, 2);
-			main_line_edit = new LineEdit(window, {1, 2});
-			window->line_edit(1, main_line_edit);
-			addWidget(main_line_edit, 2, 0, 1, 6);
+			LineEdit::LineEdit *mainLineEdit = \
+				new LineEdit::LineEdit(window, {1, 2});
+			window->line_edit(1, mainLineEdit);
+			addWidget(mainLineEdit, 2, 0, 1, 6);
 		}
 	};
 
 	class GridDerivativeOrIntegrateCalc : public GridBaseCalc {
 	public:
-		explicit GridDerivativeOrIntergateCalc( \
+		explicit GridDerivativeOrIntegrateCalc( \
 			Window *window, short numberTab \
 		) : GridBaseCalc(window) {
-			LineEdit *line_edit = \
-				LineEdit(window, (number_tab, 0));
+			short input[2] = {numberTab, 0};
+			LineEdit::LineEdit *lineEdit = \
+				new LineEdit::LineEdit(window, input);
 			window->setLineEdit( \
-				number_tab, line_edit \
+				numberTab, \
+				reinterpret_cast<uintptr_t>(lineEdit) \
 			);
-			addWidget(line_edit);
+			addWidget(lineEdit);
+		}
+	};
 	class GridReplacementCalc : public GridBaseCalc {
 	public:
 		explicit GridReplacementCalc( \
 			Window *window \
 		) : GridBaseCalc(window) {
 			addWidget( \
-				ButtonBase( \
+				Button::ButtonBase( \
 					"with =", 20, window, \
 					nullptr, "calculate" \
 				), 1, 0, 1, 1 \
@@ -1156,7 +1163,7 @@ namespace Grid {
 			window->setLineEdit(4, withLineEdit);
 			addWidget(withLineEdit, 1, 1, 1, 2);
 			addWidget( \
-				ButtonBase( \
+				Button::ButtonBase( \
 					"on =", css_name = "calculate", \
 					width = 100, window = window \
 				), 1, 3, 1, 1 \
@@ -1174,7 +1181,6 @@ namespace Grid {
 }
 
 
-using namespace Grid;
 
 namespace TabWindow {
 	class CustomTabBar : public QTabBar {
