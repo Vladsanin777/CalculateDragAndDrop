@@ -365,13 +365,11 @@ public:
 		char* pos;
 
 		// Удаляем "_ALL" из строки
-		while ((pos = strstr(_lineEditText, "_ALL")) != nullptr) {
-			memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
-		}
+		pos = strstr(_lineEditText, "_ALL")
+		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
 
 		if (strlen(_lineEditText) > 0) {
-			strcpy(_lineEditText, pos); // Обновляем текст
-			window->setResult(pos);  // Устанавливаем результат
+			window->setResult(_lineEditText);  // Устанавливаем результат
 			
 			buttonOther();                         // Вызываем другую функцию
 			addHistori(_window, _lineEditText);    // Добавляем в историю
@@ -380,43 +378,48 @@ public:
 		}
 
 		reinterpret_cast<QLineEdit *>( \
-			_window->getLineEdit \
+			_window->getLineEdit() \
 		)->setText(""); // Очищаем поле ввода
 	}
 
 	void button_DO() {
 		char* pos;
-		// Удаляем "_DO" из строки
-		while ((pos = strstr(_lineEditText, "_DO")) != nullptr) {
-			memmove(pos, pos + 3, strlen(pos + 3) + 1); // Сдвигаем остаток строки влево
-		}
+		pos = strstr(_lineEditText, "_DO")
+		memmove(pos, pos + 3, strlen(pos + 3) + 1);
 
 		if (strlen(_lineEditText) > 0) {
-			strcpy(_lineEditText, pos);
-			_window->setResult(pos);
+			_window->setResult(_lineEditText);
 			buttonOther();
+			*pos = '\0';
 			addHistori(_window, _lineEditText);
 		}
-		_window->
-    def button__DO(self):
-        if (line_edit_text := "".join(line_edit_text_list := self.line_edit_text.split("_DO"))) != "":
-            self.line_edit_text = line_edit_text
-            self.window.result = line_edit_text
-            self.button_other()
-            self.add_histori(self.window, line_edit_text)
-        self.window.line_edit.setText(line_edit_text_list[1])
+		reinterpret_cast<QLineEdit *>(
+			_window->getLineEdit \
+		)->setText(_lineEditText);
+	}
 
-    def button__POS(self):
-        if (line_edit_text := "".join(line_edit_text_list := self.line_edit_text.split("_POS"))) != "":
-            self.line_edit_text = line_edit_text
-            self.window.result = line_edit_text
-            self.button_other()
-            self.add_histori(self.window, line_edit_text)
-        self.window.line_edit.setText(line_edit_text_list[0])
+	void button_POS() {
+		char* pos;
+		// Удаляем "_DO" из строки
+		pos = strstr(_lineEditText, "_POS")
+		memmove(pos, pos + 3, strlen(pos + 3) + 1); // Сдвигаем остаток строки влево
 
-    def button__RES(self):
-        window = self.window
-        result = window.result
+		if (strlen(_lineEditText) > 0) {
+			_window->setResult(_lineEditText);
+			buttonOther();
+			pos += strlen("_POS");
+			memmove(_lineEditText, pos, strlen(pos) + 1);
+			addHistori(_window, _lineEditText);
+		}
+		reinterpret_cast<QLineEdit *>(
+			_window->getLineEdit() \
+		)->setText(pos1);
+	}
+
+	void button_RES() {
+
+
+        char *result = _window->getResult();
         if (line_edit_text := "".join(line_edit_text_list := self.line_edit_text.split("_RES"))) != "":
             self.line_edit_text = line_edit_text
             self.window.result = line_edit_text
