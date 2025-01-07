@@ -369,7 +369,7 @@ public:
 		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
 
 		if (strlen(_lineEditText) > 0) {
-			window->setResult(_lineEditText);  // Устанавливаем результат
+			// window->setResult(_lineEditText);  // Устанавливаем результат
 			
 			buttonOther();                         // Вызываем другую функцию
 			addHistori(_window, _lineEditText);    // Добавляем в историю
@@ -388,7 +388,7 @@ public:
 		memmove(pos, pos + 3, strlen(pos + 3) + 1);
 
 		if (strlen(_lineEditText) > 0) {
-			_window->setResult(_lineEditText);
+			// _window->setResult(_lineEditText);
 			buttonOther();
 			*pos = '\0';
 			addHistori(_window, _lineEditText);
@@ -400,12 +400,12 @@ public:
 
 	void button_POS() {
 		char* pos;
-		// Удаляем "_DO" из строки
+		// Удаляем "_POS" из строки
 		pos = strstr(_lineEditText, "_POS")
-		memmove(pos, pos + 3, strlen(pos + 3) + 1); // Сдвигаем остаток строки влево
+		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
 
 		if (strlen(_lineEditText) > 0) {
-			_window->setResult(_lineEditText);
+			// _window->setResult(_lineEditText);
 			buttonOther();
 			pos += strlen("_POS");
 			memmove(_lineEditText, pos, strlen(pos) + 1);
@@ -420,57 +420,147 @@ public:
 
 
         char *result = _window->getResult();
-        if (line_edit_text := "".join(line_edit_text_list := self.line_edit_text.split("_RES"))) != "":
-            self.line_edit_text = line_edit_text
-            self.window.result = line_edit_text
-            self.button_other()
-            self.add_histori(window, line_edit_text)
-        line_edit = self.window.line_edit
-        line_edit.setText(result)
-        line_edit.setCursorPosition(len(result)-1)
-    def add_histori(self, window, line_edit_text):
-        tab = window.inputtin[0]
-        match tab:
-            case 1:
+		pos = strstr(_lineEditText, "_RES");
+		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
 
-                cls = lambda: CustomBoxHistoriElement(
-                    line_edit_text, self.window, 
-                    number_tab = 1, name_operation = "Integral",
-                    label_1 = "a", text_1 = window.getResult(1, 0),
-                    label_2 = "b", text_2 = window.getResult(1, 1)
-                )
-            case 4:
-                cls = lambda: CustomBoxHistoriElement(
-                    line_edit_text, self.window, 
-                    number_tab = 4, name_operation = "Replacement",
-                    label_1 = "with", text_1 = window.getResult(4, 0),
-                    label_2 = "on", text_2 = window.getResult(4, 1)
-                )
-            case _:
-                lst_tabs: dict = {0: "Basic", 2: "Derivate", 3: "Integrate"}
-                cls = lambda: BasicBoxHistoriElement(
-                    line_edit_text, self.window,
-                    result = window.result, name_operation = lst_tabs[tab]
-                )
-        self.window.add_global_histori.addLayout(cls())
-        self.window.resize_global_histori.adjustSize()
-        self.window.global_histori.verticalScrollBar().setValue(self.window.global_histori.verticalScrollBar().maximum())
-        self.window.add_local_histori.addLayout(cls())
-        self.window.resize_local_histori.adjustSize()
-        scroll_histori = self.window.local_histori
-        scroll_histori.verticalScrollBar().setValue(scroll_histori.verticalScrollBar().maximum())
+		if (strlen(_lineEditText) > 0) {
+            // window.setResult(_lineEditText);
+            buttonOther();
+            addHistori();
+		}
+        QLineEdit *line_edit = reinterpret_cast<QLineEdit *>( \
+			window->getLineEdit() \
+		);
+        line_edit->setText(result);
+        line_edit->setCursorPosition(result.lenght-1);
+	}
+
+	void add_histori() {
+
+		QLayout *element;
+		short tab = window->inputtin[0];
+
+		switch (tab) {
+			case 1:
+				element = new CustomBoxHistoriElement(
+					_lineEditText, _window, 
+					1, "Integral",
+					"a", window->getResult(1, 0),
+					"b", window->getResult(1, 1)
+				);
+				break;
+
+			case 4:
+				element = new CustomBoxHistoriElement(
+					_lineEditText, _window, 
+					4, "Replacement",
+					"with", window->getResult(4, 0),
+					"on", window->getResult(4, 1)
+				);
+				break;
+
+			default:
+				{
+					std::map<short, const char*> lstTabs = {
+						{0, "Basic"}, {2, "Derivate"}, {3, "Integrate"}
+					};
+					element = new BasicBoxHistoriElement(
+						line_edit_text, window,
+						window->result, lst_tabs[tab]
+					);
+				}
+				break;
+		}
 
 
-    def button__O(self) -> None:
-        if (line_edit_text := "".join(line_edit_text_list := self.line_edit_text.split("_O"))) != "":
-            element_position = len(line_edit_text_list[0])-1
-            print(element_position, "22")
-            self.window.line_edit.setText(self.line_edit_text[:element_position] + self.line_edit_text[element_position+3:])
+		// Добавление элемента в глобальную историю
+		reinterpret_cast<QVBoxLayout *>(
+			window->getAddGlobalHistori()
+		)->addLayout(element);
+		reinterpret_cast<QWidget *>(
+			window->getResizeGlobalHistori()
+		)->adjustSize();
+		QScrollArea *globalHistori = \
+			reinterpret_cast<QScrollArea *>(
+				window->getGlobalHistori()
+			);
+		globalHistori->verticalScrollBar()->setValue(
+			globalHistori->verticalScrollBar()->maximum()
+		);
+
+		// Добавление элемента в локальную историю
+		reinterpret_cast<QVBoxLayout *>(
+			window->getAddLocalHistori()
+		)->addLayout(element);
+		reinterpret_cast<QWidget *>(
+			window->getResizeLocalHistori()
+		)->adjustSize();
+		QScrollArea *localHistori = \
+			reinterpret_cast<QScrollArea *>(
+				window->getLocalHistori()
+			);
+		localHistori->verticalScrollBar()->setValue(
+			localHistori->verticalScrollBar()->maximum()
+		);
+	}
+
+    void button_O() {
+		char *pos = strstr(_lineEditText, "_O");
+		memmove(pos-1, pos + 3, strlen(pos + 3) + 1);
+
+		reinterpret_cast<QLineEdit *>(
+			_window->getLineEdit()
+		)->setText(
+			_lineEditText
+		);
+	}
+
+	
+	void button_other() {
+		auto integral = [_window]() {
+			char* equation = reinterpret_cast<QLineEdit *>(
+				window->getLineEdit(1, 2)
+			).text();
+			_window->setResult(equation, 1, 2);
+		};
+
+		auto other_tab = [&]() {
+			window.setResult({0, 0}, window.line_edit_text);
+		};
+
+		switch (window.inputtin.first * 10 + window.inputtin.second) {
+			case 10:
+			case 11:
+				other_tab();
+				integral();
+				break;
+			case 12:
+				integral();
+				break;
+			case 20:
+				window.setResult({0, 0}, window.line_edit_text); // Пример для Derivative
+				break;
+			case 30:
+				window.setResult({0, 0}, window.line_edit_text); // Пример для Derivative с true
+				break;
+			case 40:
+			case 41:
+				window.setResult({0, 0}, window.line_edit_text);
+				break;
+			case 42: {
+				char* modified_text = replaceAll(window.line_edit_text, window.getResult(4, 0), window.getResult(4, 1));
+				window.setResult({0, 0}, modified_text);
+				break;
+			}
+			default:
+				other_tab();
+				break;
+		}
+
+		window.setForResult(window.result);
+	}
             
     def button_other(self) -> None:
-        print(self.line_edit_text, 'line_edit_text')
-        print(3)
-        window = self.window
         result: Union[Calculate, Derivative, Integral, str] = window.result
         print(str(window.inputtin), "op")
         def integral():
@@ -512,6 +602,7 @@ public:
                 other_tab()
         window.set_for_result.setText(window.result)
     
+
     @staticmethod
     def inputing_line_edit(button, window) -> None:
         label: str = button.text()
