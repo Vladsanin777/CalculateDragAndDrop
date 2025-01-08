@@ -12,6 +12,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QScrollArea>
+#include <QScrollBar>
 #include <QMenu>
 #include <QPen>
 #include <QPainterPath>
@@ -157,7 +158,7 @@ private:
 	vector<uintptr_t> _resizeLocalHistori = {};
 	vector<uintptr_t> _addLocalHistori = {};
 	mutable vector<vector<uintptr_t>> _lineEdit = {{}, {}, {}, {}, {}};
-	short _inputtin[2] = {0, 0};
+	array<short, 2> _inputtin = {0, 0};
 	vector<vector<const char *>> _result = {
 		{"0"}, {"1", "2", "0"}, {"0"}, {"0"}, {"x", "0", "0"}
 	};
@@ -304,18 +305,23 @@ public:
 		return;
 	}
 	uintptr_t getLineEdit( \
-			short tab, short index \
+			short tab = -1, short index = -1 \
 	) const {
-		return _lineEdit.at(tab).at(index);
+		if (tab < -1 || index < -1)
+			return _lineEdit.at(_inputtin[0]).at(_inputtin[1]);
+		else
+			return _lineEdit.at(tab).at(index);
 	}
 	void setLineEdit( \
 			short tab, uintptr_t newLineEdit \
 	) const {
 		_lineEdit.at(tab).push_back(newLineEdit);
 	}
-	void setInputtin(short inputtin[2]) {
-		_inputtin[0] = inputtin[0];
-		_inputtin[1] = inputtin[1];
+	array<short, 2> getInputtin() {
+		return _inputtin;
+	}
+	void setInputtin(array<short, 2> inputtin) {
+		_inputtin = inputtin;
 	}
 	uintptr_t getResultButton() {
 		return _resultButton;
@@ -327,16 +333,21 @@ public:
 		return;
 	}
 	const char *getResult( \
-		short tab, short index \
+		short tab = -1, short index = -1 \
 	) {
-		return _result.at(tab).at(index);
+		if (tab < 0 || index < 0)
+			return _result.at(_inputtin[0]).at(_inputtin[1]);
+		else
+			return _result.at(tab).at(index);
 	}
 	void setResult( \
-		short tab, short index, \
-		const char *newResult
+		const char *newResult,
+		short tab = -1, short index = -1 \
 	) {
-		_result.at(tab).at(index) = \
-			newResult;
+		if (tab < 0 || index < 0)
+			_result.at(_inputtin[0]).at(_inputtin[1]) = newResult;
+		else
+			_result.at(tab).at(index) = newResult;
 	}
 };
 
@@ -352,29 +363,29 @@ inline void CalculateDragAndDrop::createWindow( \
 
 class LogicCalculate {
 private:
-    char *_lineEditText = "";
+    char *_lineEditText;
 	Window *_window = nullptr;
 public:
 	explicit LogicCalculate( \
 		char *lineEditText, \
 		Window *window \
-	) : _lineEditText(lineEditText) \
+	) : _lineEditText(lineEditText), \
 	_window(window) {}
 
 	void button_ALL() {
 		char* pos;
 
 		// Удаляем "_ALL" из строки
-		pos = strstr(_lineEditText, "_ALL")
+		pos = strstr(_lineEditText, "_ALL");
 		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
 
 		if (strlen(_lineEditText) > 0) {
 			// window->setResult(_lineEditText);  // Устанавливаем результат
 			
 			buttonOther();                         // Вызываем другую функцию
-			addHistori(_window, _lineEditText);    // Добавляем в историю
+			addHistori();    // Добавляем в историю
 
-			_window->getResult("0");            // Сбрасываем результат
+			_window->setResult("0");            // Сбрасываем результат
 		}
 
 		reinterpret_cast<QLineEdit *>( \
@@ -384,24 +395,24 @@ public:
 
 	void button_DO() {
 		char* pos;
-		pos = strstr(_lineEditText, "_DO")
+		pos = strstr(_lineEditText, "_DO");
 		memmove(pos, pos + 3, strlen(pos + 3) + 1);
 
 		if (strlen(_lineEditText) > 0) {
 			// _window->setResult(_lineEditText);
 			buttonOther();
 			*pos = '\0';
-			addHistori(_window, _lineEditText);
+			addHistori();
 		}
 		reinterpret_cast<QLineEdit *>(
-			_window->getLineEdit \
+			_window->getLineEdit() \
 		)->setText(_lineEditText);
 	}
 
 	void button_POS() {
 		char* pos;
 		// Удаляем "_POS" из строки
-		pos = strstr(_lineEditText, "_POS")
+		pos = strstr(_lineEditText, "_POS");
 		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
 
 		if (strlen(_lineEditText) > 0) {
@@ -409,18 +420,18 @@ public:
 			buttonOther();
 			pos += strlen("_POS");
 			memmove(_lineEditText, pos, strlen(pos) + 1);
-			addHistori(_window, _lineEditText);
+			addHistori();
 		}
 		reinterpret_cast<QLineEdit *>(
 			_window->getLineEdit() \
-		)->setText(pos1);
+		)->setText(pos);
 	}
 
 	void button_RES() {
 
 
-        char *result = _window->getResult();
-		pos = strstr(_lineEditText, "_RES");
+        const char *result = _window->getResult();
+		char *pos = strstr(_lineEditText, "_RES");
 		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
 
 		if (strlen(_lineEditText) > 0) {
@@ -429,16 +440,16 @@ public:
             addHistori();
 		}
         QLineEdit *line_edit = reinterpret_cast<QLineEdit *>( \
-			window->getLineEdit() \
+			_window->getLineEdit() \
 		);
         line_edit->setText(result);
-        line_edit->setCursorPosition(result.lenght-1);
+        line_edit->setCursorPosition(strlen(result)-1);
 	}
 
-	void add_histori() {
+	void addHistori() {
 
 		QLayout *element;
-		short tab = window->inputtin[0];
+		short tab = _window->getInputtin()[0];
 
 		switch (tab) {
 			case 1:
@@ -475,14 +486,14 @@ public:
 
 		// Добавление элемента в глобальную историю
 		reinterpret_cast<QVBoxLayout *>(
-			window->getAddGlobalHistori()
+			_window->getAddGlobalHistori()
 		)->addLayout(element);
 		reinterpret_cast<QWidget *>(
-			window->getResizeGlobalHistori()
+			_window->getResizeGlobalHistori()
 		)->adjustSize();
 		QScrollArea *globalHistori = \
 			reinterpret_cast<QScrollArea *>(
-				window->getGlobalHistori()
+				_window->getGlobalHistori()
 			);
 		globalHistori->verticalScrollBar()->setValue(
 			globalHistori->verticalScrollBar()->maximum()
@@ -490,14 +501,14 @@ public:
 
 		// Добавление элемента в локальную историю
 		reinterpret_cast<QVBoxLayout *>(
-			window->getAddLocalHistori()
+			_window->getAddLocalHistori()
 		)->addLayout(element);
 		reinterpret_cast<QWidget *>(
-			window->getResizeLocalHistori()
+			_window->getResizeLocalHistori()
 		)->adjustSize();
 		QScrollArea *localHistori = \
 			reinterpret_cast<QScrollArea *>(
-				window->getLocalHistori()
+				_window->getLocalHistori()
 			);
 		localHistori->verticalScrollBar()->setValue(
 			localHistori->verticalScrollBar()->maximum()
@@ -516,22 +527,24 @@ public:
 	}
 
 	
-	void button_other() {
-		auto integral = [_window]() {
-			char* equation = reinterpret_cast<QLineEdit *>(
-				window->getLineEdit(1, 2)
-			).text();
+	void buttonOther() {
+		auto integral = [_window = this->_window]() {
+			char* equation = strdup( \
+				reinterpret_cast<QLineEdit *>(
+					_window->getLineEdit(1, 2)
+				)->text().toUtf8().data() \
+			);
 			_window->setResult(equation, 1, 2);
 		};
 
-		auto other_tab = [&]() {
-			window.setResult({0, 0}, window.line_edit_text);
+		auto otherTab = [_window = this->_window]() {
+			_window.setResult(_window->getLineEdit(), 0, 0);
 		};
 
 		switch (window.inputtin.first * 10 + window.inputtin.second) {
 			case 10:
 			case 11:
-				other_tab();
+				otherTab();
 				integral();
 				break;
 			case 12:
@@ -560,57 +573,27 @@ public:
 		window.setForResult(window.result);
 	}
             
-    def button_other(self) -> None:
-        result: Union[Calculate, Derivative, Integral, str] = window.result
-        print(str(window.inputtin), "op")
-        def integral():
-            print(window.getLineEdit(1, 2))
-            window.setResult(
-                (1, 2),
-                str(
-                    Integral(
-                        a = window.getResult(1, 0), 
-                        b = window.getResult(1, 1), 
-                        equation = window.getLineEdit(1, 2).text().replace("_DO", "").replace("_ALL", "").replace("_POS", "").replace("_RES", "").replace("_O", "")
-                    )
-                )
-            )
-        def other_tab():
-                window.result = str(Calculate(self.line_edit_text))
-        match window.inputtin:
-            case (1, 0) | (1, 1):
-                other_tab()
-                integral()
-            case (1, 2): 
-                integral()
-            case (2, 0):
-                window.result = str(Derivative(self.line_edit_text))
-            case (3, 0):
-                window.result = str(Derivative(self.line_edit_text, True))
-            case (4, 0) | (4, 1):
-                window.result = self.line_edit_text
-            case (4, 2):
-                window.result = str(
-                    Calculate(
-                        self.line_edit_text.replace(
-                            window.getResult(4, 0), 
-                            window.getResult(4, 1)
-                        )
-                    )
-                )
-            case _:
-                other_tab()
-        window.set_for_result.setText(window.result)
-    
+	static void inputtinLineEdit( \
+		QPushButton *button, Window *window \
+	) {
+		char *label = button.text();
+		QLineEdit *lineEdit = window->getLineEdit();
+		char *text = lineEdit.text();
+		short positionCursor = lineEdit->cursorPosition();
+		char *result = malloc(text_len + label_len + 1);
+		// Копируем часть строки до курсора
+		strncpy(result, text, positionCursor);
+		result[positionCursor] = '\0'; // Завершаем строку
 
-    @staticmethod
-    def inputing_line_edit(button, window) -> None:
-        label: str = button.text()
-        line_edit = window.line_edit
-        text: str = line_edit.text()
-        position_cursor: int = line_edit.cursorPosition()
-        line_edit.setText(text[:position_cursor] + label + text[position_cursor:])
-        line_edit.setCursorPosition(position_cursor + len(label))
+		// Добавляем label
+		strcat(result, label);
+
+		// Добавляем оставшуюся часть строки после курсора
+		strcat(result, text + positionCursor);
+        lineEdit->setText(result);
+        lineEdit->setCursorPosition(positionCursor + strlen(label));
+	}
+};
 
 
 namespace GradientFont {
@@ -1210,7 +1193,7 @@ namespace Grid {
 					const char *labelButton = rowLabelsButton.at(rowIndex);
 					grid->addWidget(createButton( \
 						labelButton, \
-						&LogicCalculate::inputing_line_edit, \
+						&LogicCalculate::inputinLineEdit, \
 						window \
 					), row, column, 1, 1);
 					column++;
@@ -1316,7 +1299,7 @@ namespace Grid {
 		) {
 			addWidget(creatorButton( \
 				label, 20, _window, \
-				&LogicCalculate::inputing_line_edit, \
+				&LogicCalculate::inputinLineEdit, \
 				"keybord" \
 			), row, column, 1, 1);
 		}
