@@ -534,53 +534,53 @@ public:
 					_window->getLineEdit(1, 2)
 				)->text().toUtf8().data() \
 			);
-			_window->setResult(equation, 1, 2);
+			// _window->setResult(equation, 1, 2);
 		};
 
 		auto otherTab = [_window = this->_window]() {
-			_window.setResult(_window->getLineEdit(), 0, 0);
+			// _window->setResult(_window->getLineEdit(), 0, 0);
 		};
-
-		switch (window.inputtin.first * 10 + window.inputtin.second) {
+		array<short, 2> inputtin = _window->getInputtin();
+		switch (inputtin[0] * 10 + inputtin[1]) {
 			case 10:
 			case 11:
 				otherTab();
-				integral();
-				break;
 			case 12:
 				integral();
 				break;
 			case 20:
-				window.setResult({0, 0}, window.line_edit_text); // Пример для Derivative
+				//_window->setResult({0, 0}, window.line_edit_text); // Пример для Derivative
 				break;
 			case 30:
-				window.setResult({0, 0}, window.line_edit_text); // Пример для Derivative с true
+				// _window.setResult({0, 0}, window.line_edit_text); // Пример для Derivative с true
 				break;
 			case 40:
 			case 41:
-				window.setResult({0, 0}, window.line_edit_text);
+				// _window.setResult({0, 0}, window.line_edit_text);
 				break;
 			case 42: {
-				char* modified_text = replaceAll(window.line_edit_text, window.getResult(4, 0), window.getResult(4, 1));
-				window.setResult({0, 0}, modified_text);
+				// char* modified_text = replaceAll(window.line_edit_text, window.getResult(4, 0), window.getResult(4, 1));
+				// _window.setResult({0, 0}, modified_text);
 				break;
 			}
 			default:
-				other_tab();
+				otherTab();
 				break;
 		}
 
-		window.setForResult(window.result);
+		// _window.setForResult(window.result);
 	}
             
 	static void inputtinLineEdit( \
 		QPushButton *button, Window *window \
 	) {
-		char *label = button.text();
-		QLineEdit *lineEdit = window->getLineEdit();
-		char *text = lineEdit.text();
+		char *label = strdup(button->text().toUtf8().data());
+		QLineEdit *lineEdit = reinterpret_cast<QLineEdit *>( \
+				window->getLineEdit() \
+		);
+		char *text = strdup(lineEdit->text().toUtf8().data());
 		short positionCursor = lineEdit->cursorPosition();
-		char *result = malloc(text_len + label_len + 1);
+		char *result;
 		// Копируем часть строки до курсора
 		strncpy(result, text, positionCursor);
 		result[positionCursor] = '\0'; // Завершаем строку
@@ -723,14 +723,13 @@ namespace LineEdit {
 	class  LineEdit : public QLineEdit {
 	private:
 		Window *_window;
-		short _inputtin[2];
+		array<short, 2> _inputtin;
 	public:
 		explicit LineEdit ( \
 				Window *window, \
-				short inputtin[2], const char *text = "" \
+				array<short, 2> inputtin, const char *text = "" \
 		) : _window(window), QLineEdit() {
-			_inputtin[0] = inputtin[0];
-			_inputtin[1] = inputtin[1];
+			_inputtin = inputtin;
 			setText(QString::fromUtf8(text));
 			QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 			setSizePolicy(sizePolicy);
