@@ -142,3 +142,73 @@ class Calculate {
 	}
 
 };
+
+
+
+#include <vector>
+class LongArifmetic {
+private:
+	vector<unsigned long long> _digit;
+	bool _isNegative;
+	unsigned long long _exponent;
+	void _removeZeros() {
+		size_t n = max((long long) 1, _exponent);
+
+		while (_digit.size() > n && _digit[_digit.size() - 1] == 0)
+			_digit.erase(_digit.end() - 1);
+
+		while (_digit.size() > 1 && _digit[0] == 0) {
+			_digit.erase(_digit.begin());
+			exponent--;
+		}
+
+		while (_digit.size() > 1 && _digit[_digit.size() - 1] == 0)
+			_digit.erase(_digit.end() - 1);
+
+		if (isZero()) exponent = 1, sign = 1;
+
+		_normalize();
+	}
+	void _normalize() {
+		size_t start = max(exponent, (long) 0);
+		size_t realDigits = digits.size() - start;
+
+		if (realDigits >= divDigits) {
+			size_t count = 0;
+			size_t maxCount = 0;
+
+			size_t i = start;
+
+			while(i < _digit.size()) {
+				count = 0;
+
+				while (i < digits.size() && digits[i] == 9) 
+					count++, i++;
+				
+				if (count > maxCount)
+					maxCount = count;
+
+				i++;
+			}
+			
+			if (maxCount > divDigits * 4 / 5) {
+				i = digits.size() - 1;
+
+				do {
+					count = 0;
+
+					while (i > 0 && digits[i] != 9)
+						i--;
+
+					while (i > 0 && digits[i] == 9) {
+						count++;
+						i--;
+					}
+				} while (count != maxCount);
+
+				digits.erase(digits.begin() + i + 1, digits.end());
+				digits[i]++;
+			}
+		}
+public:
+
