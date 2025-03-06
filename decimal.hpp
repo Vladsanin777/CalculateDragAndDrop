@@ -15,6 +15,7 @@ private:
     std::vector<byte> fractionalPart;
     bool isNegative;
 public:
+    Decimal(const Decimal& other) = default;
     Decimal() : isNegative(false), integerPart{0} {}
     Decimal(const char * const str) {
         if (*str == '-') isNegative = true;
@@ -22,15 +23,115 @@ public:
         const char * const ptrPoint = strchr(str, '.');
         const size_t len = strlen(str);
         if (!ptrPoint) {
-            for (const char *strInteger = str + len; strInteger >= str; strInteger--)
+            for (const char *strInteger = str + len - 1; strInteger >= str; strInteger--)
                 integerPart.push_back((byte)(*strInteger-'0'));
+            fractionalPart = {0};
             return;
         }
-        for (const char* strInteger = ptrPoint; strInteger >= str; strInteger--)
+        putchar('\n');
+        for (const char* strInteger = ptrPoint - 1; strInteger >= str; strInteger--) {
+            putchar(*strInteger);
             integerPart.push_back((byte)(*strInteger-'0'));
+        }
+        putchar('\n');
         const char * const ptrEnd = str + len;
-        for (const char* strFractional = ptrPoint; strFractional < ptrEnd; strFractional--)
+        for (const char* strFractional = ptrPoint + 1; strFractional < ptrEnd; strFractional++) {
+            putchar(*strFractional);
             fractionalPart.push_back((byte)(*strFractional-'0'));
+        }
+        putchar('\n');
+    }
+    void printNumber() {
+        if (isNegative)
+            putchar('-');
+        {
+            const std::vector<byte>::iterator byteIntegerEnd = integerPart.begin() - 1;
+            for (
+                std::vector<byte>::iterator byteInteger = integerPart.end() - 1; 
+                byteInteger > byteIntegerEnd; byteInteger--
+            ) printf("%hhu", *byteInteger);
+        }
+        putchar('.');
+        {
+            const std::vector<byte>::iterator byteFractionalEnd = fractionalPart.end();
+            for (
+                std::vector<byte>::iterator byteFractional = fractionalPart.begin();
+                byteFractional < byteFractionalEnd; byteFractional++
+            ) printf("%hhu", *byteFractional);
+        }
+        putchar('\n');
+    }
+    Decimal operator+(const Decimal& other) const {
+        if (isNegative != other.isNegative) {
+            //return *this - (-other);
+        }
+        Decimal result;
+        result.isNegative = isNegative;
+        size_t carry = 0;
+        const size_t absoluteMax = ~size_t(0);
+        // Start Fractional Part
+        {
+            // Sheach min and max size vectors factional part
+            const size_t minFractional = \
+                std::min(fractionalPart.size(), other.fractionalPart.size()) - 1, \
+                maxFractional = std::max(fractionalPart.size(), other.fractionalPart.size());
+            // Resize result fractional
+            result.fractionalPart.resize(maxFractional);
+            // define the longest part
+            const std::vector<byte> &maxFractionalPart = \
+                fractionalPart.size() > other.fractionalPart.size() ? \
+                fractionalPart : other.fractionalPart;
+            // i it is index digit start from end digit
+            size_t i = maxFractional + 1;
+            // copying element from the longest part to result \
+                to align the fractional part
+            for (; i > minFractional; i--)
+                result.fractionalPart[i] = maxFractionalPart[i];
+            // addition of the remainder
+            for (size_t sum; i != absoluteMax; i--) {
+                sum = fractionalPart[i] + other.fractionalPart[i] + carry;
+                result.fractionalPart[i] = sum % 10;
+                carry = sum / 10;
+            }
+        }
+        std::cout << carry << std::endl;
+        // End Fractional Part
+        // Start Integer Part
+        {
+            // Sheatch min and max size vectors integer part
+            const size_t minInteger = std::min(integerPart.size(), other.integerPart.size()), \
+                maxInteger = std::max(integerPart.size(), other.integerPart.size());
+
+            // Resize result integer
+            result.integerPart.resize(maxInteger);
+            // i it is index digit start from end digit
+            size_t i = 0;
+            // addition two operand
+            for (size_t sum; i < minInteger; i++) {
+                sum = integerPart[i] + other.integerPart[i] + carry;
+                std::cout << i << (short)integerPart[i] << ' ' << (short)other.integerPart[i] << ' ' << carry << ' ' << sum << std::endl;
+                result.integerPart[i] = sum % 10;
+                carry = sum / 10;
+            }
+            // sheach the longest operand integer
+            const std::vector<byte> &maxIntegerPart = \
+                integerPart.size() > other.integerPart.size() ? integerPart : other.integerPart;
+            // copying remainder operand integer
+            for (size_t sum; i < maxInteger; i++) {
+                sum = maxIntegerPart[i] + carry;
+                std::cout << sum << std::endl;
+                result.integerPart[i] = sum % 10;
+                carry = sum / 10;
+            }
+            // adding remainder number from main addtion integer
+            while (carry != 0) {
+                result.integerPart.push_back(carry % 10);
+                carry /= 10;
+            }
+        }
+        // End Integer Part
+
+        return result;
     }
 };
 /*
