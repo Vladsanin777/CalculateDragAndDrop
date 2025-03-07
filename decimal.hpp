@@ -63,7 +63,7 @@ public:
     }
     Decimal operator+(const Decimal& other) const {
         if (isNegative != other.isNegative) {
-            //return *this - (-other);
+            return *this - (-other);
         }
         Decimal result;
         result.isNegative = isNegative;
@@ -132,6 +132,30 @@ public:
         // End Integer Part
 
         return result;
+    }
+    Decimal operator~() const {
+        Decimal result {*this};
+        size_t lenght{integerPart.size()};
+        for (std::vector<byte>::iterator itInteger {result.integerPart.begin()}; \
+            lenght--; itInteger++
+        )
+            *itInteger = 9 - *itInteger;
+        lenght = fractionalPart.size();
+        for (std::vector<byte>::iterator itFractional {result.fractionalPart.begin()};
+            lenght--; itFractional++
+        )
+            *itFractional = 9 - *itFractional;
+        return result;
+    }
+    Decimal operator-() const {
+        Decimal result = *this;
+        result.isNegative = !isNegative;
+        return result;
+    }
+    Decimal operator-(const Decimal &other) const {
+        if (isNegative != other.isNegative) {
+            return *this + (-other);
+        }
     }
 };
 /*
