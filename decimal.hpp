@@ -14,6 +14,7 @@ private:
     std::vector<byte> integerPart;
     std::vector<byte> fractionalPart;
     bool isNegative;
+    static size_t EPSILON;
 public:
     Decimal(const Decimal& other) = default;
     Decimal() : isNegative(false), integerPart{0}, fractionalPart{0} {}
@@ -239,6 +240,7 @@ public:
         return false;
     }
     Decimal operator-(const Decimal& other) const {
+        puts("predvar substraction");
         if (isNegative != other.isNegative) {
             return *this + (-other);
         }
@@ -407,156 +409,154 @@ public:
 
         return result;
     }
+    bool operator>=(const Decimal& other) const {
+        if (isNegative && !other.isNegative) return false;
+        if (!isNegative && other.isNegative) return true;
+        bool (*func) (bool) =  isNegative == other.isNegative ? \
+            [] (bool isTrue) -> bool {return isTrue;} : \
+            [] (bool isTrue) -> bool {return !isTrue;};
+        size_t integerThisSize = integerPart.size(), \
+            integerOtherSize = other.integerPart.size();
+        if (integerThisSize < integerOtherSize) return false;
+        if (integerOtherSize > integerOtherSize) return true;
+        for (std::vector<byte>::const_iterator integerThis \
+            = integerPart.end(), integerOther = \
+            other.integerPart.end(); integerOtherSize--; \
+            integerThis--, integerOther-- \
+        ) {
+            if (*integerThis == *integerOther) continue;
+            if (*integerThis > *integerOther) return func(true);
+            std::cout << "op" << std::endl;
+            return func(false);
+        }
+        size_t fractionalThisSize = fractionalPart.size(), \
+            fractionalOtherSize = other.fractionalPart.size();
+        size_t minFractionSize = std::min(fractionalThisSize, fractionalOtherSize);
+        for (std::vector<byte>::const_iterator fractionalThis \
+            = fractionalPart.begin(), fractionalOther = \
+            other.fractionalPart.begin(); minFractionSize--; \
+            fractionalThis--, fractionalOther-- \
+        ) {
+            if (*fractionalThis == *fractionalOther) continue;
+            if (*fractionalThis > *fractionalOther) return func(true);
+            return func(false);
+        }
+        if (fractionalThisSize >= fractionalOtherSize) return func(true);
+        return func(false);
+    }
+    Decimal operator%(const Decimal& other) const {
+        if (other.isZero()) throw std::runtime_error("Division by zero");
+        Decimal result = *this;
+        while (result >= other)
+            result = result - other;
+        return result;
+    }
+    Decimal& operator<<=(size_t step) {
+        const size_t fractionalSize = fractionalPart.size();
+        if (step >= fractionalSize) {
+            // Вырезаем первые три элемента
+            std::vector<byte>::iterator start = fractionalPart.begin(), \
+                end = start + step;
+
+            // Вставляем вырезанные элементы в начало целевого вектора в обратном порядке
+            integerPart.insert(integerPart.begin(), end, start);
+
+            // Удаляем вырезанные элементы из исходного вектора
+            fractionalPart.erase(start, end);
+            return *this;
+        }
+        if (fractionalSize > 0) {
+            step -= fractionalSize;
+            integerPart.insert(integerPart.begin(), fractionalPart.end(), \
+                fractionalPart.begin());
+            fractionalPart.clear();
+        }
+        integerPart.insert(integerPart.begin(), step, 0);
+        return *this;
+    }
+    // !!! Здесь ошибка
+    Decimal& operator>>=(size_t step) {
+        const size_t integerSize = integerPart.size();
+        if (step >= integerSize) {
+            // Вырезаем первые три элемента
+            std::vector<byte>::iterator start = integerPart.begin(), \
+                end = start + step;
+
+            // Вставляем вырезанные элементы в начало целевого вектора в обратном порядке
+            fractionalPart.insert(fractionalPart.begin(), end, start);
+
+            // Удаляем вырезанные элементы из исходного вектора
+            integerPart.erase(start, end);
+            return *this;
+        }
+        if (integerSize > 0) {
+            step -= integerSize;
+            fractionalPart.insert(fractionalPart.begin(), integerPart.end(), \
+                integerPart.begin());
+            integerPart.clear();
+        }
+        fractionalPart.insert(fractionalPart.begin(), step, 0);
+        return *this;
+    }
+    Decimal& operator++(int arrgument) {
+        puts("++");
+        *this = *this + Decimal{"1"};
+        return *this;
+    }
     Decimal operator/(const Decimal& other) const {
-        if (other.isZero()) {
-            throw std::runtime_error("Division by zero");
-        }
-
-        Decimal result;
-        result.isNegative = isNegative != other.isNegative;
-
-        // Определяем количество знаков в дробной части делителя
-        size_t divisor_scale = other.fractionalPart.size();
-
-        // Умножаем делимое и делитель на 10^divisor_scale, чтобы делитель стал целым
-        Decimal adjusted_dividend = *this * Decimal::powerOfTen(divisor_scale);
-        Decimal adjusted_divisor = other * Decimal::powerOfTen(divisor_scale);
-
-        // Объединяем цифры делимого (целая + дробная части)
-        std::vector<byte> dividend = adjusted_dividend.getCombined();
-        std::vector<byte> divisor = adjusted_divisor.getCombined();
-
-        // Выполняем деление объединённых цифр
-        auto [quotient, remainder] = longDivision(dividend, divisor);
-
-        // Определяем позицию десятичной точки (сумма дробных цифр делимого)
-        size_t result_scale = fractionalPart.size() + divisor_scale;
-
-        // Разделяем результат на целую и дробную части
-        result.splitCombined(quotient, result_scale);
-        result.normalize();
-
-        return result;
-    }
-
-    // Вспомогательные методы
-    std::vector<byte> getCombined() const {
-        std::vector<byte> combined;
-        combined.reserve(integerPart.size() + fractionalPart.size());
-        
-        // Целая часть в обратном порядке
-        for (auto it = integerPart.rbegin(); it != integerPart.rend(); ++it)
-            combined.push_back(*it);
-        
-        // Дробная часть как есть
-        combined.insert(combined.end(), fractionalPart.begin(), fractionalPart.end());
-        return combined;
-    }
-
-    void splitCombined(const std::vector<byte>& digits, size_t scale) {
-        integerPart.clear();
-        fractionalPart.clear();
-
-        // Целая часть (всё что до scale)
-        if (digits.size() > scale) {
-            integerPart.assign(digits.rbegin() + scale, digits.rend());
-        } else {
-            integerPart.push_back(0);
-        }
-
-        // Дробная часть (последние scale цифр)
-        if (scale > 0) {
-            size_t start = digits.size() > scale ? digits.size() - scale : 0;
-            fractionalPart.assign(digits.begin() + start, digits.end());
-        }
-    }
-
-    static std::pair<std::vector<byte>, std::vector<byte>> longDivision(
-        const std::vector<byte>& dividend, 
-        const std::vector<byte>& divisor
-    ) {
-        std::vector<byte> quotient;
-        std::vector<byte> current;
-        
-        // Алгоритм длинного деления
-        for (auto it = dividend.rbegin(); it != dividend.rend(); ++it) {
-            current.insert(current.begin(), *it);
-            trimZeros(current);
-            
-            byte digit = 0;
-            while (compare(current, divisor) >= 0) {
-                current = subtract(current, divisor);
-                digit++;
+        Decimal thisCopy{*this}, result{"0"};
+        while (thisCopy >= other) 
+            thisCopy = thisCopy - other, \
+                result++;
+        Decimal otherCopy{other};
+        for (size_t step{0}; !thisCopy.isZero() && step < EPSILON; step++) {
+            Decimal temp{"0"};
+            otherCopy >>= 1;
+            puts("sg");
+            thisCopy.printNumber();
+            otherCopy.printNumber();
+            while (thisCopy >= otherCopy) {
+                puts("lkjh");
+                thisCopy = thisCopy - otherCopy;
+                temp++;
             }
-            quotient.push_back(digit);
-        }
-        
-        reverse(quotient.begin(), quotient.end());
-        trimZeros(quotient);
-        return {quotient, current};
-    }
-
-    // Вспомогательные функции
-    static void trimZeros(std::vector<byte>& digits) {
-        size_t first_non_zero = 0;
-        while (first_non_zero < digits.size() && digits[first_non_zero] == 0)
-            first_non_zero++;
-        digits.erase(digits.begin(), digits.begin() + first_non_zero);
-    }
-
-    static int compare(const std::vector<byte>& a, const std::vector<byte>& b) {
-        if (a.size() != b.size()) 
-            return a.size() > b.size() ? 1 : -1;
-        for (int i = a.size()-1; i >= 0; i--) {
-            if (a[i] != b[i]) 
-                return a[i] > b[i] ? 1 : -1;
-        }
-        return 0;
-    }
-
-    static std::vector<byte> subtract(std::vector<byte> a, const std::vector<byte>& b) {
-        std::vector<byte> result;
-        int borrow = 0;
-        
-        for (size_t i = 0; i < a.size(); i++) {
-            int sub = a[i] - borrow;
-            if (i < b.size()) sub -= b[i];
-            
-            if (sub < 0) {
-                sub += 10;
-                borrow = 1;
-            } else {
-                borrow = 0;
-            }
-            result.push_back(static_cast<byte>(sub));
-        }
-        trimZeros(result);
-        return result;
-    }
-
-    static Decimal powerOfTen(size_t exponent) {
-        Decimal result;
-        result.integerPart.push_back(1);
-        for (size_t i = 0; i < exponent; i++) {
-            result = result * Decimal("10");
+            temp >>= step;
+            result = result + temp;
         }
         return result;
-    }
 
-    void normalize() {
-        // Удаление ведущих нулей в целой части
-        while (integerPart.size() > 1 && integerPart.back() == 0)
-            integerPart.pop_back();
-        
-        // Удаление хвостовых нулей в дробной части
-        while (!fractionalPart.empty() && fractionalPart.back() == 0)
-            fractionalPart.pop_back();
     }
 
     bool isZero() const {
-        return integerPart.size() == 1 && integerPart[0] == 0 && fractionalPart.empty();
+        for (byte d : integerPart) {
+            if (d != 0) return false;
+        }
+        for (byte d : fractionalPart) {
+            if (d != 0) return false;
+        }
+        return true;
+    }
+
+    Decimal abs() const {
+        Decimal result = *this;
+        result.isNegative = false;
+        return result;
+    }
+    void normalize() {
+        // Удаление ведущих нулей в целой части (кроме последнего, если число 0)
+        while (integerPart.size() > 1 && integerPart.back() == 0) {
+            integerPart.pop_back();
+        }
+
+        // Удаление хвостовых нулей в дробной части
+        while (!fractionalPart.empty() && fractionalPart.back() == 0) {
+            fractionalPart.pop_back();
+        }
     }
 };
+
+size_t Decimal::EPSILON = 100;
+
 /*
 // Класс который на писал Deepseek это его максимум!!!
 class Decimal {
