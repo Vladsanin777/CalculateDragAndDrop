@@ -65,7 +65,8 @@
     "array": "cpp",
     "string_view": "cpp",
     "initializer_list": "cpp",
-    "span": "cpp"
+    "span": "cpp",
+    "ostream": "cpp"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }
