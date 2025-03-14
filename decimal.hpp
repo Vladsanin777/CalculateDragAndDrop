@@ -528,50 +528,79 @@ public:
         *this + one;
         return *this;
     }
-    Decimal operator/(Decimal& other) const {
-        Decimal thisCopy{*this}, result{"0"};
-        while (thisCopy >= other) {
-            //std::cout << "pop" << std::endl; 
-            thisCopy - other, \
-                result++; //std::cout << "pop";
-            //thisCopy.printNumber();
+    Decimal& operator/(Decimal& other) {
+        if (other.isZero()) {
+            throw std::invalid_argument("Division by zero");
         }
-        //thisCopy.printNumber();
-        //other.printNumber();
-        //std::cout << "mod ";thisCopy.printNumber();
-        //std::cout << "/operator "; result.printNumber();
+        Decimal thisCopy{*this};
+        *this = Decimal{"0"};
+
+        while (thisCopy >= other) {
+            thisCopy - other, \
+                (*this)++;
+        }
         Decimal otherCopy{other};
         otherCopy >>= 1;
         otherCopy.normalize();
         for (size_t step{1}; !thisCopy.isZero() && step < EPSILON; step++) {
-            Decimal temp{"0"};
-            //puts("sg");
-            //thisCopy.printNumber();
-            //otherCopy.printNumber();
-            //std::cout << "lkjh" << (thisCopy >= otherCopy) << std::endl;
-            //thisCopy.normalize(), otherCopy.normalize();
-            //puts("pop5");
+            byte temp{0};
             while (thisCopy >= otherCopy) {
-                //puts("pop1");
-                //std::cout << (thisCopy >= otherCopy) << std::endl;
-                //thisCopy.printNumber();
-                //otherCopy.printNumber();
                 thisCopy - otherCopy;
                 temp++;
             }
-            //std::cout << "form";
-            //temp.printNumber();
-            temp >>= step;
-            //std::cout << "after";
-            //temp.printNumber();
-            //std::cout << "step " << step << std::endl;
-            result = result + temp;
-            //std::cout << "result division";
-            //result.printNumber();
+            this->fractionalPart.push_back(temp);
             otherCopy >>= 1;
+            if (step % 15 != 0 || this->fractionalPart.empty()) continue;
+            size_t periodLength = findPeriod(this->fractionalPart);
+            
+            if (periodLength > 0) {
+                // Вставка периода
+                std::vector<byte> period(
+                    this->fractionalPart.end() - periodLength,
+                    this->fractionalPart.end()
+                );
+                
+                while (step + periodLength <= EPSILON) {
+                    this->fractionalPart.insert(
+                        this->fractionalPart.end(),
+                        period.begin(),
+                        period.end()
+                    );
+                    step += periodLength;
+                }
+                
+                // Добавление оставшихся цифр
+                if (step < EPSILON) {
+                    size_t remaining = EPSILON - step;
+                    this->fractionalPart.insert(
+                        this->fractionalPart.end(),
+                        period.begin(),
+                        period.begin() + remaining
+                    );
+                }
+                break;
+            }
         }
-        return result;
 
+        return *this;
+    }
+
+    // Вспомогательная функция для поиска периода
+    size_t findPeriod(const std::vector<byte>& digits) {
+        for (size_t len = 1; len <= digits.size() / 2; ++len) {
+            bool isPeriodic = true;
+            for (size_t i = 0; i < len; ++i) {
+                for (size_t j = i + len; j < digits.size(); j += len) {
+                    if (digits[j] != digits[i]) {
+                        isPeriodic = false;
+                        break;
+                    }
+                }
+                if (!isPeriodic) break;
+            }
+            if (isPeriodic) return len;
+        }
+        return 0;
     }
 
     bool isZero() const {
