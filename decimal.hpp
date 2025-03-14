@@ -17,7 +17,7 @@ private:
     static size_t EPSILON;
 public:
     Decimal(const Decimal& other) = default;
-    Decimal() : isNegative(false), integerPart{0}, fractionalPart{0} {}
+    Decimal() : isNegative(false), integerPart{0} {}
     Decimal(const char * const str) {
         bool (*condition) (const char * const, const char * const);
         if (*str == '-') {
@@ -42,21 +42,21 @@ public:
         if (!ptrPoint) {
             for (const char *strInteger = str + len - 1; condition(strInteger, str); strInteger--)
                 integerPart.push_back((byte)(*strInteger-'0'));
-            fractionalPart = {0};
+            //fractionalPart = {0};
             return;
         }
-        putchar('\n');
+        //putchar('\n');
         for (const char* strInteger = ptrPoint - 1; condition(strInteger, str); strInteger--) {
-            putchar(*strInteger);
+            //putchar(*strInteger);
             integerPart.push_back((byte)(*strInteger-'0'));
         }
-        putchar('\n');
+        //putchar('\n');
         const char * const ptrEnd = str + len;
         for (const char* strFractional = ptrPoint + 1; strFractional < ptrEnd; strFractional++) {
-            putchar(*strFractional);
+            //putchar(*strFractional);
             fractionalPart.push_back((byte)(*strFractional-'0'));
         }
-        putchar('\n');
+        //putchar('\n');
     }
     void printNumber() {
         if (isNegative)
@@ -82,7 +82,7 @@ public:
         if (isNegative != other.isNegative) {
             return *this - (-other);
         }
-        puts("addition");
+        //puts("addition");
         size_t carry = 0;
         const size_t absoluteMax = ~size_t(0);
         // Start Fractional Part
@@ -98,11 +98,17 @@ public:
                 fractionalPart.size() > other.fractionalPart.size() ? \
                 fractionalPart : other.fractionalPart;
             // i it is index digit start from end digit
-            size_t i = maxFractional + 1;
+            size_t i = maxFractional - 1;
             // copying element from the longest part to result \
                 to align the fractional part
+            //printNumber(), other.printNumber();
             for (; i > minFractional; i--)
                 fractionalPart[i] = maxFractionalPart[i];
+            //std::cout << i << std::endl;
+            //for (std::vector<byte>::iterator it = other.fractionalPart.begin();
+                //it != other.fractionalPart.end(); it++)
+                //std::cout << (short)*it << ' ';
+            //std::cout << std::endl;
             // addition of the remainder
             for (size_t sum; i != absoluteMax; i--) {
                 sum = fractionalPart[i] + other.fractionalPart[i] + carry;
@@ -110,7 +116,7 @@ public:
                 carry = sum / 10;
             }
         }
-        std::cout << carry << std::endl;
+        //std::cout << carry << std::endl;
         // End Fractional Part
         // Start Integer Part
         {
@@ -125,7 +131,7 @@ public:
             // addition two operand
             for (size_t sum; i < minInteger; i++) {
                 sum = integerPart[i] + other.integerPart[i] + carry;
-                std::cout << i << (short)integerPart[i] << ' ' << (short)other.integerPart[i] << ' ' << carry << ' ' << sum << std::endl;
+                // std::cout << i << (short)integerPart[i] << ' ' << (short)other.integerPart[i] << ' ' << carry << ' ' << sum << std::endl;
                 integerPart[i] = sum % 10;
                 carry = sum / 10;
             }
@@ -135,7 +141,7 @@ public:
             // copying remainder operand integer
             for (size_t sum; i < maxInteger; i++) {
                 sum = maxIntegerPart[i] + carry;
-                std::cout << sum << std::endl;
+                //std::cout << sum << std::endl;
                 integerPart[i] = sum % 10;
                 carry = sum / 10;
             }
@@ -201,6 +207,7 @@ public:
         }
 
         // Сравнение целых частей
+
         if (integerPart.size() > other.integerPart.size()) {
             return !isNegative; // Если текущее число длиннее, оно больше (если оба положительные)
         }
@@ -237,15 +244,15 @@ public:
         return false;
     }
     Decimal& operator-(Decimal& other) {
-        puts("predvar substraction");
+        //puts("predvar substraction");
         if (isNegative != other.isNegative) {
             return *this + (-other);
         }
-        puts("substraction");
+        //puts("substraction");
 
 
         // Определяем, какое число больше по модулю
-        bool thisIsGreater = (*this > other);
+        bool thisIsGreater = (*this >= other);
 
         if (!thisIsGreater) {
             isNegative = !isNegative;
@@ -256,7 +263,7 @@ public:
 
         size_t borrow = 0;
 
-        std::cout<<"launch fractional part" << std::endl;
+        //std::cout<<"launch fractional part" << std::endl;
         // Вычитание дробной части
         {
             size_t maxFractional = std::max(minuend.fractionalPart.size(), subtrahend.fractionalPart.size());
@@ -276,7 +283,7 @@ public:
                 }
             }
         }
-        std::cout<<"launch integer part" << std::endl;
+        //std::cout<<"launch integer part" << std::endl;
 
         // Вычитание целой части
         {
@@ -296,19 +303,19 @@ public:
                 }
             }
         }
-          
-        std::cout<<"finish integer part" << std::endl;
+        normalize();
+        //std::cout<<"finish integer part" << std::endl;
         // Удаление ведущих нулей в целой части
-        while (integerPart.size() > 1 && integerPart.back() == 0) {
-            integerPart.pop_back();
-        }
-        std::cout << "opi" << std::endl;
+        //while (integerPart.size() > 1 && integerPart.back() == 0) {
+            //integerPart.pop_back();
+        //}
+        //std::cout << "opi" << std::endl;
         // Удаление ведущих нулей в дробной части
-        while (fractionalPart.size() > 1 && fractionalPart.back() == 0) {
-            fractionalPart.pop_back();
-        }
+        //while (fractionalPart.size() > 1 && fractionalPart.back() == 0) {
+            //fractionalPart.pop_back();
+        //}
 
-        std::cout << "opa" << std::endl;
+        //std::cout << "opa" << std::endl;
         return *this;
     }
     Decimal operator*(const Decimal& other) const {
@@ -416,22 +423,24 @@ public:
             [] (bool isTrue) -> bool {return !isTrue;};
         size_t integerThisSize = integerPart.size(), \
             integerOtherSize = other.integerPart.size();
-        if (integerThisSize < integerOtherSize) return false;
-        if (integerOtherSize > integerOtherSize) return true;
-        for (std::vector<byte>::const_iterator it{integerPart.cbegin()}; it != integerPart.cend(); it++)
-            std::cout << (short)*it << std::endl;
+        if (integerThisSize == 1 && integerPart.at(0) == 0) integerThisSize = 0;
+        if (integerOtherSize == 1 && other.integerPart.at(0) == 0) integerOtherSize = 0;
+        if (integerThisSize < integerOtherSize) return func(false);
+        if (integerThisSize > integerOtherSize) return func(true);
+        //for (std::vector<byte>::const_iterator it{integerPart.cbegin()}; it != integerPart.cend(); it++)
+            //std::cout << (short)*it << std::endl;
         for (std::vector<byte>::const_reverse_iterator integerThis \
             = integerPart.crend()-1, integerOther = \
             other.integerPart.crend()-1; integerOtherSize--; \
             integerThis--, integerOther-- \
         ) {
-            printNumber();
-            other.printNumber();
-            std::cout << "rowjk" << (short)*integerThis << (short)*integerOther << std::endl;
+            //printNumber();
+            //other.printNumber();
+            //std::cout << "rowjk" << (short)*integerThis << (short)*integerOther << std::endl;
             if (*integerThis == *integerOther) continue;
-            std::cout << "kkjjj" << std::endl;
+            //std::cout << "kkjjj" << std::endl;
             if (*integerThis > *integerOther) return func(true);
-            std::cout << "op" << std::endl;
+            //std::cout << "op" << std::endl;
             return func(false);
         }
         size_t fractionalThisSize = fractionalPart.size(), \
@@ -450,7 +459,7 @@ public:
         if (fractionalThisSize >= fractionalOtherSize) return func(true);
         return func(false);
     }
-    Decimal operator%(Decimal& other) {
+    Decimal& operator%(Decimal& other) {
         if (other.isZero()) throw std::runtime_error("Division by zero");
         while (*this >= other)
             *this - other;
@@ -480,12 +489,12 @@ public:
         return *this;
     }
     Decimal& operator>>=(size_t step) {
-        std::cout << "fvfzklzdf" << integerPart.size() << std::endl;
-        for (std::vector<byte>::const_iterator it = integerPart.cbegin(); it != integerPart.cend(); it++)
-            printf("%hhu\n", *it);
+        //std::cout << "fvfzklzdf" << integerPart.size() << std::endl;
+        //for (std::vector<byte>::const_iterator it = integerPart.cbegin(); it != integerPart.cend(); it++)
+            //printf("%hhu\n", *it);
         const size_t integerSize = integerPart.size();
         if (step <= integerSize) {
-            std::cout << "fvfzklzdf" << std::endl;
+            //std::cout << "fvfzklzdf" << std::endl;
             // Вырезаем первые три элемента
             std::vector<byte>::iterator start = integerPart.begin(), \
                 end = start + step;
@@ -500,7 +509,7 @@ public:
             return *this;
         }
         if (integerSize > 1) {
-            std::cout << "jhfjk" << std::endl;
+            //std::cout << "jhfjk" << std::endl;
             step -= integerSize;
             fractionalPart.insert(fractionalPart.begin(), integerPart.rend(), \
                 integerPart.rbegin());
@@ -514,7 +523,7 @@ public:
         return *this;
     }
     Decimal& operator++(int arrgument) {
-        puts("++");
+        //puts("++");
         Decimal one{"1"};
         *this + one;
         return *this;
@@ -522,33 +531,44 @@ public:
     Decimal operator/(Decimal& other) const {
         Decimal thisCopy{*this}, result{"0"};
         while (thisCopy >= other) {
+            //std::cout << "pop" << std::endl; 
             thisCopy - other, \
-                result++; std::cout << "pop";
+                result++; //std::cout << "pop";
+            //thisCopy.printNumber();
         }
-        std::cout << "mod ";thisCopy.printNumber();
-        std::cout << "/operator "; result.printNumber();
+        //thisCopy.printNumber();
+        //other.printNumber();
+        //std::cout << "mod ";thisCopy.printNumber();
+        //std::cout << "/operator "; result.printNumber();
         Decimal otherCopy{other};
+        otherCopy >>= 1;
+        otherCopy.normalize();
         for (size_t step{1}; !thisCopy.isZero() && step < EPSILON; step++) {
             Decimal temp{"0"};
-            otherCopy >>= 1;
-            puts("sg");
-            thisCopy.printNumber();
-            otherCopy.printNumber();
-            std::cout << "lkjh" << (thisCopy >= otherCopy) << std::endl;
-            thisCopy.normalize(), otherCopy.normalize();
+            //puts("sg");
+            //thisCopy.printNumber();
+            //otherCopy.printNumber();
+            //std::cout << "lkjh" << (thisCopy >= otherCopy) << std::endl;
+            //thisCopy.normalize(), otherCopy.normalize();
+            //puts("pop5");
             while (thisCopy >= otherCopy) {
-                thisCopy = thisCopy - otherCopy;
+                //puts("pop1");
+                //std::cout << (thisCopy >= otherCopy) << std::endl;
+                //thisCopy.printNumber();
+                //otherCopy.printNumber();
+                thisCopy - otherCopy;
                 temp++;
             }
-            std::cout << "form";
-            temp.printNumber();
+            //std::cout << "form";
+            //temp.printNumber();
             temp >>= step;
-            std::cout << "after";
-            temp.printNumber();
-            std::cout << "step " << step << std::endl;
+            //std::cout << "after";
+            //temp.printNumber();
+            //std::cout << "step " << step << std::endl;
             result = result + temp;
-            std::cout << "result division";
-            result.printNumber();
+            //std::cout << "result division";
+            //result.printNumber();
+            otherCopy >>= 1;
         }
         return result;
 
@@ -564,10 +584,9 @@ public:
         return true;
     }
 
-    Decimal abs() const {
-        Decimal result = *this;
-        result.isNegative = false;
-        return result;
+    Decimal& abs() {
+        isNegative = false;
+        return *this;
     }
     void normalize() {
         // Удаление ведущих нулей в целой части (кроме последнего, если число 0)
@@ -582,7 +601,7 @@ public:
     }
 };
 
-size_t Decimal::EPSILON = 400;
+size_t Decimal::EPSILON = 10000;
 
 /*
 // Класс который на писал Deepseek это его максимум!!!

@@ -6,7 +6,13 @@ int main() {
     Decimal b("472.26518");
     //Decimal a{"1"}, b{"2"};
     //a.printNumber();
+    //Decimal a{"0.463829592123"}, b{"0.47226518"};
+    a.printNumber();
+    std::cout << " / " << std::endl;
+    b.printNumber();
+    std::cout << " = " << std::endl;
     (a / b).printNumber();
+    //Decimal a{"0.463829592123"}, b{"0.47226518"};
     //std::cout << (a >= b) << std::endl;
     // Decimal res = a / b;
     // res.printNumber();
