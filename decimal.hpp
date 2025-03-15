@@ -14,7 +14,8 @@ private:
     std::vector<byte> integerPart;
     std::vector<byte> fractionalPart;
     bool isNegative;
-    static size_t EPSILON;
+    static size_t EPSILON_TRUE;
+    static size_t EPSILON_FALSE;
 public:
     Decimal(const Decimal& other) = default;
     Decimal() : isNegative(false), integerPart{0} {}
@@ -542,7 +543,7 @@ public:
         Decimal otherCopy{other};
         otherCopy >>= 1;
         otherCopy.normalize();
-        for (size_t step{1}; !thisCopy.isZero() && step < EPSILON; step++) {
+        for (size_t step{1}; !thisCopy.isZero() && step < EPSILON_TRUE; step++) {
             byte temp{0};
             while (thisCopy >= otherCopy) {
                 thisCopy - otherCopy;
@@ -552,7 +553,7 @@ public:
             otherCopy >>= 1;
             if (step % 15 != 0 || this->fractionalPart.empty()) continue;
             size_t periodLength = findPeriod(this->fractionalPart);
-            
+            std::cout << periodLength << std::endl;
             if (periodLength > 0) {
                 // Вставка периода
                 std::vector<byte> period(
@@ -560,7 +561,7 @@ public:
                     this->fractionalPart.end()
                 );
                 
-                while (step + periodLength <= EPSILON) {
+                while (step + periodLength <= EPSILON_FALSE) {
                     this->fractionalPart.insert(
                         this->fractionalPart.end(),
                         period.begin(),
@@ -570,8 +571,8 @@ public:
                 }
                 
                 // Добавление оставшихся цифр
-                if (step < EPSILON) {
-                    size_t remaining = EPSILON - step;
+                if (step < EPSILON_FALSE) {
+                    size_t remaining = EPSILON_FALSE - step;
                     this->fractionalPart.insert(
                         this->fractionalPart.end(),
                         period.begin(),
@@ -586,20 +587,26 @@ public:
     }
 
     // Вспомогательная функция для поиска периода
-    size_t findPeriod(const std::vector<byte>& digits) {
-        for (size_t len = 1; len <= digits.size() / 2; ++len) {
-            bool isPeriodic = true;
-            for (size_t i = 0; i < len; ++i) {
-                for (size_t j = i + len; j < digits.size(); j += len) {
-                    if (digits[j] != digits[i]) {
-                        isPeriodic = false;
-                        break;
-                    }
+    size_t findPeriod(const std::vector<byte>& digits) const {
+        if (digits.empty()) return 0;
+
+        const auto begin = digits.cbegin();
+        const auto end = digits.cend();
+        const size_t n = digits.size();
+
+        // Максимальная длина периода — половина вектора
+        for (size_t k = 1; k <= n / 2; ++k) {
+            bool isPeriod = true;
+            // Проверяем, совпадают ли последние k элементов с предыдущими k
+            for (size_t i = 0; i < k; ++i) {
+                if (*(end - k - k + i) != *(end - k + i)) {
+                    isPeriod = false;
+                    break;
                 }
-                if (!isPeriodic) break;
             }
-            if (isPeriodic) return len;
+            if (isPeriod) return k;
         }
+
         return 0;
     }
 
@@ -630,7 +637,8 @@ public:
     }
 };
 
-size_t Decimal::EPSILON = 10000;
+size_t Decimal::EPSILON_TRUE = 10000;
+size_t Decimal::EPSILON_FALSE = 100000;
 
 /*
 // Класс который на писал Deepseek это его максимум!!!
