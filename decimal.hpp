@@ -553,7 +553,7 @@ public:
             otherCopy >>= 1;
             if (step % 16 != 0 || this->fractionalPart.empty()) continue;
             size_t periodLength = findPeriod(this->fractionalPart);
-            std::cout << periodLength << std::endl;
+            //std::cout << periodLength << std::endl;
             if (periodLength > 0) {
                 // Вставка периода
                 std::vector<byte> period(
