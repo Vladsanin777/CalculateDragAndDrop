@@ -551,7 +551,7 @@ public:
             }
             this->fractionalPart.push_back(temp);
             otherCopy >>= 1;
-            if (step % 15 != 0 || this->fractionalPart.empty()) continue;
+            if (step % 16 != 0 || this->fractionalPart.empty()) continue;
             size_t periodLength = findPeriod(this->fractionalPart);
             std::cout << periodLength << std::endl;
             if (periodLength > 0) {
@@ -595,7 +595,7 @@ public:
         const size_t n = digits.size();
 
         // Максимальная длина периода — половина вектора
-        for (size_t k = 1; k <= n / 2; ++k) {
+        for (size_t k = n >> 4; k <= n >> 1; ++k) {
             bool isPeriod = true;
             // Проверяем, совпадают ли последние k элементов с предыдущими k
             for (size_t i = 0; i < k; ++i) {
