@@ -529,18 +529,35 @@ public:
         *this + one;
         return *this;
     }
-    Decimal& operator/(Decimal& other) {
+    Decimal& operator--(int arrgument) {
+        //puts("++");
+        Decimal one{"1"};
+        *this - one;
+        return *this;
+    }
+
+    Decimal& operator/(const Decimal& other) {
         if (other.isZero()) {
             throw std::invalid_argument("Division by zero");
         }
-        Decimal thisCopy{*this};
-        *this = Decimal{"0"};
+        Decimal& (*func) (Decimal&) = \
+            isNegative == other.isNegative ? \
+            [](Decimal& number) -> Decimal& {
+                return number++;
+            } : \
+            [](Decimal& number) -> Decimal& {
+                return number--;
+            };
 
-        while (thisCopy >= other) {
-            thisCopy - other, \
-                (*this)++;
-        }
+        Decimal thisCopy{this->abs()};
+        *this = Decimal{"0"};
         Decimal otherCopy{other};
+        otherCopy.abs();
+
+        while (thisCopy >= otherCopy) {
+            thisCopy - otherCopy, \
+                func(*this);
+        }
         otherCopy >>= 1;
         otherCopy.normalize();
         for (size_t step{1}; !thisCopy.isZero() && step < EPSILON_TRUE; step++) {
@@ -637,7 +654,7 @@ public:
     }
 };
 
-size_t Decimal::EPSILON_TRUE = 10000;
+size_t Decimal::EPSILON_TRUE = 400;
 size_t Decimal::EPSILON_FALSE = 100000;
 
 /*
