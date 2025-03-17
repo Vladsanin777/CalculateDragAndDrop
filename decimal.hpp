@@ -468,24 +468,39 @@ public:
     }
     Decimal& operator<<=(size_t step) {
         const size_t fractionalSize = fractionalPart.size();
-        if (step >= fractionalSize) {
+        if (step <= fractionalSize) {
+            //std::cout << "pop456" << std::endl;
             // Вырезаем первые три элемента
             std::vector<byte>::iterator start = fractionalPart.begin(), \
                 end = start + step;
 
             // Вставляем вырезанные элементы в начало целевого вектора в обратном порядке
-            integerPart.insert(integerPart.begin(), end, start);
+            integerPart.insert(integerPart.begin(), \
+                std::make_reverse_iterator(end), \
+                std::make_reverse_iterator(start)
+            );
 
             // Удаляем вырезанные элементы из исходного вектора
             fractionalPart.erase(start, end);
             return *this;
         }
-        if (fractionalSize > 0 && fractionalPart[0] != 0) {
+        if (fractionalSize > 1) {
+            //std::cout << "pop678" << std::endl;
             step -= fractionalSize;
-            integerPart.insert(integerPart.begin(), fractionalPart.end(), \
-                fractionalPart.begin());
+            //printNumber();
+            //std::cout << (short)*integerPart.begin() \
+                << fractionalPart.rend() - fractionalPart.rbegin() << std::endl;
+            //integerPart.resize(integerPart.size() + fractionalPart.size());
+            integerPart.insert(integerPart.begin(), fractionalPart.rbegin(), \
+                fractionalPart.rend());
+            fractionalPart.clear();
+        } else if (fractionalSize == 1 && fractionalPart[0] != 0) {
+            //std::cout << "pop691" << std::endl;
+            step--;
+            integerPart.insert(integerPart.begin(), fractionalPart[0]);
             fractionalPart.clear();
         }
+        std::cout << "jkjk" << std::endl;
         integerPart.insert(integerPart.begin(), step, 0);
         return *this;
     }
@@ -512,8 +527,8 @@ public:
         if (integerSize > 1) {
             //std::cout << "jhfjk" << std::endl;
             step -= integerSize;
-            fractionalPart.insert(fractionalPart.begin(), integerPart.rend(), \
-                integerPart.rbegin());
+            fractionalPart.insert(fractionalPart.begin(), integerPart.rbegin(), \
+                integerPart.rend());
             integerPart.clear();
         } else if (integerSize == 1 && integerPart[0] != 0) {
             step--;

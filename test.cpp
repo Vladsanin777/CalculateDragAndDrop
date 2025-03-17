@@ -2,17 +2,21 @@
 #include "decimal.hpp"
 
 int main() {
+    //std::vector<unsigned char> integerPart = {0}, fractionalPart = {0, 2};
+    //integerPart.insert(integerPart.begin(), fractionalPart.rbegin(), \
+        fractionalPart.rend());
     //Decimal a("38726743.817391632123");
     //Decimal b("472.26518");
     //Decimal a{"56.02"}, b{"56"};
-    Decimal a {"-3.6"}, b {"-1.4"};
-    //Decimal a{"1"}, b{"2"};
+    //Decimal a {"897.75432"}, b {"544.355"};
+    Decimal a{"0.02"}, b{"2"};
     //a.printNumber();
     //Decimal a{"0.463829592123"}, b{"0.47226518"};
-    a.printNumber();
-    std::cout << " / " << std::endl;
-    b.printNumber();
-    std::cout << " = " << std::endl;
+    //a <<= 3;
+    //a.printNumber();
+    //std::cout << " / " << std::endl;
+    //b.printNumber();
+    //std::cout << " = " << std::endl;
     (a / b).printNumber();
     //Decimal a{"0.463829592123"}, b{"0.47226518"};
     //std::cout << (a >= b) << std::endl;
