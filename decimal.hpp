@@ -84,7 +84,6 @@ public:
         if (_isNegative != other._isNegative) {
             return *this -= (-other);
         }
-        //puts("addition");
         size_t carry = 0;
         const size_t absoluteMax = ~size_t(0);
         // Start Fractional Part
@@ -112,7 +111,6 @@ public:
                 carry = sum / 10;
             }
         }
-        //std::cout << carry << std::endl;
         // End Fractional Part
         // Start Integer Part
         {
@@ -127,7 +125,6 @@ public:
             // addition two operand
             for (size_t sum; i < minInteger; i++) {
                 sum = _integerPart[i] + other._integerPart[i] + carry;
-                // std::cout << i << (short)integerPart[i] << ' ' << (short)other.integerPart[i] << ' ' << carry << ' ' << sum << std::endl;
                 _integerPart[i] = sum % 10;
                 carry = sum / 10;
             }
@@ -137,7 +134,6 @@ public:
             // copying remainder operand integer
             for (size_t sum; i < maxInteger; i++) {
                 sum = maxIntegerPart[i] + carry;
-                //std::cout << sum << std::endl;
                 _integerPart[i] = sum % 10;
                 carry = sum / 10;
             }
@@ -151,49 +147,15 @@ public:
 
         return *this;
     }
-    /*
-    Decimal operator~() const {
+    Decimal operator+(const Decimal& other) const {
         Decimal result {*this};
-        size_t lenght{integerPart.size()};
-        for (std::vector<byte>::iterator itInteger {result.integerPart.begin()}; \
-            lenght--; itInteger++
-        )
-            *itInteger = 9 - *itInteger;
-        lenght = fractionalPart.size();
-        for (std::vector<byte>::iterator itFractional {result.fractionalPart.begin()};
-            lenght--; itFractional++
-        )
-            *itFractional = 9 - *itFractional;
-        return result;
+        return result += other;
     }
-    */
     Decimal operator-() const {
         Decimal result = *this;
         result._isNegative = !_isNegative;
         return result;
     }
-    /*
-    Decimal operator-=(const Decimal &other) const {
-        if (isNegative != other.isNegative) {
-            return *this + (-other);
-        }
-        Decimal result;
-        bool isThisLess;
-        if (isThisLess = *this < other) result.isNegative = true;
-        Decimal &operand1 = isThisLess ? *this : other;
-        Decimal &operand2 = isThisLess ? other : *this;
-        // Start subtraction Fraction Part
-        {
-            const size_t minFractional = \
-                std::min(operand1.fractionalPart.size(), \
-                    operand2.fractionalPart.size()) - 1, \
-                maxFractional = std::max(operand.fractionalPart.size(), \
-                    operand2.fractionalPart.size());
-            result.fractionalPart.resize(maxFractional);
-            std::vector<byte>::iterator itFractional = operand1.fractionalPart;
-        }
-    }
-    */
     bool operator>(const Decimal& other) const {
         // Если знаки разные, положительное число всегда больше
         if (!_isNegative && other._isNegative) {
@@ -303,30 +265,31 @@ public:
         normalize();
         return *this;
     }
-    Decimal operator*=(const Decimal& other) {
+    Decimal operator-(const Decimal& other) const {
+        Decimal result{*this};
+        return result -= other;
+    }
+    Decimal& operator*=(const Decimal& other) {
 
         Decimal otherCopy = other;
         Decimal thisCopy = *this;
         *this = Decimal{"0"};
-        while (otherCopy >= ONE) {
-            //otherCopy.printNumber();
+        while (otherCopy >= ONE)
             *this += thisCopy, otherCopy--;
-        }
-        //otherCopy.printNumber();
-        printNumber();
         while (!otherCopy.isZero()) {
             otherCopy <<= 1;
             thisCopy >>= 1;
-            while (otherCopy >= ONE) {
-                std::cout << "kl" << std::endl;
-                otherCopy.printNumber();
+            while (otherCopy >= ONE)
                 *this += thisCopy, otherCopy--;
-            }
-            printNumber();
         }
         _isNegative = _isNegative != other._isNegative;
         return *this;
     }
+    Decimal operator*(const Decimal& other) const {
+        Decimal result{*this};
+        return result *= other;
+    }
+
     bool operator>=(const Decimal& other) const {
         if (_isNegative && !other._isNegative) return false;
         if (!_isNegative && other._isNegative) return true;
@@ -371,11 +334,15 @@ public:
         if (fractionalThisSize >= fractionalOtherSize) return func(true);
         return func(false);
     }
-    Decimal& operator%=(Decimal& other) {
+    Decimal& operator%=(const Decimal& other) {
         if (other.isZero()) throw std::runtime_error("Division by zero");
         while (*this >= other)
             *this -= other;
         return *this;
+    }
+    Decimal operator%(const Decimal& other) const {
+        Decimal result{*this};
+        return result %= other;
     }
     Decimal& operator<<=(size_t step) {
         const size_t fractionalSize = _fractionalPart.size();
@@ -393,6 +360,7 @@ public:
 
             // Удаляем вырезанные элементы из исходного вектора
             _fractionalPart.erase(start, end);
+            normalize();
             return *this;
         }
         if (fractionalSize > 1) {
@@ -413,7 +381,12 @@ public:
         }
         //std::cout << "jkjk" << std::endl;
         _integerPart.insert(_integerPart.begin(), step, 0);
+        normalize();
         return *this;
+    }
+    Decimal operator<<(const size_t step) const {
+        Decimal result{*this};
+        return result <<= step;
     }
     Decimal& operator>>=(size_t step) {
         //std::cout << "fvfzklzdf" << integerPart.size() << std::endl;
@@ -449,15 +422,15 @@ public:
         _fractionalPart.insert(_fractionalPart.begin(), step, 0);
         return *this;
     }
+    Decimal operator>>(const size_t step) const {
+        Decimal result{*this};
+        return result >>= step;
+    }
     Decimal& operator++(int arrgument) {
-        //puts("++");
-        //Decimal one{"1"};
         *this += ONE;
         return *this;
     }
     Decimal& operator--(int arrgument) {
-        //puts("++");
-        //Decimal one{"1"};
         *this -= ONE;
         return *this;
     }
