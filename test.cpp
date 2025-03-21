@@ -2,6 +2,7 @@
 #include "decimal.hpp"
 
 int main() {
+    Decimal::initializerPI();
     //std::vector<unsigned char> integerPart = {0}, fractionalPart = {0, 2};
     //integerPart.insert(integerPart.begin(), fractionalPart.rbegin(), \
         fractionalPart.rend());
@@ -17,7 +18,7 @@ int main() {
     //std::cout << " / " << std::endl;
     //b.printNumber();
     //std::cout << " = " << std::endl;
-    (a *= b).printNumber();
+    a.sin().printNumber();
     //Decimal a{"0.463829592123"}, b{"0.47226518"};
     //std::cout << (a >= b) << std::endl;
     // Decimal res = a / b;

@@ -17,7 +17,22 @@ private:
 public:
     static size_t EPSILON_TRUE;
     static size_t EPSILON_FALSE;
-    const static Decimal ONE;
+    const static Decimal ZERO, ONE, TWO, FOUR;
+    static Decimal PI, PI_2, PI_2_NEGATIVE;
+    static void initializerPI(void) {
+        PI = Decimal{"0"};
+        char str[11];
+        long long templl;
+        for (size_t n = 0; n < EPSILON_TRUE; n++) {
+            templl = (long long)n << 1LL + 1LL;
+            sprintf(str, "%lld\0", n % 2 == 0 ? templl : -templl);
+            PI += Decimal{str};
+        }
+        PI *= FOUR;
+        PI_2 = PI * TWO;
+        PI_2_NEGATIVE = -PI_2;
+        return;
+    }
     Decimal(const Decimal& other) = default;
     Decimal() : _isNegative(false), _integerPart{0} {}
     Decimal(const char * const str) {
@@ -440,10 +455,10 @@ public:
             throw std::invalid_argument("Division by zero");
         }
 
-        Decimal thisCopy{this->abs()};
+        Decimal thisCopy{this->absAssignment()};
         *this = Decimal{"0"};
         Decimal otherCopy{other};
-        otherCopy.abs();
+        otherCopy.absAssignment();
 
         while (thisCopy >= otherCopy) {
             thisCopy -= otherCopy, \
@@ -493,6 +508,9 @@ public:
         _isNegative = _isNegative != other._isNegative;
         return *this;
     }
+    Decimal operator/(const Decimal& other) const {
+        return Decimal{*this} / other;
+    }
 
     // Вспомогательная функция для поиска периода
     size_t findPeriod(const std::vector<byte>& digits) const {
@@ -528,11 +546,114 @@ public:
         return true;
     }
 
-    Decimal& abs() {
+    Decimal& absAssignment(void) {
         _isNegative = false;
         return *this;
     }
-    void normalize() {
+    Decimal abs(void) const {
+        return Decimal{*this}.absAssignment();
+    }
+    bool isEpsilon(void) const {
+        for (std::vector<byte>::const_iterator \
+            itInteger {this->_integerPart.cbegin()}, \
+            itIntegerEnd {this->_integerPart.cend()};
+            itInteger != itIntegerEnd; itInteger++
+        ) if (*itInteger != 0) return false;
+        for (std::vector<byte>::const_iterator \
+            itFractional {this->_fractionalPart.cbegin()}, \
+            itFractionalEnd {
+                this->_fractionalPart.size() < EPSILON_TRUE ? \
+                this->_fractionalPart.cend() : \
+                itFractional + EPSILON_TRUE
+            };
+            itFractional != itFractionalEnd; itFractional++
+        ) if (*itFractional != 0) return false;
+        return true;
+    }
+    inline bool isNotEpsilon(void) const {
+        return !isEpsilon();
+    }
+    Decimal& logAssignment(void) {
+        if (this->_isNegative) 
+            throw std::invalid_argument("Invalid number Log");
+        const Decimal term {(*this - ONE) / (*this + ONE)}, \
+            termSquared {term * term};
+        Decimal power{term}, n{ONE}, temp;
+        *this = ZERO;
+        while ((temp = power / n).isNotEpsilon()) {
+            *this += temp;
+            power *= termSquared;
+            n += TWO;
+        }
+        return *this *= TWO;
+    }
+    Decimal log(void) const {
+        return Decimal{*this}.logAssignment();
+    }
+    Decimal& logAssignment(const Decimal& other) {
+        return this->logAssignment() /= other.log();
+    }
+    Decimal log(const Decimal& other) const {
+        return this->log() /= other.log();
+    }
+    
+    Decimal& expAssigment(void) {
+        Decimal thisCopy {*this}, term{ONE}, n{ONE};
+        *this = ONE;
+        while (term.isNotEpsilon()) {
+            term *= thisCopy / n;
+            *this += term;
+            n++;
+        }
+        return *this;
+    }
+    Decimal exp(void) const {
+        Decimal result{*this};
+        return result.expAssigment();
+    }
+    Decimal& powAssignment(const Decimal& other) {
+        if (this->isZero() && ZERO >= other)
+            throw std::invalid_argument("Невозможно возвести 0 в неположительную степень.");
+        return (other * this->log()).expAssigment();
+    }
+    Decimal pow(const Decimal& other) const {
+        return Decimal{*this}.powAssignment(other);
+    }
+    Decimal& factorialAssignment(void) {
+        Decimal thisCopy{*this};
+        *this = ONE;
+        for (Decimal i{"1"}; thisCopy >= i; i++)
+            *this *= i;
+        return *this;
+    }
+    Decimal factorial(void) {
+        return Decimal{*this}.factorialAssignment();
+    }
+    Decimal& sinAssignment(void) {
+        Decimal thisCopy{*this};
+        *this = Decimal{"0"};
+        while (thisCopy > PI)
+            thisCopy += PI_2_NEGATIVE;
+        while (PI_2_NEGATIVE > thisCopy)
+            thisCopy += PI_2;
+        size_t n = 0;
+        Decimal temp1, temp2;
+        unsigned long long tempull;
+        char str[11];
+        do {
+            tempull = 2 << n + 1;
+            sprintf(str, "%ull\0", tempull);
+            temp1 = Decimal{str};
+            temp2 = thisCopy.pow(temp1) / temp1.factorial();
+            *this += n & 1 == 0 ? temp2 : -temp2;
+        } while (temp2.isNotEpsilon());
+        return *this;
+    }
+    Decimal sin(void) {
+        Decimal result{*this};
+        return result.sinAssignment();
+    }
+    void normalize(void) {
         // Удаление ведущих нулей в целой части (кроме последнего, если число 0)
         while (_integerPart.size() > 1 && _integerPart.back() == 0) {
             _integerPart.pop_back();
@@ -546,5 +667,11 @@ public:
 };
 
 size_t Decimal::EPSILON_TRUE = 400;
-size_t Decimal::EPSILON_FALSE = 100000;
-const Decimal Decimal::ONE = Decimal{"1"};
+size_t Decimal::EPSILON_FALSE = 10000;
+const Decimal Decimal::ZERO = Decimal{"0"}, \
+    Decimal::ONE = Decimal{"1"}, \
+    Decimal::TWO = Decimal{"2"}, \
+    Decimal::FOUR = Decimal{"4"};
+Decimal Decimal::PI = Decimal::ZERO, \
+    Decimal::PI_2 = Decimal::ZERO, \
+    Decimal::PI_2_NEGATIVE = Decimal::ZERO;

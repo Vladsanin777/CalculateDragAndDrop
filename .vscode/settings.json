@@ -67,7 +67,9 @@
     "initializer_list": "cpp",
     "span": "cpp",
     "ostream": "cpp",
-    "cstddef": "cpp"
+    "cstddef": "cpp",
+    "cmath": "cpp",
+    "ratio": "cpp"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }
