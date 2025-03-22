@@ -17,20 +17,36 @@ private:
 public:
     static size_t EPSILON_TRUE;
     static size_t EPSILON_FALSE;
-    const static Decimal ZERO, ONE, TWO, FOUR;
+    const static Decimal ZERO, ONE, TWO, FOUR, \
+        FIVE, SIX, NUMBER_16, NUMBER_8;
     static Decimal PI, PI_2, PI_2_NEGATIVE;
     static void initializerPI(void) {
         PI = Decimal{"0"};
         char str[11];
-        long long templl;
+        Decimal temp, tempx8;
+        //long long templl = 1;
         for (size_t n = 0; n < EPSILON_TRUE; n++) {
-            templl = (long long)n << 1LL + 1LL;
+            sprintf(str, "%u", n);
+            temp = Decimal{str};
+            tempx8 = temp * NUMBER_8;
+            PI += ONE / NUMBER_16.pow(temp) * ( \
+                FOUR / (tempx8 + ONE) - \
+                TWO / (tempx8 + FOUR) - \
+                ONE / (tempx8 + FIVE) - \
+                ONE / (tempx8 + SIX) \
+            );
+            //PI.printNumber();
+            /*
+            templl += 2LL;
             sprintf(str, "%lld\0", n % 2 == 0 ? templl : -templl);
-            PI += Decimal{str};
+            std::cout << "fsf" << std::endl;
+            PI += ONE / Decimal{str};
+            //PI.printNumber();
+            */
         }
-        PI *= FOUR;
         PI_2 = PI * TWO;
         PI_2_NEGATIVE = -PI_2;
+        //PI.printNumber();
         return;
     }
     Decimal(const Decimal& other) = default;
@@ -75,27 +91,30 @@ public:
         }
         //putchar('\n');
     }
-    void printNumber() {
+    void printNumber() const {
         if (_isNegative)
             putchar('-');
         {
-            const std::vector<byte>::iterator byteIntegerEnd = _integerPart.begin() - 1;
+            const std::vector<byte>::const_iterator byteIntegerEnd = _integerPart.cbegin() - 1;
             for (
-                std::vector<byte>::iterator byteInteger = _integerPart.end() - 1; 
+                std::vector<byte>::const_iterator byteInteger = _integerPart.cend() - 1; 
                 byteInteger > byteIntegerEnd; byteInteger--
             ) printf("%hhu", *byteInteger);
         }
         putchar('.');
         {
-            const std::vector<byte>::iterator byteFractionalEnd = _fractionalPart.end();
+            const std::vector<byte>::const_iterator byteFractionalEnd = _fractionalPart.cend();
             for (
-                std::vector<byte>::iterator byteFractional = _fractionalPart.begin();
+                std::vector<byte>::const_iterator byteFractional = _fractionalPart.cbegin();
                 byteFractional < byteFractionalEnd; byteFractional++
             ) printf("%hhu", *byteFractional);
         }
         putchar('\n');
     }
     Decimal& operator+=(const Decimal& other) {
+        //printNumber();
+        //other.printNumber();
+        //std::cout << "addition" << std::endl;
         if (_isNegative != other._isNegative) {
             return *this -= (-other);
         }
@@ -107,6 +126,8 @@ public:
             const size_t minFractional = \
                 std::min(_fractionalPart.size(), other._fractionalPart.size()) - 1, \
                 maxFractional = std::max(_fractionalPart.size(), other._fractionalPart.size());
+            //std::cout << "min fractional" << minFractional \
+                << "max fractional" << maxFractional << std::endl;
             // Resize result fractional
             _fractionalPart.resize(maxFractional);
             // define the longest part
@@ -117,10 +138,11 @@ public:
             size_t i = maxFractional - 1;
             // copying element from the longest part to result \
                 to align the fractional part
-            for (; i > minFractional; i--)
+            for (; i != minFractional; i--)
                 _fractionalPart[i] = maxFractionalPart[i];
             // addition of the remainder
             for (size_t sum; i != absoluteMax; i--) {
+                //std::cout << i << std::endl;
                 sum = _fractionalPart[i] + other._fractionalPart[i] + carry;
                 _fractionalPart[i] = sum % 10;
                 carry = sum / 10;
@@ -451,6 +473,7 @@ public:
     }
 
     Decimal& operator/=(const Decimal& other) {
+        //other.printNumber();
         if (other.isZero()) {
             throw std::invalid_argument("Division by zero");
         }
@@ -509,7 +532,7 @@ public:
         return *this;
     }
     Decimal operator/(const Decimal& other) const {
-        return Decimal{*this} / other;
+        return Decimal{*this} /= other;
     }
 
     // Вспомогательная функция для поиска периода
@@ -576,18 +599,26 @@ public:
     Decimal& logAssignment(void) {
         if (this->_isNegative) 
             throw std::invalid_argument("Invalid number Log");
+        std::cout << "start" << std::endl;
         const Decimal term {(*this - ONE) / (*this + ONE)}, \
             termSquared {term * term};
+        std::cout << "term ";
+        term.printNumber();
         Decimal power{term}, n{ONE}, temp;
         *this = ZERO;
-        while ((temp = power / n).isNotEpsilon()) {
-            *this += temp;
+        std::cout << "dfzjk" << std::endl;
+        for (size_t i = 0; i < EPSILON_TRUE; i++) {
+            std::cout << "dfzjk" << std::endl;
+            *this += power / n;
             power *= termSquared;
             n += TWO;
+            printNumber();
         }
+        std::cout << "logAssignment void" << std::endl;
         return *this *= TWO;
     }
     Decimal log(void) const {
+        std::cout<<"log void"<<std::endl;
         return Decimal{*this}.logAssignment();
     }
     Decimal& logAssignment(const Decimal& other) {
@@ -630,28 +661,36 @@ public:
         return Decimal{*this}.factorialAssignment();
     }
     Decimal& sinAssignment(void) {
+        std::cout << "jk;l" << std::endl;
         Decimal thisCopy{*this};
-        *this = Decimal{"0"};
-        while (thisCopy > PI)
+        std::cout << "jk;l" << std::endl;
+        *this = ZERO;
+        std::cout << "jk;l" << std::endl;
+        while (thisCopy > PI_2)
             thisCopy += PI_2_NEGATIVE;
+        std::cout << "jk;l" << std::endl;
         while (PI_2_NEGATIVE > thisCopy)
             thisCopy += PI_2;
         size_t n = 0;
+        std::cout << "jk;l" << std::endl;
         Decimal temp1, temp2;
         unsigned long long tempull;
-        char str[11];
+        char str[22];
+        std::cout << "jk;l" << std::endl;
+
         do {
-            tempull = 2 << n + 1;
-            sprintf(str, "%ull\0", tempull);
+            tempull = (unsigned long long)n << 1 + 1;
+            sprintf(str, "%llu\0", tempull);
+            std::cout << "jkj" << std::endl;
             temp1 = Decimal{str};
             temp2 = thisCopy.pow(temp1) / temp1.factorial();
             *this += n & 1 == 0 ? temp2 : -temp2;
+            n++;
         } while (temp2.isNotEpsilon());
         return *this;
     }
     Decimal sin(void) {
-        Decimal result{*this};
-        return result.sinAssignment();
+        return Decimal{*this}.sinAssignment();
     }
     void normalize(void) {
         // Удаление ведущих нулей в целой части (кроме последнего, если число 0)
@@ -667,11 +706,16 @@ public:
 };
 
 size_t Decimal::EPSILON_TRUE = 400;
-size_t Decimal::EPSILON_FALSE = 10000;
+size_t Decimal::EPSILON_FALSE = 400;
 const Decimal Decimal::ZERO = Decimal{"0"}, \
     Decimal::ONE = Decimal{"1"}, \
     Decimal::TWO = Decimal{"2"}, \
-    Decimal::FOUR = Decimal{"4"};
+    Decimal::FOUR = Decimal{"4"}, \
+    Decimal::FIVE = Decimal{"5"}, \
+    Decimal::SIX = Decimal{"6"}, \
+    Decimal::NUMBER_16 = Decimal{"16"}, \
+    Decimal::NUMBER_8 = Decimal{"8"};
+
 Decimal Decimal::PI = Decimal::ZERO, \
     Decimal::PI_2 = Decimal::ZERO, \
     Decimal::PI_2_NEGATIVE = Decimal::ZERO;
