@@ -1,30 +1,22 @@
+#include <gmp.h>
 #include <iostream>
-#include <iomanip>
-#include <cmath>
-
-// Функция для вычисления π с использованием BBP-формулы
-double computePiBBP(int numIterations) {
-    double pi = 0.0;
-    for (int k = 0; k < numIterations; k++) {
-        double term = (1.0 / std::pow(16, k)) * (
-            4.0 / (8 * k + 1) -
-            2.0 / (8 * k + 4) -
-            1.0 / (8 * k + 5) -
-            1.0 / (8 * k + 6)
-        );
-        pi += term;
-
-        std::cout << std::setprecision(15) << "Pi (BBP formula): " << pi << std::endl;
-    }
-    return pi;
-}
 
 int main() {
-    int numIterations = 10; // Количество итераций
-    double pi = computePiBBP(numIterations);
+    mpf_t num1, num2, result;
+    mpf_init2(num1, 256UL); // Точность в битах
+    mpf_init2(num2, 256UL);
+    mpf_init2(result, 256UL);
 
-    // Вывод результата с высокой точностью
-    std::cout << std::setprecision(15) << "Pi (BBP formula): " << pi << std::endl;
+    mpf_set_str(num1, "123456789012345678901234567890.1234567890123456789000000000000000000000000000000002", 10);
+    mpf_set_str(num2, "987654321098765432109876543210.98765432109876543210", 10);
+
+    mpf_mul(result, num1, num2);
+
+    gmp_printf("Результат: %.50Ff\n", result);
+
+    mpf_clear(num1);
+    mpf_clear(num2);
+    mpf_clear(result);
 
     return 0;
 }
