@@ -1,22 +1,23 @@
-#include <gmp.h>
+#include <mpfr.h>
+#include "Calculate.h"
 #include <iostream>
 
 int main() {
-    mpf_t num1, num2, result;
-    mpf_init2(num1, 256UL); // Точность в битах
-    mpf_init2(num2, 256UL);
-    mpf_init2(result, 256UL);
+    mpfr_t num1, num2, result;
+    mpfr_init2(num1, 256UL); // Точность в битах
+    mpfr_init2(num2, 256UL);
+    mpfr_init2(result, 256UL);
 
-    mpf_set_str(num1, "123456789012345678901234567890.1234567890123456789000000000000000000000000000000002", 10);
-    mpf_set_str(num2, "987654321098765432109876543210.98765432109876543210", 10);
+    mpfr_set_str(num1, "123456789012345678901234567890.2", 10, MPFR_RNDN);
+    mpfr_set_str(num2, "987654321098765432109876543210.1", 10, MPFR_RNDN);
 
-    mpf_mul(result, num1, num2);
+    mpfr_add(result, num1, num2, MPFR_RNDN);
 
-    gmp_printf("Результат: %.50Ff\n", result);
+    mpfr_printf("Результат: %.50Rf\n", result);
 
-    mpf_clear(num1);
-    mpf_clear(num2);
-    mpf_clear(result);
+    mpfr_clear(num1);
+    mpfr_clear(num2);
+    mpfr_clear(result);
 
     return 0;
 }
