@@ -52,10 +52,10 @@ enum ArifmeticAction { \
 	addition, subtraction, \
 	remainderFromDivision, \
 	multiplication, division, \
-	cos, sin, tan, sec, csc, cot, sgn, \
+	sin, cos, tan, sec, csc, cot, sgn, \
 	acos, asin, atan, asec, acsc, acot \
 };
-union Data {mpfr_t number; ArifmeticAction action;};
+union Data {const char *number; ArifmeticAction action;};
 class Expression {
 private:
 	Expression *_parent, *_operand1, *_operand2;
@@ -72,8 +72,10 @@ public:
 		_data{.action = action} {}
 	static void calculate(Expression *expression, mpfr_t &result) {
 		if (expression->_isNumber) {
-			result = expression->_data.number;
-			mpfr_clear(expression->_data.number);
+			const char *str = expression->_data.number, pointPtr;
+			size_t len{strlen(str) << 2};
+			mpfr_init2(result, len);
+			mpfr_set_str(result, str, 10, MPFR_RNDN);
 			delete expression;
 			return;
 		}
@@ -141,6 +143,10 @@ public:
 		mpfr_clear(operand2);
 		delete expression;
 		return;
+	}
+	~Expression() {
+		if (_isNumber)
+			delete [] _data.number;
 	}
 };
 /*
