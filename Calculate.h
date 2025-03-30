@@ -55,26 +55,41 @@ enum ArifmeticAction { \
 	sin, cos, tan, sec, csc, cot, sgn, \
 	acos, asin, atan, asec, acsc, acot \
 };
-union Data {const char *number; ArifmeticAction action;};
+union Data {mpfr_t number; ArifmeticAction action;};
 class Expression {
 private:
 	Expression *_parent, *_operand1, *_operand2;
 	Data _data;
 	bool _isNumber;
 public:
-	Expression(mpfr_t& number, \
+	static size_t size;
+	Expression(const char *number, bool isDelete = true, \
 		Expression *parent = nullptr) 
 		: _isNumber(true), _parent(parent), \
-		_data{.number = number} {}
+	{
+		mpfr_t numberDecimal;
+		mpfr_init2(numberDecimal, size);
+		mpfr_set_str(numberDecimal, number, 10, MPFR_RNDN);
+		_data.number = numberDecimal;
+		if (isDelete) delete [] number;
+	}
 	Expression(ArifmeticAction action, \
 		Expression *parent = nullptr)
 		: _isNumber(false), _parent(parent), \
 		_data{.action = action} {}
+	void setParent(Expression *parent) {
+		_parent = parent;
+	}
+	void setFirstOperand(Expression *operand1) {
+		_operand1 = operand1;
+	}
+	void setSecondOperand(Expression *operand2) {
+		_operand2 = operand2;
+	}
 	static void calculate(Expression *expression, mpfr_t &result) {
+		mpfr_init2(result, size);
 		if (expression->_isNumber) {
-			const char *str = expression->_data.number, pointPtr;
-			size_t len{strlen(str) << 2};
-			mpfr_init2(result, len);
+			const char *str = expression->_data.number;
 			mpfr_set_str(result, str, 10, MPFR_RNDN);
 			delete expression;
 			return;
@@ -137,7 +152,8 @@ public:
 				mpfr_acot(result, operand1, MPFR_RNDN);
 				break;
 			case sgn:
-				mpfr_sgn(result, operand1);
+				result = mpfr_sgn(operand1);
+				mpfr_printf("Результат: %.50Rf\n", result);
 		}
 		mpfr_clear(operand1);
 		mpfr_clear(operand2);
@@ -147,6 +163,53 @@ public:
 	~Expression() {
 		if (_isNumber)
 			delete [] _data.number;
+	}
+};
+
+static size_t size = 256;
+
+class ConstructerExpression {
+public:
+	ConstructerExpression ( \
+		const char *expression, \
+		bool isDelete = true \
+	) {
+		_buildExpressionTree(expression);
+		if (isDelete) delete [] expression;
+	}
+private:
+	inline bool _isBrackets(char symbol) {
+		return symbol == '(' || symbol ')';
+	}
+	bool _isOperator(const char * const symbol, const char * const start) {
+		if (start < symbol) {
+			const char symbolBefore = *(symbol - 1UL);
+			if (isalpha(symbolBefore) || isdigit(symbolBefore) || \
+				_isBrackets(symbolBefore))
+				return true;
+		}
+		return false;
+	}
+	const char * _shearchNotPriorityOperator(const char * const expression) {
+		size_t len = strlen(expression);
+		size_t levelBrakets = 0UL;
+
+		for (const char *ptrExpression = expression + len; \
+			ptrExpression-- != expression;)
+		{
+			if (*ptrExpression == ')') levelBrakets++, continue;
+			if (*ptrExpression == '(') levelBrakets--, continue;
+			if (levelBrakets) continue;
+			if (*ptrExpression == '+' || (*ptrExpression == '-' && \
+				_isOperator(ptrExpression)))
+				return ptrExpression;
+			if ()
+		}
+	}
+	Expression *_buildExpressionTree(const char *expression, bool isDelete = true)
+	{
+		
+		if (isDelete) delete [] expression;
 	}
 };
 /*
