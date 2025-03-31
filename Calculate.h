@@ -181,7 +181,7 @@ private:
 	inline bool _isBrackets(char symbol) {
 		return symbol == '(' || symbol ')';
 	}
-	bool _isOperator(const char * const symbol, const char * const start) {
+	bool _isOperatorSub(const char * const symbol, const char * const start) {
 		if (start < symbol) {
 			const char symbolBefore = *(symbol - 1UL);
 			if (isalpha(symbolBefore) || isdigit(symbolBefore) || \
@@ -190,9 +190,13 @@ private:
 		}
 		return false;
 	}
-	const char * _shearchNotPriorityOperator(const char * const expression) {
+	const char * _shearchNotPriorityOperator( \
+		const char * const expression, unsigned char &lenOperator
+	) {
+		lenOperator = 0;
 		size_t len = strlen(expression);
 		size_t levelBrakets = 0UL;
+		const char * finaly = 0L;
 
 		for (const char *ptrExpression = expression + len; \
 			ptrExpression-- != expression;)
@@ -201,14 +205,49 @@ private:
 			if (*ptrExpression == '(') levelBrakets--, continue;
 			if (levelBrakets) continue;
 			if (*ptrExpression == '+' || (*ptrExpression == '-' && \
-				_isOperator(ptrExpression)))
-				return ptrExpression;
-			if ()
+				_isOperatorSub(ptrExpression))
+			) {
+				lenOperator = 1; return ptrExpression;
+			}
+			if ((*ptrExpression == '*' || *ptrExpression == '/') \
+				&& finaly != 0) 
+				lenOperator = 1, finaly = ptrExpression;
 		}
+		const char *temp;
+		if ((temp = strrstr(expression, "mod")) > finaly) 
+			lenOperator = 3, finaly = temp;
+		if (finaly) return finaly;
+		finaly = strrstr(expression, "sin"), lenOperator = 3;
+		if (finaly == 0L) lenOperator = 0
+		if ((temp = strrstr(expression, "cos")) > finaly) finaly, lenOperator = 3;
+		if ((temp = strrstr(expression, "tan")) > finaly) finaly, lenOperator = 3;
+		if ((temp = strrstr(expression, "cot")) > finaly) finaly, lenOperator = 3;
+		if ((temp = strrstr(expression, "sec")) > finaly) finaly, lenOperator = 3;
+		if ((temp = strrstr(expression, "csc")) > finaly) finaly, lenOperator = 3;
+		if ((temp = strrstr(expression, "asin")) > finaly) finaly, lenOperator = 4;
+		if ((temp = strrstr(expression, "acos")) > finaly) finaly, lenOperator = 4;
+		if ((temp = strrstr(expression, "atan")) > finaly) finaly, lenOperator = 4;
+		if ((temp = strrstr(expression, "acot")) > finaly) finaly, lenOperator = 4;
+		if ((temp = strrstr(expression, "asec")) > finaly) finaly, lenOperator = 4;
+		if ((temp = strrstr(expression, "acsc")) > finaly) finaly, lenOperator = 4;
+		if ((temp = strrstr(expression, "sgn")) > finaly) finaly, lenOperator = 3;
+		return temp;
+
 	}
 	Expression *_buildExpressionTree(const char *expression, bool isDelete = true)
 	{
-		
+		unsigned char lenOperator;
+		bool isTwoOperand;
+		const char * ptrOperator = _shearchNotPriorityOperator(expression);
+		if (ptrOperator) {
+			if (isDelete) delete [] expression;
+			return new Expression{expression};
+		}
+		Expression * result = new Expression{};
+		char * const newExpression = new char[ptrOperator - expression + 1];
+		strncpy(newExpression, expression, ptrOperator - expression);
+		result->setFirstOperand(_buildExpressionTree(newExpression));
+		strncpy(newExpression, expression + ptrOperator - expression + lenOperator, strlen(expression) - expression + ptrOperator - expression + lenOperator)
 		if (isDelete) delete [] expression;
 	}
 };
