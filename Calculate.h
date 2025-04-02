@@ -1,7 +1,21 @@
 #include <vector>
-//#include "decimal.h"
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
 #include <mpfr.h>
 
+// Add this function definition
+const char* strrstr(const char* haystack, const char* needle) {
+    const char* last = nullptr;
+    const char* tmp = haystack;
+    
+    while ((tmp = strstr(tmp, needle)) != nullptr) {
+        last = tmp;
+        tmp += strlen(needle);
+    }
+    
+    return last;
+}
 
 void mpfr_asec(mpfr_t& result, const mpfr_t x, mpfr_rnd_t rnd) {
     mpfr_t temp;
@@ -47,36 +61,145 @@ void mpfr_acot(mpfr_t& result, const mpfr_t x, mpfr_rnd_t rnd) {
 
     mpfr_clear(temp);
 }
-
 enum ArifmeticAction { \
-	addition, subtraction, \
+	none, addition, subtraction, \
 	remainderFromDivision, \
 	multiplication, division, \
 	sin, cos, tan, sec, csc, cot, sgn, \
 	acos, asin, atan, asec, acsc, acot \
 };
+static inline bool _isBrackets(char symbol) {
+	return symbol == '(' || symbol == ')';
+}
+static inline bool _isOperatorSub(const char * const symbol, const char * const start) {
+	if (start < symbol) {
+		const char symbolBefore = *(symbol - 1UL);
+		if (isalpha(symbolBefore) || isdigit(symbolBefore) || \
+			_isBrackets(symbolBefore))
+			return true;
+	}
+	return false;
+}
+static inline const char * _shearchNotPriorityOperator( \
+	const char * const expression, bool &isTwoOperand, unsigned char &lenOperator, \
+	ArifmeticAction &action \
+) {
+	action = none, lenOperator = 0;
+	size_t len{strlen(expression)}, levelBrakets = 0UL;
+	const char * finaly = 0L;
+
+	for (const char *ptrExpression = expression + len; \
+		ptrExpression-- != expression;)
+	{
+		if (*ptrExpression == ')') {levelBrakets++; continue;}
+		if (*ptrExpression == '(') {levelBrakets--; continue;}
+		if (levelBrakets) continue;
+		if (*ptrExpression == '+') {
+			lenOperator = 1, action = addition; return ptrExpression;
+		}
+		if (*ptrExpression == '-' && _isOperatorSub(ptrExpression, expression)) {
+			lenOperator = 1, action = subtraction; return ptrExpression;
+		}
+		if (*ptrExpression == '*' && finaly != 0) 
+			lenOperator = 1, action = multiplication, finaly = ptrExpression;
+		if (*ptrExpression == '/' && finaly != 0)
+			lenOperator = 1, action = division, finaly = ptrExpression;
+	}
+	const char *temp;
+	if ((temp = strrstr(expression, "mod")) > finaly) 
+		lenOperator = 3, action = remainderFromDivision, finaly = temp;
+	if (finaly) return finaly;
+	if ((temp = strrstr(expression, "sin")) > finaly)
+		finaly = temp, action = sin, lenOperator = 3;
+	if ((temp = strrstr(expression, "cos")) > finaly) 
+		finaly = temp, action = cos, lenOperator = 3;
+	if ((temp = strrstr(expression, "tan")) > finaly) 
+		finaly = temp, action = tan, lenOperator = 3;
+	if ((temp = strrstr(expression, "cot")) > finaly) 
+		finaly = temp, action = cot, lenOperator = 3;
+	if ((temp = strrstr(expression, "sec")) > finaly) 
+		finaly = temp, action = sec, lenOperator = 3;
+	if ((temp = strrstr(expression, "csc")) > finaly) 
+		finaly = temp, action = csc, lenOperator = 3;
+	if ((temp = strrstr(expression, "asin")) > finaly) 
+		finaly = temp, action = asin, lenOperator = 4;
+	if ((temp = strrstr(expression, "acos")) > finaly) 
+		finaly = temp, action = acos, lenOperator = 4;
+	if ((temp = strrstr(expression, "atan")) > finaly) 
+		finaly = temp, action = atan, lenOperator = 4;
+	if ((temp = strrstr(expression, "acot")) > finaly) 
+		finaly = temp, action = acot, lenOperator = 4;
+	if ((temp = strrstr(expression, "asec")) > finaly) 
+		finaly = temp, action = asec, lenOperator = 4;
+	if ((temp = strrstr(expression, "acsc")) > finaly) 
+		finaly = temp, action = acsc, lenOperator = 4;
+	if ((temp = strrstr(expression, "sgn")) > finaly) 
+		finaly = temp, action = sgn, lenOperator = 3;
+	return finaly;
+
+}
+
+
 union Data {mpfr_t number; ArifmeticAction action;};
 class Expression {
 private:
 	Expression *_parent, *_operand1, *_operand2;
 	Data _data;
 	bool _isNumber;
-public:
+
+
 	static size_t size;
-	Expression(const char *number, bool isDelete = true, \
-		Expression *parent = nullptr) 
-		: _isNumber(true), _parent(parent), \
-	{
-		mpfr_t numberDecimal;
-		mpfr_init2(numberDecimal, size);
-		mpfr_set_str(numberDecimal, number, 10, MPFR_RNDN);
-		_data.number = numberDecimal;
-		if (isDelete) delete [] number;
+	Expression (
+		const char *expression, \
+		Expression * parent, \
+		bool isDelete = true \
+	) : _isNumber{true}, _parent{parent} {
+		mpfr_t number;
+		mpfr_init2(_data.number, size);
+		mpfr_set_str(_data.number, expression, 10, MPFR_RNDN);
+		if (isDelete) delete [] expression;
 	}
 	Expression(ArifmeticAction action, \
 		Expression *parent = nullptr)
-		: _isNumber(false), _parent(parent), \
+		: _isNumber{false}, _parent{parent}, \
 		_data{.action = action} {}
+public:
+	static Expression *buildExpressionTree( \
+		const char *expression, \
+		Expression * parent = 0L, \
+		bool isDelete = true \
+	) {
+		puts(expression);
+		unsigned char lenOperator;
+		bool isTwoOperand;
+		ArifmeticAction action;
+		const char * ptrOperator = \
+			_shearchNotPriorityOperator(expression, \
+				isTwoOperand, lenOperator, action);
+		if (ptrOperator) {
+			if (isDelete) delete [] expression;
+			return new Expression{expression, parent};
+		}
+		Expression * result = new Expression{action, parent};
+		if (isTwoOperand) {
+			size_t lenExpression{(size_t)(ptrOperator - expression)};
+			char * newExpression = new char[lenExpression + 1];
+			strncpy(newExpression, expression, lenExpression);
+			result->setFirstOperand(buildExpressionTree(newExpression, result));
+			lenExpression = ptrOperator - expression + lenOperator;
+			newExpression = (char *)realloc(newExpression, lenExpression + 1);
+			strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
+			result->setSecondOperand(buildExpressionTree(newExpression, result));
+		} else {
+			size_t lenExpression{(size_t)(ptrOperator - expression + lenOperator)};
+			char * const newExpression = new char[lenExpression + 1];
+			strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
+			result->setFirstOperand(buildExpressionTree(newExpression, result));
+		}
+		if (isDelete) delete [] expression;
+		return result;
+	}
+
 	void setParent(Expression *parent) {
 		_parent = parent;
 	}
@@ -86,11 +209,13 @@ public:
 	void setSecondOperand(Expression *operand2) {
 		_operand2 = operand2;
 	}
+	void getNumber(char * const str) {
+
+	}
 	static void calculate(Expression *expression, mpfr_t &result) {
 		mpfr_init2(result, size);
 		if (expression->_isNumber) {
-			const char *str = expression->_data.number;
-			mpfr_set_str(result, str, 10, MPFR_RNDN);
+			mpfr_set(result, expression->_data.number, MPFR_RNDN);
 			delete expression;
 			return;
 		}
@@ -151,9 +276,9 @@ public:
 			case acot:
 				mpfr_acot(result, operand1, MPFR_RNDN);
 				break;
-			case sgn:
-				result = mpfr_sgn(operand1);
-				mpfr_printf("Результат: %.50Rf\n", result);
+			//case sgn:
+				//result = mpfr_sgn(operand1);
+				//mpfr_printf("Результат: %.50Rf\n", result);
 		}
 		mpfr_clear(operand1);
 		mpfr_clear(operand2);
@@ -162,96 +287,13 @@ public:
 	}
 	~Expression() {
 		if (_isNumber)
-			delete [] _data.number;
+			mpfr_clear(_data.number);
+		else {
+			delete _operand1;
+			if (_operand2) 
+				delete _operand2;
+		}
 	}
 };
 
-static size_t size = 256;
-
-class ConstructerExpression {
-public:
-	ConstructerExpression ( \
-		const char *expression, \
-		bool isDelete = true \
-	) {
-		_buildExpressionTree(expression);
-		if (isDelete) delete [] expression;
-	}
-private:
-	inline bool _isBrackets(char symbol) {
-		return symbol == '(' || symbol ')';
-	}
-	bool _isOperatorSub(const char * const symbol, const char * const start) {
-		if (start < symbol) {
-			const char symbolBefore = *(symbol - 1UL);
-			if (isalpha(symbolBefore) || isdigit(symbolBefore) || \
-				_isBrackets(symbolBefore))
-				return true;
-		}
-		return false;
-	}
-	const char * _shearchNotPriorityOperator( \
-		const char * const expression, unsigned char &lenOperator
-	) {
-		lenOperator = 0;
-		size_t len = strlen(expression);
-		size_t levelBrakets = 0UL;
-		const char * finaly = 0L;
-
-		for (const char *ptrExpression = expression + len; \
-			ptrExpression-- != expression;)
-		{
-			if (*ptrExpression == ')') levelBrakets++, continue;
-			if (*ptrExpression == '(') levelBrakets--, continue;
-			if (levelBrakets) continue;
-			if (*ptrExpression == '+' || (*ptrExpression == '-' && \
-				_isOperatorSub(ptrExpression))
-			) {
-				lenOperator = 1; return ptrExpression;
-			}
-			if ((*ptrExpression == '*' || *ptrExpression == '/') \
-				&& finaly != 0) 
-				lenOperator = 1, finaly = ptrExpression;
-		}
-		const char *temp;
-		if ((temp = strrstr(expression, "mod")) > finaly) 
-			lenOperator = 3, finaly = temp;
-		if (finaly) return finaly;
-		finaly = strrstr(expression, "sin"), lenOperator = 3;
-		if (finaly == 0L) lenOperator = 0
-		if ((temp = strrstr(expression, "cos")) > finaly) finaly, lenOperator = 3;
-		if ((temp = strrstr(expression, "tan")) > finaly) finaly, lenOperator = 3;
-		if ((temp = strrstr(expression, "cot")) > finaly) finaly, lenOperator = 3;
-		if ((temp = strrstr(expression, "sec")) > finaly) finaly, lenOperator = 3;
-		if ((temp = strrstr(expression, "csc")) > finaly) finaly, lenOperator = 3;
-		if ((temp = strrstr(expression, "asin")) > finaly) finaly, lenOperator = 4;
-		if ((temp = strrstr(expression, "acos")) > finaly) finaly, lenOperator = 4;
-		if ((temp = strrstr(expression, "atan")) > finaly) finaly, lenOperator = 4;
-		if ((temp = strrstr(expression, "acot")) > finaly) finaly, lenOperator = 4;
-		if ((temp = strrstr(expression, "asec")) > finaly) finaly, lenOperator = 4;
-		if ((temp = strrstr(expression, "acsc")) > finaly) finaly, lenOperator = 4;
-		if ((temp = strrstr(expression, "sgn")) > finaly) finaly, lenOperator = 3;
-		return temp;
-
-	}
-	Expression *_buildExpressionTree(const char *expression, bool isDelete = true)
-	{
-		unsigned char lenOperator;
-		bool isTwoOperand;
-		const char * ptrOperator = _shearchNotPriorityOperator(expression);
-		if (ptrOperator) {
-			if (isDelete) delete [] expression;
-			return new Expression{expression};
-		}
-		Expression * result = new Expression{};
-		char * const newExpression = new char[ptrOperator - expression + 1];
-		strncpy(newExpression, expression, ptrOperator - expression);
-		result->setFirstOperand(_buildExpressionTree(newExpression));
-		strncpy(newExpression, expression + ptrOperator - expression + lenOperator, strlen(expression) - expression + ptrOperator - expression + lenOperator)
-		if (isDelete) delete [] expression;
-	}
-};
-/*
-class CalculateBasic {
-	public:
-*/
+size_t Expression::size = 256;
