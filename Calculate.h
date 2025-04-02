@@ -2,6 +2,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <mpfr.h>
 
 // Add this function definition
@@ -84,7 +85,7 @@ static inline const char * _shearchNotPriorityOperator( \
 	const char * const expression, bool &isTwoOperand, unsigned char &lenOperator, \
 	ArifmeticAction &action \
 ) {
-	action = none, lenOperator = 0;
+	action = none, lenOperator = 0, isTwoOperand = true;
 	size_t len{strlen(expression)}, levelBrakets = 0UL;
 	const char * finaly = 0L;
 
@@ -100,15 +101,17 @@ static inline const char * _shearchNotPriorityOperator( \
 		if (*ptrExpression == '-' && _isOperatorSub(ptrExpression, expression)) {
 			lenOperator = 1, action = subtraction; return ptrExpression;
 		}
-		if (*ptrExpression == '*' && finaly != 0) 
+		if (*ptrExpression == '*' && finaly == 0) 
 			lenOperator = 1, action = multiplication, finaly = ptrExpression;
-		if (*ptrExpression == '/' && finaly != 0)
+		if (*ptrExpression == '/' && finaly == 0)
 			lenOperator = 1, action = division, finaly = ptrExpression;
 	}
 	const char *temp;
 	if ((temp = strrstr(expression, "mod")) > finaly) 
 		lenOperator = 3, action = remainderFromDivision, finaly = temp;
+	std::cout << (long)finaly << std::endl;
 	if (finaly) return finaly;
+	isTwoOperand = false;
 	if ((temp = strrstr(expression, "sin")) > finaly)
 		finaly = temp, action = sin, lenOperator = 3;
 	if ((temp = strrstr(expression, "cos")) > finaly) 
@@ -135,6 +138,7 @@ static inline const char * _shearchNotPriorityOperator( \
 		finaly = temp, action = acsc, lenOperator = 4;
 	if ((temp = strrstr(expression, "sgn")) > finaly) 
 		finaly = temp, action = sgn, lenOperator = 3;
+	puts("klsdsdsd");
 	return finaly;
 
 }
@@ -154,9 +158,11 @@ private:
 		Expression * parent, \
 		bool isDelete = true \
 	) : _isNumber{true}, _parent{parent} {
-		mpfr_t number;
+		puts("jkk");
+		puts(expression);
 		mpfr_init2(_data.number, size);
 		mpfr_set_str(_data.number, expression, 10, MPFR_RNDN);
+		puts("ndh");
 		if (isDelete) delete [] expression;
 	}
 	Expression(ArifmeticAction action, \
@@ -176,16 +182,25 @@ public:
 		const char * ptrOperator = \
 			_shearchNotPriorityOperator(expression, \
 				isTwoOperand, lenOperator, action);
-		if (ptrOperator) {
-			if (isDelete) delete [] expression;
-			return new Expression{expression, parent};
+
+		if (ptrOperator)
+			putchar(*ptrOperator);
+		puts("dfsfgv");
+		if (!ptrOperator) {
+			puts("kl");
+			//if (isDelete) delete [] expression;
+			puts("kl");
+			return new Expression{expression, parent, isDelete};
 		}
+		puts("nm");
 		Expression * result = new Expression{action, parent};
+		puts("nm");
 		if (isTwoOperand) {
 			size_t lenExpression{(size_t)(ptrOperator - expression)};
 			char * newExpression = new char[lenExpression + 1];
 			strncpy(newExpression, expression, lenExpression);
-			result->setFirstOperand(buildExpressionTree(newExpression, result));
+			result->setFirstOperand(buildExpressionTree(newExpression, result, false));
+			puts("klkdd");
 			lenExpression = ptrOperator - expression + lenOperator;
 			newExpression = (char *)realloc(newExpression, lenExpression + 1);
 			strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
@@ -195,6 +210,7 @@ public:
 			char * const newExpression = new char[lenExpression + 1];
 			strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
 			result->setFirstOperand(buildExpressionTree(newExpression, result));
+			puts("dj");
 		}
 		if (isDelete) delete [] expression;
 		return result;
@@ -282,16 +298,15 @@ public:
 		}
 		mpfr_clear(operand1);
 		mpfr_clear(operand2);
+		puts("skddk");
 		delete expression;
 		return;
 	}
 	~Expression() {
-		if (_isNumber)
+		puts("delete Expression");
+		if (_isNumber) {
+			mpfr_printf("%Rf\n", _data.number);
 			mpfr_clear(_data.number);
-		else {
-			delete _operand1;
-			if (_operand2) 
-				delete _operand2;
 		}
 	}
 };
