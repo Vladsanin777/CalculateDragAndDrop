@@ -76,71 +76,94 @@ static inline bool _isOperatorSub(const char * const symbol, const char * const 
 	if (start < symbol) {
 		const char symbolBefore = *(symbol - 1UL);
 		if (isalpha(symbolBefore) || isdigit(symbolBefore) || \
-			_isBrackets(symbolBefore))
+			_isBrackets(symbolBefore) || symbolBefore == '.')
 			return true;
 	}
 	return false;
+}
+static inline size_t _shearchMaxLevelBrackets(const char * expression) {
+	size_t maxLevelBrackets {0UL}, levelBrackets {0UL};
+	const char * const expressionEnd {expression + strlen(expression)};
+	for (; expression < expressionEnd; expression++) {
+		if (*expression == '(')
+			if (maxLevelBrackets < ++levelBrackets)
+				maxLevelBrackets = levelBrackets;
+			else;
+		else if (*expression == ')')
+			levelBrackets--;
+	}
+	return maxLevelBrackets;
+}
+static inline void _replaceOnX(char *expression, const size_t level = 0UL) {
+	char * expressionEnd {expression + strlen(expression)}, temp;
+	size_t levelBrackets {0UL};
+	for (; expression < expressionEnd; expression++)
+	{
+		temp = *expression;
+		if (temp == '(') levelBrackets++;
+		if (levelBrackets != level) *expression = 'x';
+		if (temp == ')') levelBrackets--;
+	}
 }
 static inline const char * _shearchNotPriorityOperator( \
 	const char * const expression, bool &isTwoOperand, unsigned char &lenOperator, \
 	ArifmeticAction &action \
 ) {
 	action = none, lenOperator = 0, isTwoOperand = true;
-	size_t len{strlen(expression)}, levelBrakets = 0UL;
-	const char * finaly = 0L;
+	size_t len{strlen(expression)};
 
-	for (const char *ptrExpression = expression + len; \
-		ptrExpression-- != expression;)
-	{
-		if (*ptrExpression == ')') {levelBrakets++; continue;}
-		if (*ptrExpression == '(') {levelBrakets--; continue;}
-		if (levelBrakets) continue;
-		if (*ptrExpression == '+') {
-			lenOperator = 1, action = addition; return ptrExpression;
+	char * const copyExpression {new char[len+1UL]()};
+	size_t maxLevelBrackets {_shearchMaxLevelBrackets(expression)};
+	const char * ptr {0L}, *temp;
+	for (size_t levelBrakets{0UL}; ptr == 0 && levelBrakets < maxLevelBrackets; levelBrakets++) {
+		strcpy(copyExpression, expression);
+		_replaceOnX(copyExpression, levelBrakets);
+		puts(copyExpression);
+		isTwoOperand = true;
+		if (ptr = strrstr(copyExpression, "+")) {
+			lenOperator = 1, action = addition; break;
 		}
-		if (*ptrExpression == '-' && _isOperatorSub(ptrExpression, expression)) {
-			lenOperator = 1, action = subtraction; return ptrExpression;
+		if (ptr = strrstr(copyExpression, "-")) {
+			lenOperator = 1, action = subtraction; break;
 		}
-		if (*ptrExpression == '*' && finaly == 0) 
-			lenOperator = 1, action = multiplication, finaly = ptrExpression;
-		if (*ptrExpression == '/' && finaly == 0)
-			lenOperator = 1, action = division, finaly = ptrExpression;
+		if (ptr = strrstr(copyExpression, "*")) {
+			lenOperator = 1, action = multiplication; break;
+		}
+		if (ptr = strrstr(copyExpression, "/")) {
+			lenOperator = 1, action = division; break;
+		}
+		if (ptr = strrstr(copyExpression, "mod")) {
+			lenOperator = 3, action = remainderFromDivision; break;
+		}
+		isTwoOperand = false;
+		if ((temp = strrstr(copyExpression, "sin")) > ptr)
+			lenOperator = 3, action = sin, ptr = temp; 
+		if ((temp = strrstr(copyExpression, "cos")) > ptr)
+			lenOperator = 3, action = cos, ptr = temp; 
+		if ((temp = strrstr(copyExpression, "tan")) > ptr)
+			lenOperator = 3, action = tan, ptr = temp; 
+		if ((temp = strrstr(copyExpression, "cot")) > ptr)
+			lenOperator = 3, action = cot, ptr = temp; 
+		if ((temp = strrstr(copyExpression, "sec")) > ptr)
+			lenOperator = 3, action = sec, ptr = temp; 
+		if ((temp = strrstr(copyExpression, "csc")) > ptr)
+			lenOperator = 3, action = csc, ptr = temp; 
+		if ((temp = strrstr(copyExpression, "asin")) > ptr)
+			lenOperator = 4, action = asin, ptr = temp; 
+		if ((temp = strrstr(copyExpression, "acos")) > ptr)
+			lenOperator = 4, action = acos, ptr = temp; 
+		if ((temp = strrstr(copyExpression, "atan")) > ptr)
+			lenOperator = 4, action = atan, ptr = temp; 
+		if ((temp = strrstr(copyExpression, "acot")) > ptr)
+			lenOperator = 4, action = acot, ptr = temp; 
+		if ((temp = strrstr(copyExpression, "asec")) > ptr)
+			lenOperator = 4, action = asec, ptr = temp; 
+		if ((temp = strrstr(copyExpression, "acsc")) > ptr)
+			lenOperator = 4, action = acsc, ptr = temp;
 	}
-	const char *temp;
-	if ((temp = strrstr(expression, "mod")) > finaly) 
-		lenOperator = 3, action = remainderFromDivision, finaly = temp;
-	std::cout << (long)finaly << std::endl;
-	if (finaly) return finaly;
-	isTwoOperand = false;
-	if ((temp = strrstr(expression, "sin")) > finaly)
-		finaly = temp, action = sin, lenOperator = 3;
-	if ((temp = strrstr(expression, "cos")) > finaly) 
-		finaly = temp, action = cos, lenOperator = 3;
-	if ((temp = strrstr(expression, "tan")) > finaly) 
-		finaly = temp, action = tan, lenOperator = 3;
-	if ((temp = strrstr(expression, "cot")) > finaly) 
-		finaly = temp, action = cot, lenOperator = 3;
-	if ((temp = strrstr(expression, "sec")) > finaly) 
-		finaly = temp, action = sec, lenOperator = 3;
-	if ((temp = strrstr(expression, "csc")) > finaly) 
-		finaly = temp, action = csc, lenOperator = 3;
-	if ((temp = strrstr(expression, "asin")) > finaly) 
-		finaly = temp, action = asin, lenOperator = 4;
-	if ((temp = strrstr(expression, "acos")) > finaly) 
-		finaly = temp, action = acos, lenOperator = 4;
-	if ((temp = strrstr(expression, "atan")) > finaly) 
-		finaly = temp, action = atan, lenOperator = 4;
-	if ((temp = strrstr(expression, "acot")) > finaly) 
-		finaly = temp, action = acot, lenOperator = 4;
-	if ((temp = strrstr(expression, "asec")) > finaly) 
-		finaly = temp, action = asec, lenOperator = 4;
-	if ((temp = strrstr(expression, "acsc")) > finaly) 
-		finaly = temp, action = acsc, lenOperator = 4;
-	if ((temp = strrstr(expression, "sgn")) > finaly) 
-		finaly = temp, action = sgn, lenOperator = 3;
-	puts("klsdsdsd");
-	return finaly;
-
+	delete [] copyExpression;
+	//puts("klsdsdsd");
+	return expression + (ptr - copyExpression);
 }
 
 
@@ -158,11 +181,11 @@ private:
 		Expression * parent, \
 		bool isDelete = true \
 	) : _isNumber{true}, _parent{parent} {
-		puts("jkk");
-		puts(expression);
+		//puts("jkk");
+		//puts(expression);
 		mpfr_init2(_data.number, size);
 		mpfr_set_str(_data.number, expression, 10, MPFR_RNDN);
-		puts("ndh");
+		//puts("ndh");
 		if (isDelete) delete [] expression;
 	}
 	Expression(ArifmeticAction action, \
@@ -182,35 +205,39 @@ public:
 		const char * ptrOperator = \
 			_shearchNotPriorityOperator(expression, \
 				isTwoOperand, lenOperator, action);
-
-		if (ptrOperator)
-			putchar(*ptrOperator);
-		puts("dfsfgv");
+		//std::cout << action << std::endl;
+		//if (ptrOperator)
+			//putchar(*ptrOperator);
+		//puts("dfsfgv");
 		if (!ptrOperator) {
-			puts("kl");
+			//puts("kl");
 			//if (isDelete) delete [] expression;
-			puts("kl");
+			//puts("kl");
 			return new Expression{expression, parent, isDelete};
 		}
-		puts("nm");
+		//puts("nm");
 		Expression * result = new Expression{action, parent};
-		puts("nm");
+		//puts("nm");
 		if (isTwoOperand) {
 			size_t lenExpression{(size_t)(ptrOperator - expression)};
-			char * newExpression = new char[lenExpression + 1];
+			char * newExpression = new char[lenExpression+1]();
 			strncpy(newExpression, expression, lenExpression);
-			result->setFirstOperand(buildExpressionTree(newExpression, result, false));
-			puts("klkdd");
-			lenExpression = ptrOperator - expression + lenOperator;
-			newExpression = (char *)realloc(newExpression, lenExpression + 1);
+			result->setFirstOperand(buildExpressionTree(newExpression, result));
+			//puts("klkdd");
+			lenExpression = strlen(expression) - (ptrOperator - expression) - lenOperator;
+			//std::cout << "lenTwoOperand " << lenExpression << std::endl;
+			newExpression = new char[lenExpression+1]();
+			//std:: cout << strlen(newExpression) << std::endl;
 			strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
+			//puts("twoOperand");
+			//puts(newExpression);
 			result->setSecondOperand(buildExpressionTree(newExpression, result));
 		} else {
 			size_t lenExpression{(size_t)(ptrOperator - expression + lenOperator)};
-			char * const newExpression = new char[lenExpression + 1];
+			char * const newExpression = new char[lenExpression + 1]();
 			strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
 			result->setFirstOperand(buildExpressionTree(newExpression, result));
-			puts("dj");
+			//puts("dj");
 		}
 		if (isDelete) delete [] expression;
 		return result;
@@ -240,7 +267,7 @@ public:
 		ArifmeticAction arifmeticAction = expression->_data.action;
 		if (arifmeticAction < sin)
 			Expression::calculate(expression->_operand2, operand2);
-		switch (expression->_data.action) {
+		switch (arifmeticAction) {
 			case addition:
 				mpfr_add(result, operand1, operand2, MPFR_RNDN);
 				break;
@@ -258,6 +285,7 @@ public:
 				break;
 			case sin:
 				mpfr_sin(result, operand1, MPFR_RNDN);
+				puts("sin");
 				break;
 			case cos:
 				mpfr_cos(result, operand1, MPFR_RNDN);
@@ -297,15 +325,15 @@ public:
 				//mpfr_printf("Результат: %.50Rf\n", result);
 		}
 		mpfr_clear(operand1);
-		mpfr_clear(operand2);
-		puts("skddk");
+		if (arifmeticAction < sin) mpfr_clear(operand2);
+		//puts("skddk");
 		delete expression;
 		return;
 	}
 	~Expression() {
-		puts("delete Expression");
+		//puts("delete Expression");
 		if (_isNumber) {
-			mpfr_printf("%Rf\n", _data.number);
+			//mpfr_printf("%Rf\n", _data.number);
 			mpfr_clear(_data.number);
 		}
 	}

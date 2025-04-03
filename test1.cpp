@@ -3,11 +3,12 @@
 #include <iostream>
 
 int main() {
-    const char *str = new char[100] {"0.2mod0.1"};
+    const char *str = new char[100] {"(8*3.14)/2"};
+    puts(str);
     Expression * expression = Expression::buildExpressionTree(str);
     mpfr_t result;
     Expression::calculate(expression, result);
-    puts("dgs");
+    //puts("dgs");
     char * buffer {new char[100]};
     mpfr_sprintf(buffer, "%Rf", result);
     puts(buffer);
