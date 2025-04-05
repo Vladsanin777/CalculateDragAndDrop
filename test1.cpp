@@ -3,7 +3,7 @@
 #include <iostream>
 
 int main() {
-    const char *str = new char[100] {"(8*3.14)/2"};
+    const char *str = new char[100] {"sincos3+2"};
     puts(str);
     Expression * expression = Expression::buildExpressionTree(str);
     mpfr_t result;

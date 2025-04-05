@@ -111,14 +111,16 @@ static inline const char * _shearchNotPriorityOperator( \
 ) {
 	action = none, lenOperator = 0, isTwoOperand = true;
 	size_t len{strlen(expression)};
+	puts(expression);
 
 	char * const copyExpression {new char[len+1UL]()};
-	size_t maxLevelBrackets {_shearchMaxLevelBrackets(expression)};
+	const size_t maxLevelBrackets {_shearchMaxLevelBrackets(expression)+1UL};
+	//std::cout << "maxLevelBrackets " << maxLevelBrackets << std::endl;
 	const char * ptr {0L}, *temp;
-	for (size_t levelBrakets{0UL}; ptr == 0 && levelBrakets < maxLevelBrackets; levelBrakets++) {
+	for (size_t levelBrakets{0UL}; ptr == 0L && levelBrakets < maxLevelBrackets; levelBrakets++) {
 		strcpy(copyExpression, expression);
 		_replaceOnX(copyExpression, levelBrakets);
-		puts(copyExpression);
+		//puts(copyExpression);
 		isTwoOperand = true;
 		if (ptr = strrstr(copyExpression, "+")) {
 			lenOperator = 1, action = addition; break;
@@ -136,34 +138,56 @@ static inline const char * _shearchNotPriorityOperator( \
 			lenOperator = 3, action = remainderFromDivision; break;
 		}
 		isTwoOperand = false;
-		if ((temp = strrstr(copyExpression, "sin")) > ptr)
+		if ((temp = strrstr(copyExpression, "sin")) < ptr != !ptr)
 			lenOperator = 3, action = sin, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "cos")) > ptr)
+		if ((temp = strrstr(copyExpression, "cos")) < ptr != !ptr)
 			lenOperator = 3, action = cos, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "tan")) > ptr)
+		if ((temp = strrstr(copyExpression, "tan")) < ptr && !ptr)
 			lenOperator = 3, action = tan, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "cot")) > ptr)
+		if ((temp = strrstr(copyExpression, "cot")) < ptr && !ptr)
 			lenOperator = 3, action = cot, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "sec")) > ptr)
+		if ((temp = strrstr(copyExpression, "sec")) < ptr && !ptr)
 			lenOperator = 3, action = sec, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "csc")) > ptr)
+		if ((temp = strrstr(copyExpression, "csc")) < ptr && !ptr)
 			lenOperator = 3, action = csc, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "asin")) > ptr)
+		if ((temp = strrstr(copyExpression, "asin")) < ptr && !ptr)
 			lenOperator = 4, action = asin, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "acos")) > ptr)
+		if ((temp = strrstr(copyExpression, "acos")) < ptr && !ptr)
 			lenOperator = 4, action = acos, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "atan")) > ptr)
+		if ((temp = strrstr(copyExpression, "atan")) < ptr && !ptr)
 			lenOperator = 4, action = atan, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "acot")) > ptr)
+		if ((temp = strrstr(copyExpression, "acot")) < ptr && !ptr)
 			lenOperator = 4, action = acot, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "asec")) > ptr)
+		if ((temp = strrstr(copyExpression, "asec")) < ptr && !ptr)
 			lenOperator = 4, action = asec, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "acsc")) > ptr)
+		if ((temp = strrstr(copyExpression, "acsc")) < ptr && !ptr)
 			lenOperator = 4, action = acsc, ptr = temp;
+		//puts("rfjvkfkml");
 	}
+	//std::cout << ptr << std::endl;
+	//putchar('A');
+	//putchar(*ptr);
 	delete [] copyExpression;
 	//puts("klsdsdsd");
-	return expression + (ptr - copyExpression);
+	if (ptr) return expression + (ptr - copyExpression);
+	return 0L;
+}
+
+static inline const char * normalize( \
+	const char * const expression, bool isDelete = true \
+) {
+	char *number {new char[strlen(expression) + 1UL]};
+	strcpy(number, expression);
+	if (isDelete)
+		delete [] expression;
+	char * deleteChar;
+	size_t len {strlen(number) + 1UL};
+	//std::cout << len << std::endl;
+	while (deleteChar = strchr(number, '('))
+		memmove(deleteChar, deleteChar + 1L, len - (number - deleteChar));
+	while (deleteChar = strchr(number, ')'))
+		memmove(deleteChar, deleteChar + 1L, len - (number - deleteChar));
+	return number;
 }
 
 
@@ -176,19 +200,19 @@ private:
 
 
 	static size_t size;
-	Expression (
-		const char *expression, \
+	inline explicit Expression (
+		const char * const number, \
 		Expression * parent, \
 		bool isDelete = true \
 	) : _isNumber{true}, _parent{parent} {
 		//puts("jkk");
 		//puts(expression);
 		mpfr_init2(_data.number, size);
-		mpfr_set_str(_data.number, expression, 10, MPFR_RNDN);
+		mpfr_set_str(_data.number, number, 10, MPFR_RNDN);
 		//puts("ndh");
-		if (isDelete) delete [] expression;
+		if (isDelete) delete [] number;
 	}
-	Expression(ArifmeticAction action, \
+	inline explicit Expression(ArifmeticAction action, \
 		Expression *parent = nullptr)
 		: _isNumber{false}, _parent{parent}, \
 		_data{.action = action} {}
@@ -198,7 +222,7 @@ public:
 		Expression * parent = 0L, \
 		bool isDelete = true \
 	) {
-		puts(expression);
+		//puts(expression);
 		unsigned char lenOperator;
 		bool isTwoOperand;
 		ArifmeticAction action;
@@ -213,8 +237,14 @@ public:
 			//puts("kl");
 			//if (isDelete) delete [] expression;
 			//puts("kl");
-			return new Expression{expression, parent, isDelete};
+
+			const char * const number = normalize(expression, isDelete);
+			//std::cout << (number == expression) << std::endl;
+			//puts("dfkfkdl");
+			return new Expression{number, parent};
 		}
+		putchar(*ptrOperator);
+		putchar('\n');
 		//puts("nm");
 		Expression * result = new Expression{action, parent};
 		//puts("nm");
@@ -222,7 +252,9 @@ public:
 			size_t lenExpression{(size_t)(ptrOperator - expression)};
 			char * newExpression = new char[lenExpression+1]();
 			strncpy(newExpression, expression, lenExpression);
+			//puts("firstOperandStart");
 			result->setFirstOperand(buildExpressionTree(newExpression, result));
+			//puts("firstOperandEnd");
 			//puts("klkdd");
 			lenExpression = strlen(expression) - (ptrOperator - expression) - lenOperator;
 			//std::cout << "lenTwoOperand " << lenExpression << std::endl;
@@ -233,7 +265,7 @@ public:
 			//puts(newExpression);
 			result->setSecondOperand(buildExpressionTree(newExpression, result));
 		} else {
-			size_t lenExpression{(size_t)(ptrOperator - expression + lenOperator)};
+			size_t lenExpression{ptrOperator - expression + lenOperator + 1UL};
 			char * const newExpression = new char[lenExpression + 1]();
 			strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
 			result->setFirstOperand(buildExpressionTree(newExpression, result));
@@ -270,18 +302,23 @@ public:
 		switch (arifmeticAction) {
 			case addition:
 				mpfr_add(result, operand1, operand2, MPFR_RNDN);
+				puts("add");
 				break;
 			case subtraction:
 				mpfr_sub(result, operand1, operand2, MPFR_RNDN);
+				puts("sub");
 				break;
 			case remainderFromDivision:
 				mpfr_fmod(result, operand1, operand2, MPFR_RNDN);
+				puts("fmod");
 				break;
 			case multiplication:
 				mpfr_mul(result, operand1, operand2, MPFR_RNDN);
+				puts("mul");
 				break;
 			case division:
 				mpfr_div(result, operand1, operand2, MPFR_RNDN);
+				puts("div");
 				break;
 			case sin:
 				mpfr_sin(result, operand1, MPFR_RNDN);
@@ -289,41 +326,54 @@ public:
 				break;
 			case cos:
 				mpfr_cos(result, operand1, MPFR_RNDN);
+				puts("cos");
 				break;
 			case tan:
 				mpfr_tan(result, operand1, MPFR_RNDN);
+				puts("tan");
 				break;
 			case sec:
 				mpfr_sec(result, operand1, MPFR_RNDN);
+				puts("sec");
 				break;
 			case csc:
 				mpfr_csc(result, operand1, MPFR_RNDN);
+				puts("csc");
 				break;
 			case cot:
 				mpfr_cot(result, operand1, MPFR_RNDN);
+				puts("cot");
 				break;
 			case asin:
 				mpfr_asin(result, operand1, MPFR_RNDN);
+				puts("asin");
 				break;
 			case acos:
 				mpfr_acos(result, operand1, MPFR_RNDN);
+				puts("acos");
 				break;
 			case atan:
 				mpfr_atan(result, operand1, MPFR_RNDN);
+				puts("atan");
 				break;
 			case asec:
 				mpfr_asec(result, operand1, MPFR_RNDN);
+				puts("asec");
 				break;
 			case acsc:
 				mpfr_acsc(result, operand1, MPFR_RNDN);
+				puts("acsc");
 				break;
 			case acot:
 				mpfr_acot(result, operand1, MPFR_RNDN);
+				puts("acot");
 				break;
 			//case sgn:
 				//result = mpfr_sgn(operand1);
+				//puts("sgn");
 				//mpfr_printf("Результат: %.50Rf\n", result);
 		}
+		mpfr_printf("1 %Rf\nr %Rf\n", operand1, result);
 		mpfr_clear(operand1);
 		if (arifmeticAction < sin) mpfr_clear(operand2);
 		//puts("skddk");
