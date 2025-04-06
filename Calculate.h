@@ -64,10 +64,11 @@ void mpfr_acot(mpfr_t& result, const mpfr_t x, mpfr_rnd_t rnd) {
 }
 enum ArifmeticAction { \
 	none, addition, subtraction, \
-	remainderFromDivision, \
+	remainderFromDivision, power, \
 	multiplication, division, \
 	sin, cos, tan, sec, csc, cot, sgn, \
-	acos, asin, atan, asec, acsc, acot \
+	acos, asin, atan, asec, acsc, acot, \
+	sqrt, qrt, cbrt, unaryMinus \
 };
 static inline bool _isBrackets(char symbol) {
 	return symbol == '(' || symbol == ')';
@@ -190,33 +191,50 @@ static inline const char * normalize( \
 	return number;
 }
 
-
-union Data {mpfr_t number; ArifmeticAction action;};
+union NumOrVar {mpfr_t number; const char * variable}
+union Data {NumOrVar operand; ArifmeticAction action;};
 class Expression {
 private:
 	Expression *_parent, *_operand1, *_operand2;
 	Data _data;
-	bool _isNumber;
-
+	bool _isOperand;
+	bool _isVariable;
 
 	static size_t size;
+	static mpfr_t ZERO, ONE;
 	inline explicit Expression (
 		const char * const number, \
 		Expression * parent, \
 		bool isDelete = true \
-	) : _isNumber{true}, _parent{parent} {
+	) : _isOperand{true}, _parent{parent} {
 		//puts("jkk");
 		//puts(expression);
-		mpfr_init2(_data.number, size);
-		mpfr_set_str(_data.number, number, 10, MPFR_RNDN);
-		//puts("ndh");
+		if (isdigit(*number) || *number == '-') {
+			_isVariable = true;
+			mpfr_init2(_data.operand.number, size);
+			mpfr_set_str(_data.operand.number, number, 10, MPFR_RNDN);
+			//puts("ndh");
+		} else {
+			_isVariable = false;
+			char * variable = new char[strlen(number)+1UL];
+			strcpy(variable, number);
+			_data.operand.variable = variable;
+		}
 		if (isDelete) delete [] number;
 	}
 	inline explicit Expression(ArifmeticAction action, \
 		Expression *parent = nullptr)
 		: _isNumber{false}, _parent{parent}, \
 		_data{.action = action} {}
+	inline explicit Expression(void) {}
 public:
+	static void init(void) {
+		mpfr_init2(ZERO, size);
+		mpfr_set_str(ZERO, "0", 8, MPFR_RNDN);
+		mpfr_init2(ONE, size);
+		mpfr_set_str(ONE, "1", 8, MPFR_RNDN);
+		return;
+	}
 	static Expression *buildExpressionTree( \
 		const char *expression, \
 		Expression * parent = 0L, \
@@ -382,10 +400,223 @@ public:
 	}
 	~Expression() {
 		//puts("delete Expression");
-		if (_isNumber) {
+		if (_isOperand) {
 			//mpfr_printf("%Rf\n", _data.number);
 			mpfr_clear(_data.number);
 		}
+	}
+	inline one(Expression * parent) {
+		this = new Expression {"1", parent};
+	}
+	inline Expression * copy(Expression * parent = 0L) {
+		Expression *result {new Expression{}};
+		*result = *this;
+		result->_parent = parent;
+		return result;
+	}
+	inline Expression * diff(Expression * parent = 0L) const {
+		Expression * result = Expression{};
+		result->_parent = parent;
+		if (_isOperand) {
+			result->_isOperand = true;
+			result->_isVariable = false;
+			mpfr_t &number = result._data.operand.number;
+			mpfr_init2(number, size);
+			if (expression->_isVariable){
+				mpfr_set(number, ONE, MPFR_RNDN);
+				return result;
+			}
+			mpfr_set(number, ZERO, MPFR_RNDN);
+			return result;
+		}
+		result->_isOperand = false;
+		ArifmeticAction &action {_data.action}, \
+			&resAction{result->_data.action};
+		Expression * &resOperand1 {result->_operand1}, \
+			* &resOperand2 {result->_operand2};
+        switch (action) {
+			case addition:
+			case subtraction:
+				resAction = action;
+				resOperand1 = _operand1->diff(result);
+				resOperand2 = _operand2->diff(result);
+				return result;
+			case multiplication:
+				resAction = addition;
+				resOperand1 = new Expression{multiplication, result};
+				resOperand1->_operand1 = _operand1->diff(resOperand1);
+				resOperand1->_operand2 = _operand2->copy(resOperand1);
+				resOperand2 = new Expression{multiplication, result};
+				resOperand2->_operand1 = _operand1->copy;
+				resOperand2->_operand2 = _operand2->diff(resOperand2);
+				return result;
+			case division:
+				resAction = division;
+				resOperand1 = new Expression{addition, result};
+				Expression * resOperand1Operand1 { \
+					new Expression {multiplication, resOperand1}}, \
+				* resOperand1Operand2 { \
+					new Expression {multiplication, resOperand1}};
+				resOperand1Operand1->_operand1 = \
+					_operand1->diff(resOperand1Operand1);
+				resOperand1Operand1->_operand2 = \
+					_operand2->copy(resOperand1Operand1);
+				resOperand1->_operand1 = resOperand1Operand1;
+				resOperand1Operand2->_operand1 = 
+					_operand1->copy(resOperand1Operand2);
+				resOperand1Operand2->_operand2 = 
+					_operand2->diff(resOperand1Operand2);
+				resOperand1->_operand2 = resOperand1Operand2;
+				resOperand2 = new Expression{qrt, result};
+				resOperand2->_operand1 = _operand2->copy(resOperand2);
+				return result;
+			case power:
+				resAction = multiplication;
+				resOperand1 = new Expression{multiplication, result};
+				resOperand2 = _operand1->diff(result);
+				resOperand1->_operand1 = _operand2->copy(resOperand1);
+				Expression * resOperand1Operand2 { \
+					new Expression{power, resOperand1}};
+				resOperand1Operand2->_operand1 = \
+					_operand1->copy(resOperand1Operand2);
+				Expression * resOperand1Operand2Operand2 { \
+					new Expression{subtraction, resOperand1Operand2}};
+				resOperand1Operand2Operand2->_operand1 = \
+					_operand2->copy(resOperand1Operand2Operand2);
+				resOperand1Operand2Operand2->_operand2->one();
+				resOperand1->_operand2 = resOperand1Operand2;
+
+				return result;
+			case sin:
+				resAction = cos;
+				resOperand1 = _
+
+            case 1:
+                print(expression)
+                if len(expression[0]) == 1:
+                    expression = '0' if expression[0][0] in "0123456789" else '1'
+                else: 
+                    expression = '0' if expression[0][1] in "0123456789" else '1'
+            case 2:
+                if expression[1][0] in "0123456789":
+                    expression = '0'
+                else:
+                    expression_0: str
+                    expression_1: Union[str, list] = expression[1]
+                    complex_expression: bool = isinstance(expression_1, list)
+                    is_minus: bool = expression[0][0] == '-'
+                    match expression_0[-6:]:
+                        case 'arcsin':
+                            expression = [
+                                '1', '/', ['sqrt', ['1', '-',
+                                [expression_1, '^', '2']]]]
+                        case 'arccos':
+                            expression = [
+                                '-1', '/', ['sqrt', ['1', '-', 
+                                [expression_1, '^', '2']]]]
+                        case 'arctan':
+                            expression = [
+                                '1', '/', ['sqrt', ['1', '+',
+                                [expression_1, '^', '2']]]]
+                        case 'arccot':
+                            expression = [
+                                '-1', '/', ['sqrt', ['1', '+', 
+                                [expression_1, '^', '2']]]]
+                        case 'arcsec':
+                            expression = [
+                                '1', '/', [['abs', expression_1],
+                                '*', ['sqrt', ['1', '-',
+                                [expression_1, '^', '2']]]]]
+                        case 'arccsc':
+                            expression = [
+                                '-1', '/', [['abs', expression_1],
+                                '*', ['sqrt', ['1', '-',
+                                [expression_1, '^', '2']]]]]
+                        case _:
+                            match expression_0[-3:]:
+                                case 'sin':
+                                    expression = [
+                                        '-cos' if is_minus else 'cos', 
+                                        expression_1
+                                    ]
+                                case 'cos':
+                                    expression = [
+                                        'sin' if is_minus else '-sin',
+                                        expression_1
+                                    ]
+                                case 'tan':
+                                    expression = [
+                                        [
+                                            '-sec' if is_minus else 'sec',
+                                            expression_1
+                                        ], '^', '2']
+                                case 'cot':
+                                    expression = [
+                                        [
+                                            'csc' if is_minus else '-csc',
+                                            expression_1
+                                        ], '^', '2']
+                                case 'sec': 
+                                    expression = [
+                                        [
+                                            '-sec' if is_minus else 'sec',
+                                            expression_1
+                                        ],
+                                        '*',
+                                        ['tan', expression_1]
+                                    ]
+                                case 'csc':
+                                    expression = [
+                                        [
+                                            'csc' if is_minus else '-csc',
+                                            expression_1
+                                        ],
+                                        '*',
+                                        ['cot', expression_1]
+                                    ]
+                                case 'abs':
+                                    expression = ['sgn', expression_1]
+                                case 'sgn':
+                                    expression = '0'
+                                case 'log':
+                                    if len(expression_1) > 1 and expression_1[1] == '|':
+                                        expression = ['1', '/', [expression_1[2], 
+                                            '*', ['ln', expression_1[0]]]]
+                                        expression = expression_1[2]
+                                    else:
+                                        expression = ['1', '/', expression_1]
+                                case _:
+                                    match expression_0[-2:]:
+                                        case 'ln':
+                                            expression = ['1', '/', expression_1]
+                                        case 'lg':
+                                            expression = ['1', '/', [expression_1, '*', ['ln', '10']]]
+                    expression = [expression, '*', self.ordinar_derivate(expression_1)]
+
+            case 3:
+                expression_0: Union[str, list] = expression[0]
+                expression_2: Union[str, list] = expression[2]
+                match expression[1]:
+                    
+                    case "^":
+                        expression = [
+                            [
+                                expression_2,
+                                '*',
+                                [
+                                    expression_0,
+                                    '^',
+                                    [expression_2, '-', '1']
+                                ]
+                            ],
+                            '*',
+                            self.ordinar_derivate(expression_0)
+                        ]
+                    case "|":
+                        ...
+                        
+
+        return expression
 	}
 };
 
