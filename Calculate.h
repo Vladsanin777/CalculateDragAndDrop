@@ -406,7 +406,8 @@ public:
 		}
 	}
 	inline one(Expression * parent) {
-		this = new Expression {"1", parent};
+		_isVariable = false, _isOperand = true;
+		_data.operand.number = new Expression {"1", parent};
 	}
 	inline Expression * copy(Expression * parent = 0L) {
 		Expression *result {new Expression{}};
@@ -483,13 +484,52 @@ public:
 					new Expression{subtraction, resOperand1Operand2}};
 				resOperand1Operand2Operand2->_operand1 = \
 					_operand2->copy(resOperand1Operand2Operand2);
-				resOperand1Operand2Operand2->_operand2->one();
+				resOperand1Operand2Operand2->_operand2->one(resOperand1Operand2Operand2);
 				resOperand1->_operand2 = resOperand1Operand2;
 
 				return result;
 			case sin:
 				resAction = cos;
-				resOperand1 = _
+				resOperand1 = _operand1->copy();
+				return result;
+			case cos:
+				resAction = unaryMinus;
+				resOperand1 = new Expression{sin, result};
+				resOperand1->_operand1 = _operand1->copy();
+				return result;
+			case tan:
+				resAction = power;
+				resOperand1 = new Expression{sec, result};
+				resOperand1->_operand1 = _operand1.copy(resOperand1Operand1);
+				return result;
+			case cot:
+				resAction = power;
+				resOperand1 = new Expression{unaryMinus, result};
+				Expression * resOperand1Operand1 {new Expression{csc, result}};
+				resOperand1Operand1->_operand1 = _operand1.copy(resOperand1Operand1);
+				resOperand1->_operand1 = resOperand1Operand1;
+				return result;
+			case sec:
+				resAction = multiplication;
+				resOperand1 = new Expression{sec, result};
+				resOperand1->_operand1 = _operand1.copy(resOperand1->_operand1);
+				resOperand2 = new Expression{tan, result};
+				resOperand2->_operand1 = _operand1.copy(resOperand2->_operand1);
+				return result;
+			case csc:
+				resAction = multiplication;
+				resOperand1 = new Expression{csc, result};
+
+			case 'csc':
+				expression = [
+					[
+						'csc' if is_minus else '-csc',
+						expression_1
+					],
+					'*',
+					['cot', expression_1]
+				]
+
 
             case 1:
                 print(expression)
