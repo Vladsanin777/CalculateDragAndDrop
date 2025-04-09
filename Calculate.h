@@ -66,10 +66,14 @@ enum ArifmeticAction { \
 	none, addition, subtraction, \
 	remainderFromDivision, power, \
 	multiplication, division, \
-	sin, cos, tan, sec, csc, cot, sgn, \
+	log, sin, cos, tan, sec, csc, cot, \
 	acos, asin, atan, asec, acsc, acot, \
-	sqrt, qrt, cbrt, unaryMinus \
+	sqrt, qrt, cbrt, unaryMinus, abs, \
+	sgn, log2, lg, ln \
 };
+enum Diff { \
+	numberDi, variableDi, actionVaribleDi \
+}
 static inline bool _isBrackets(char symbol) {
 	return symbol == '(' || symbol == ')';
 }
@@ -191,31 +195,36 @@ static inline const char * normalize( \
 	return number;
 }
 
-union NumOrVar {mpfr_t number; const char * variable}
-union Data {NumOrVar operand; ArifmeticAction action;};
+enum TypeData { \
+	numberTD, variableTD, actionTD \
+};
+union Data { \
+	const char * variable; \
+	mpfr_t number; \
+	ArifmeticAction action; \
+};
 class Expression {
 private:
 	Expression *_parent, *_operand1, *_operand2;
 	Data _data;
-	bool _isOperand;
-	bool _isVariable;
+	TypeData _typeData;
 
 	static size_t size;
-	static mpfr_t ZERO, ONE;
+	static Expression *ZERO, *ONE;
 	inline explicit Expression (
 		const char * const number, \
 		Expression * parent, \
 		bool isDelete = true \
-	) : _isOperand{true}, _parent{parent} {
+	) : _parent{parent} {
 		//puts("jkk");
 		//puts(expression);
 		if (isdigit(*number) || *number == '-') {
-			_isVariable = true;
-			mpfr_init2(_data.operand.number, size);
-			mpfr_set_str(_data.operand.number, number, 10, MPFR_RNDN);
+			_typeData = variableTD;
+			mpfr_init2(_data.number, size);
+			mpfr_set_str(_data.number, number, 10, MPFR_RNDN);
 			//puts("ndh");
 		} else {
-			_isVariable = false;
+			_typeData = numberTD;
 			char * variable = new char[strlen(number)+1UL];
 			strcpy(variable, number);
 			_data.operand.variable = variable;
@@ -224,7 +233,7 @@ private:
 	}
 	inline explicit Expression(ArifmeticAction action, \
 		Expression *parent = nullptr)
-		: _isNumber{false}, _parent{parent}, \
+		: _typeData{actionTD}, _parent{parent}, \
 		_data{.action = action} {}
 	inline explicit Expression(void) {}
 public:
@@ -409,30 +418,49 @@ public:
 		_isVariable = false, _isOperand = true;
 		_data.operand.number = new Expression {"1", parent};
 	}
-	inline Expression * copy(Expression * parent = 0L) {
+	inline Expression * copy( \
+		Expression * parent = 0L \
+	) const {
 		Expression *result {new Expression{}};
 		*result = *this;
 		result->_parent = parent;
+		switch (_typeData) {
+			case variableTD:
+				char * variable {new char[strlen(_data) + 1UL]};
+				result._data.variable = variable;
+				return result;
+			case actionTD:
+				result->operand1 = result->operand1->copy();
+				result->operand2 = result->operand2->copy();
+		}
 		return result;
+	}
+	inline Diff heandlerDiff(void) const {
+		switch (_typeData) {
+			case numberTD:
+				return numberDi;
+			case variableTD:
+				return variableDi;
+		}
+		Diff diff {_operand1->heandlerDiff()};
+		if (diff == variableDi) diff = actionVaribleDi;
+		if (_data.action < sin)
+			if ((diff = _operand2->heandlerDiff()) == variableDi) 
+				return actionVaribleDi;
+		return diff;
 	}
 	inline Expression * diff(Expression * parent = 0L) const {
 		Expression * result = Expression{};
 		result->_parent = parent;
-		if (_isOperand) {
-			result->_isOperand = true;
-			result->_isVariable = false;
-			mpfr_t &number = result._data.operand.number;
-			mpfr_init2(number, size);
-			if (expression->_isVariable){
-				mpfr_set(number, ONE, MPFR_RNDN);
-				return result;
-			}
-			mpfr_set(number, ZERO, MPFR_RNDN);
-			return result;
+		switch (heandlerDiff()) {
+			case numberTD:
+				return ZERO->copy();
+			case variableTD:
+				return ONE->copy();
 		}
-		result->_isOperand = false;
-		ArifmeticAction &action {_data.action}, \
-			&resAction{result->_data.action};
+		result->_typeData = actionTD;
+		const ArifmeticAction &action {_data.action};
+		ArifmeticAction &resAction{result->_data.action};
 		Expression * &resOperand1 {result->_operand1}, \
 			* &resOperand2 {result->_operand2};
         switch (action) {
@@ -471,66 +499,77 @@ public:
 				resOperand2 = new Expression{qrt, result};
 				resOperand2->_operand1 = _operand2->copy(resOperand2);
 				return result;
+		}
+		switch (action) {
 			case power:
 				resAction = multiplication;
-				resOperand1 = new Expression{multiplication, result};
-				resOperand2 = _operand1->diff(result);
-				resOperand1->_operand1 = _operand2->copy(resOperand1);
-				Expression * resOperand1Operand2 { \
-					new Expression{power, resOperand1}};
-				resOperand1Operand2->_operand1 = \
-					_operand1->copy(resOperand1Operand2);
-				Expression * resOperand1Operand2Operand2 { \
-					new Expression{subtraction, resOperand1Operand2}};
-				resOperand1Operand2Operand2->_operand1 = \
-					_operand2->copy(resOperand1Operand2Operand2);
-				resOperand1Operand2Operand2->_operand2->one(resOperand1Operand2Operand2);
-				resOperand1->_operand2 = resOperand1Operand2;
+				resOperand1 = _operand2->copy(resOperand1);
+				resOperand2 = new Expression{power, result}};
+				resOperand2->_operand1 = \
+					_operand1->copy(resOperand2);
+				Expression * resOperand2Operand2 { \
+					new Expression{subtraction, resOperand2}};
+				resOperand2Operand2->_operand1 = \
+					_operand2->copy(resOperand2Operand2);
+				resOperand2Operand2->_operand2 = ONE->copy(resOperand2Operand2);
 
-				return result;
+				break;
 			case sin:
 				resAction = cos;
 				resOperand1 = _operand1->copy();
-				return result;
+				break;
 			case cos:
 				resAction = unaryMinus;
 				resOperand1 = new Expression{sin, result};
 				resOperand1->_operand1 = _operand1->copy();
-				return result;
+				break;
 			case tan:
 				resAction = power;
 				resOperand1 = new Expression{sec, result};
 				resOperand1->_operand1 = _operand1.copy(resOperand1Operand1);
-				return result;
+				break;
 			case cot:
 				resAction = power;
 				resOperand1 = new Expression{unaryMinus, result};
-				Expression * resOperand1Operand1 {new Expression{csc, result}};
+				Expression * resOperand1Operand1 {new Expression{csc, resOperand1}};
 				resOperand1Operand1->_operand1 = _operand1.copy(resOperand1Operand1);
 				resOperand1->_operand1 = resOperand1Operand1;
-				return result;
+				break;
 			case sec:
 				resAction = multiplication;
 				resOperand1 = new Expression{sec, result};
-				resOperand1->_operand1 = _operand1.copy(resOperand1->_operand1);
+				resOperand1->_operand1 = _operand1.copy(resOperand1);
 				resOperand2 = new Expression{tan, result};
-				resOperand2->_operand1 = _operand1.copy(resOperand2->_operand1);
-				return result;
+				resOperand2->_operand1 = _operand1.copy(resOperand2);
+				break;
 			case csc:
 				resAction = multiplication;
-				resOperand1 = new Expression{csc, result};
+				resOperand1 = new Expression{unaryMinus, result};
+				Expression * resOperand1Operand1{new Expression{csc, resOperand1}};
+				resOperand1Operand1->_operand1 = _operand1.copy(resOperand1Operand1);
+				resOperand2 = new Expression{cot, result};
+				resOperand2->operand1 = _operand1.copy(resOperand2);
+				break;
+			case abs:
+				resAction = sgn;
+				resOperand1 = _operand1->copy();
+				break;
 
-			case 'csc':
-				expression = [
-					[
-						'csc' if is_minus else '-csc',
-						expression_1
-					],
-					'*',
-					['cot', expression_1]
-				]
-
-
+			case asin:
+				action = division;
+				resOperand1 = ONE->copy();
+				resOperand2 = new Expression{sqrt, result};
+				Expression * resOperand2Operand1 { \
+					new Expression{subtraction, resOperand2}};
+				resOperand2->_operand1 = resOperand2Operand1;
+				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
+				Expression *resOperand2Operand1Operand2 { \
+					new Expression{qrt, resOperand2Operand1}};
+				resOperand2Operand1->_operand2 = resOperand2Operand1Operand2;
+				resOperand2Operand1Operand2->_operand1 = _operand1->copy();
+				break;
+		}
+			/*
             case 1:
                 print(expression)
                 if len(expression[0]) == 1:
@@ -657,6 +696,7 @@ public:
                         
 
         return expression
+		*/
 	}
 };
 
