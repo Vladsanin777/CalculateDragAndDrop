@@ -341,9 +341,12 @@ public:
 	}
 	static void calculate(Expression *expression, mpfr_t &result) {
 		mpfr_init2(result, size);
+		if (expression->_typeData == variableTD) {
+			mpfr_set_str(result, "6", 10, MPFR_RNDN);
+			return;
+		}
 		if (expression->_typeData == numberTD) {
 			mpfr_set(result, expression->_data.number, MPFR_RNDN);
-			delete expression;
 			return;
 		}
 		mpfr_t operand1, operand2;
@@ -372,6 +375,10 @@ public:
 			case division:
 				mpfr_div(result, operand1, operand2, MPFR_RNDN);
 				puts("div");
+				break;
+			case unaryMinus:
+				mpfr_sub(result, ZERO->_data.number, operand1, MPFR_RNDN);
+				puts("unary minus");
 				break;
 			case sin:
 				mpfr_sin(result, operand1, MPFR_RNDN);
@@ -430,21 +437,25 @@ public:
 		mpfr_clear(operand1);
 		if (isTwoOperandBool) mpfr_clear(operand2);
 		//puts("skddk");
-		delete expression;
 		return;
 	}
 	inline const char *print(void) {
 		char * expression;
 		switch (_typeData){
 			case numberTD:
+				puts("numberTD");
 				expression = new char[12];
 				mpfr_sprintf(expression, "%05.5Rf", _data.number);
 				return expression;
 			case variableTD:
+				puts("variableTD");
 				expression = new char[strlen(_data.variable) + 1UL];
 				strcpy(expression, _data.variable);
 				return expression;
 		}
+		puts("actionTD");
+		puts(ARIFMETIC_STR_ACTION[_data.action]);
+		//if (isTwoOperand()) puts(_operand2->print());
 		const char *operand1 {_operand1->print()}, \
 			*action {ARIFMETIC_STR_ACTION[_data.action]};
 		if (isTwoOperand()) {
@@ -474,17 +485,21 @@ public:
 			case numberTD:
 				mpfr_init2(result->_data.number, size);
 				mpfr_set(result->_data.number, _data.number, MPFR_RNDN);
+				result->_typeData = numberTD;
 				return result;
 			case variableTD:
-				std::cout << "fvhfdnk " << _data.variable << ' ' << strlen(_data.variable) + 1UL << std::endl;
+				//std::cout << "fvhfdnk " << _data.variable << ' ' << strlen(_data.variable) + 1UL << std::endl;
 				temp = new char[strlen(_data.variable) + 1UL];
 				strcpy(temp, _data.variable);
 				result->_data.variable = temp;
+				result->_typeData = variableTD;
 				return result;
 			case actionTD:
+				result->_data.action = _data.action;
 				result->_operand1 = _operand1->copy(result);
 				if (isTwoOperand())
 					result->_operand2 = _operand2->copy(result);
+				result->_typeData = actionTD;
 		}
 		return result;
 	}
@@ -504,16 +519,18 @@ public:
 		return diff;
 	}
 	inline Expression * diff(Expression * parent = 0L) const {
-		Expression * result {new Expression{}};
-		result->_parent = parent;
 		switch (heandlerDiff()) {
 			case numberDi:
 				puts("numberDi");
-				return ZERO->copy();
+				return ZERO->copy(parent);
 			case variableDi:
 				puts("variableDi");
-				return ONE->copy();
+				return ONE->copy(parent);
 		}
+		Expression * result {new Expression{}};
+		result->_parent = parent;
+		result->_operand1 = nullptr;
+		result->_operand1 = nullptr;
 		result->_typeData = actionTD;
 		const ArifmeticAction &action {_data.action};
 		ArifmeticAction &resAction{result->_data.action};
@@ -526,9 +543,22 @@ public:
         switch (action) {
 			case addition:
 			case subtraction:
-				resAction = action;
-				resOperand1 = _operand1->diff(result);
-				resOperand2 = _operand2->diff(result);
+				puts("subAdd");
+				if (_operand1->heandlerDiff() == numberDi) {
+					puts("asd");
+					//delete result;
+					puts("asd");
+					result = _operand2->diff(parent);
+				} else if (_operand2->heandlerDiff() == numberDi) {
+					puts("asd");
+					//delete result;
+					puts("asd");
+					result = _operand1->diff(parent);
+				} else {
+					resAction = action;
+					resOperand1 = _operand1->diff(result);
+					resOperand2 = _operand2->diff(result);
+				}
 				return result;
 			case multiplication:
 				resAction = addition;
@@ -775,7 +805,7 @@ public:
 				delete [] _data.variable;
 				return;
 			case actionTD:
-				delete _operand1;
+				if (_operand1) delete _operand1;
 				if (isTwoOperand()) {
 					delete _operand2;
 				}
