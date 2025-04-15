@@ -257,7 +257,120 @@ private:
 		: _typeData{actionTD}, _parent{parent}, \
 		_data{.action = action} {}
 	inline explicit Expression(void) {}
+	mpfr_t* calculate(void) {
+		mpfr_t* result {new mpfr_t[1]};
+		mpfr_init2(*result, size);
+		if (_typeData == variableTD) {
+			mpfr_set_str(*result, "6", 10, MPFR_RNDN);
+			return result;
+		}
+		if (_typeData == numberTD) {
+			mpfr_set(*result, _data.number, MPFR_RNDN);
+			return result;
+		}
+		mpfr_t* operand1 = _operand1->calculate(), *operand2;
+		ArifmeticAction arifmeticAction = _data.action;
+		bool isTwoOperandBool {isTwoOperand()};
+		if (isTwoOperandBool)
+			operand2 = _operand2->calculate();
+		switch (arifmeticAction) {
+			case addition:
+				mpfr_add(*result, *operand1, *operand2, MPFR_RNDN);
+				puts("add");
+				break;
+			case subtraction:
+				mpfr_sub(*result, *operand1, *operand2, MPFR_RNDN);
+				puts("sub");
+				break;
+			case remainderFromDivision:
+				mpfr_fmod(*result, *operand1, *operand2, MPFR_RNDN);
+				puts("fmod");
+				break;
+			case multiplication:
+				mpfr_mul(*result, *operand1, *operand2, MPFR_RNDN);
+				puts("mul");
+				break;
+			case division:
+				mpfr_div(*result, *operand1, *operand2, MPFR_RNDN);
+				puts("div");
+				break;
+			case unaryMinus:
+				mpfr_sub(*result, ZERO->_data.number, *operand1, MPFR_RNDN);
+				puts("unary minus");
+				break;
+			case sin:
+				mpfr_sin(*result, *operand1, MPFR_RNDN);
+				puts("sin");
+				break;
+			case cos:
+				mpfr_cos(*result, *operand1, MPFR_RNDN);
+				puts("cos");
+				break;
+			case tan:
+				mpfr_tan(*result, *operand1, MPFR_RNDN);
+				puts("tan");
+				break;
+			case sec:
+				mpfr_sec(*result, *operand1, MPFR_RNDN);
+				puts("sec");
+				break;
+			case csc:
+				mpfr_csc(*result, *operand1, MPFR_RNDN);
+				puts("csc");
+				break;
+			case cot:
+				mpfr_cot(*result, *operand1, MPFR_RNDN);
+				puts("cot");
+				break;
+			case asin:
+				mpfr_asin(*result, *operand1, MPFR_RNDN);
+				puts("asin");
+				break;
+			case acos:
+				mpfr_acos(*result, *operand1, MPFR_RNDN);
+				puts("acos");
+				break;
+			case atan:
+				mpfr_atan(*result, *operand1, MPFR_RNDN);
+				puts("atan");
+				break;
+			case asec:
+				mpfr_asec(*result, *operand1, MPFR_RNDN);
+				puts("asec");
+				break;
+			case acsc:
+				mpfr_acsc(*result, *operand1, MPFR_RNDN);
+				puts("acsc");
+				break;
+			case acot:
+				mpfr_acot(*result, *operand1, MPFR_RNDN);
+				puts("acot");
+				break;
+			//case sgn:
+				//result = mpfr_sgn(operand1);
+				//puts("sgn");
+				//mpfr_printf("Результат: %.50Rf\n", result);
+		}
+		mpfr_printf("1 %Rf\nr %Rf\n", *operand1, *result);
+		mpfr_clear(*operand1);
+		delete [] operand1;
+		if (isTwoOperandBool) {
+			mpfr_clear(*operand2);
+			delete [] operand2;
+		}
+		//puts("skddk");
+		return result;
+	}
 public:
+	const char *calc(void) {
+		char *resStr = new char[100];
+		mpfr_t *result = calculate();
+		mpfr_sprintf(resStr, "%.77Rf", *result);
+		mpfr_clear(*result);
+		delete [] result;
+		std::cout << (void*)resStr << std::endl;
+		return resStr;
+	}
 	static void init(void) {
 		if (ZERO) delete ZERO;
 		if (ONE) delete ONE;
@@ -338,106 +451,6 @@ public:
 	}
 	void getNumber(char * const str) {
 
-	}
-	static void calculate(Expression *expression, mpfr_t &result) {
-		mpfr_init2(result, size);
-		if (expression->_typeData == variableTD) {
-			mpfr_set_str(result, "6", 10, MPFR_RNDN);
-			return;
-		}
-		if (expression->_typeData == numberTD) {
-			mpfr_set(result, expression->_data.number, MPFR_RNDN);
-			return;
-		}
-		mpfr_t operand1, operand2;
-		Expression::calculate(expression->_operand1, operand1);
-		ArifmeticAction arifmeticAction = expression->_data.action;
-		bool isTwoOperandBool {arifmeticAction < sin};
-		if (isTwoOperandBool)
-			Expression::calculate(expression->_operand2, operand2);
-		switch (arifmeticAction) {
-			case addition:
-				mpfr_add(result, operand1, operand2, MPFR_RNDN);
-				puts("add");
-				break;
-			case subtraction:
-				mpfr_sub(result, operand1, operand2, MPFR_RNDN);
-				puts("sub");
-				break;
-			case remainderFromDivision:
-				mpfr_fmod(result, operand1, operand2, MPFR_RNDN);
-				puts("fmod");
-				break;
-			case multiplication:
-				mpfr_mul(result, operand1, operand2, MPFR_RNDN);
-				puts("mul");
-				break;
-			case division:
-				mpfr_div(result, operand1, operand2, MPFR_RNDN);
-				puts("div");
-				break;
-			case unaryMinus:
-				mpfr_sub(result, ZERO->_data.number, operand1, MPFR_RNDN);
-				puts("unary minus");
-				break;
-			case sin:
-				mpfr_sin(result, operand1, MPFR_RNDN);
-				puts("sin");
-				break;
-			case cos:
-				mpfr_cos(result, operand1, MPFR_RNDN);
-				puts("cos");
-				break;
-			case tan:
-				mpfr_tan(result, operand1, MPFR_RNDN);
-				puts("tan");
-				break;
-			case sec:
-				mpfr_sec(result, operand1, MPFR_RNDN);
-				puts("sec");
-				break;
-			case csc:
-				mpfr_csc(result, operand1, MPFR_RNDN);
-				puts("csc");
-				break;
-			case cot:
-				mpfr_cot(result, operand1, MPFR_RNDN);
-				puts("cot");
-				break;
-			case asin:
-				mpfr_asin(result, operand1, MPFR_RNDN);
-				puts("asin");
-				break;
-			case acos:
-				mpfr_acos(result, operand1, MPFR_RNDN);
-				puts("acos");
-				break;
-			case atan:
-				mpfr_atan(result, operand1, MPFR_RNDN);
-				puts("atan");
-				break;
-			case asec:
-				mpfr_asec(result, operand1, MPFR_RNDN);
-				puts("asec");
-				break;
-			case acsc:
-				mpfr_acsc(result, operand1, MPFR_RNDN);
-				puts("acsc");
-				break;
-			case acot:
-				mpfr_acot(result, operand1, MPFR_RNDN);
-				puts("acot");
-				break;
-			//case sgn:
-				//result = mpfr_sgn(operand1);
-				//puts("sgn");
-				//mpfr_printf("Результат: %.50Rf\n", result);
-		}
-		mpfr_printf("1 %Rf\nr %Rf\n", operand1, result);
-		mpfr_clear(operand1);
-		if (isTwoOperandBool) mpfr_clear(operand2);
-		//puts("skddk");
-		return;
 	}
 	inline const char *print(void) {
 		char * expression;

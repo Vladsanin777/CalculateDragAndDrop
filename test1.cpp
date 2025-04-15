@@ -12,12 +12,14 @@ int main() {
     Expression * diffExpression {expression->diff()};
     delete expression;
     puts("Expression");
-    const char *str {diffExpression->print()};
-    puts(str);
-    delete [] str;
-    Expression *result {diffExpression.calc()};
+    const char *strRes {diffExpression->print()};
+    puts(strRes);
+    delete [] strRes;
+    const char * const strRes2 = diffExpression->calc();
+    std::cout << (void*)strRes2 << std::endl;
+    std::cout << &strRes2 << std::endl;
+    puts(strRes2);
     delete diffExpression;
-    str = result->print();
     delete [] str;
     //puts("dgs");
 
