@@ -506,7 +506,7 @@ public:
 	inline Diff heandlerDiff(void) const {
 		switch (_typeData) {
 			case numberTD:
-				puts("svfjsjk");
+				//puts("svfjsjk");
 				return numberDi;
 			case variableTD:
 				return variableDi;
@@ -521,17 +521,17 @@ public:
 	inline Expression * diff(Expression * parent = 0L) const {
 		switch (heandlerDiff()) {
 			case numberDi:
-				puts("numberDi");
+				//puts("numberDi");
 				return ZERO->copy(parent);
 			case variableDi:
-				puts("variableDi");
+				//puts("variableDi");
 				return ONE->copy(parent);
 		}
-		Expression * result {new Expression{}};
-		result->_parent = parent;
+		Expression * result {new Expression{none, parent}};
 		result->_operand1 = nullptr;
-		result->_operand1 = nullptr;
-		result->_typeData = actionTD;
+		result->_operand2 = nullptr;
+		Diff operand1Di {_operand1->heandlerDiff()}, operand2Di;
+		if (_operand2) operand2Di = _operand2->heandlerDiff();
 		const ArifmeticAction &action {_data.action};
 		ArifmeticAction &resAction{result->_data.action};
 		Expression * &resOperand1 {result->_operand1}, \
@@ -543,16 +543,16 @@ public:
         switch (action) {
 			case addition:
 			case subtraction:
-				puts("subAdd");
-				if (_operand1->heandlerDiff() == numberDi) {
-					puts("asd");
-					//delete result;
-					puts("asd");
+				//puts("subAdd");
+				if (operand1Di == numberDi) {
+					//puts("asd");
+					delete result;
+					//puts("asd");
 					result = _operand2->diff(parent);
-				} else if (_operand2->heandlerDiff() == numberDi) {
-					puts("asd");
-					//delete result;
-					puts("asd");
+				} else if (operand2Di == numberDi) {
+					//puts("asd");
+					delete result;
+					//puts("asd");
 					result = _operand1->diff(parent);
 				} else {
 					resAction = action;
@@ -561,13 +561,27 @@ public:
 				}
 				return result;
 			case multiplication:
-				resAction = addition;
-				resOperand1 = new Expression{multiplication, result};
-				resOperand1->_operand1 = _operand1->diff(resOperand1);
-				resOperand1->_operand2 = _operand2->copy(resOperand1);
-				resOperand2 = new Expression{multiplication, result};
-				resOperand2->_operand1 = _operand1->copy(resOperand2);
-				resOperand2->_operand2 = _operand2->diff(resOperand2);
+				std::cout << operand1Di << ' ' << operand2Di << std::endl;
+				puts("sfjkvjk");
+				if (operand1Di == numberDi || operand2Di == numberDi) {
+					delete result;
+					result = ZERO->copy(parent);
+				} else if (operand1Di == variableDi) {
+					delete result;
+					result = _operand2->diff(parent);
+				} else if (operand2Di == variableDi) {
+					//puts("operand2");
+					delete result;
+					result = _operand1->diff(parent);
+				} else {
+					resAction = addition;
+					resOperand1 = new Expression{multiplication, result};
+					resOperand1->_operand1 = _operand1->diff(resOperand1);
+					resOperand1->_operand2 = _operand2->copy(resOperand1);
+					resOperand2 = new Expression{multiplication, result};
+					resOperand2->_operand1 = _operand1->copy(resOperand2);
+					resOperand2->_operand2 = _operand2->diff(resOperand2);
+				}
 				return result;
 			case division:
 				resAction = division;
@@ -630,16 +644,19 @@ public:
 			case sin:
 				resAction = cos;
 				resOperand1 = _operand1->copy();
+				if (operand1Di == variableDi) return result;
 				break;
 			case cos:
 				resAction = unaryMinus;
 				resOperand1 = new Expression{sin, result};
 				resOperand1->_operand1 = _operand1->copy();
+				if (operand1Di == variableDi) return result;
 				break;
 			case tan:
 				resAction = power;
 				resOperand1 = new Expression{sec, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
+				if (operand1Di == variableDi) return result;
 				break;
 			case cot:
 				resAction = power;
@@ -647,6 +664,7 @@ public:
 				resOperand1Operand1 = new Expression{csc, resOperand1};
 				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
 				resOperand1->_operand1 = resOperand1Operand1;
+				if (operand1Di == variableDi) return result;
 				break;
 			case sec:
 				resAction = multiplication;
@@ -654,6 +672,7 @@ public:
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
 				resOperand2 = new Expression{tan, result};
 				resOperand2->_operand1 = _operand1->copy(resOperand2);
+				if (operand1Di == variableDi) return result;
 				break;
 			case csc:
 				resAction = multiplication;
@@ -662,10 +681,12 @@ public:
 				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
 				resOperand2 = new Expression{cot, result};
 				resOperand2->_operand1 = _operand1->copy(resOperand2);
+				if (operand1Di == variableDi) return result;
 				break;
 			case _abs:
 				resAction = sgn;
 				resOperand1 = _operand1->copy();
+				if (operand1Di == variableDi) return result;
 				break;
 
 			case asin:
@@ -680,6 +701,7 @@ public:
 					new Expression{qrt, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				if (operand1Di == variableDi) return result;
 				break;
 			case acos:
 				resAction = unaryMinus;
@@ -699,6 +721,7 @@ public:
 					resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
+				if (operand1Di == variableDi) return result;
 				break;
 			case atan:
 				resAction = division;
@@ -712,6 +735,7 @@ public:
 					new Expression{qrt, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				if (operand1Di == variableDi) return result;
 				break;
 				
 			case acot:
@@ -732,6 +756,7 @@ public:
 					resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
+				if (operand1Di == variableDi) return result;
 				break;
 			case asec:
 				resAction = division;
@@ -757,6 +782,7 @@ public:
 					resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
+				if (operand1Di == variableDi) return result;
 				break;
 			case acsc:
 				resAction = unaryMinus;
@@ -782,6 +808,7 @@ public:
 					resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
+				if (operand1Di == variableDi) return result;
 				break;
     
 			case sgn:
@@ -807,7 +834,7 @@ public:
 			case actionTD:
 				if (_operand1) delete _operand1;
 				if (isTwoOperand()) {
-					delete _operand2;
+					if (_operand2) delete _operand2;
 				}
 				return;
 		}

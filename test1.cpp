@@ -8,16 +8,19 @@ int main() {
     Expression::init();
     Expression * expression = Expression::buildExpressionTree(str);
     puts("Expression89");
-    puts(expression->print());
+    //puts(expression->print());
     Expression * diffExpression {expression->diff()};
+    delete expression;
     puts("Expression");
-    puts(diffExpression->print());
-    mpfr_t result;
-    Expression::calculate(diffExpression, result);
+    const char *str {diffExpression->print()};
+    puts(str);
+    delete [] str;
+    Expression *result {diffExpression.calc()};
+    delete diffExpression;
+    str = result->print();
+    delete [] str;
     //puts("dgs");
-    char * buffer {new char[100]};
-    mpfr_sprintf(buffer, "%.77Rf", result);
-    puts(buffer);
+
     //delete expression;
     return 0;
 }
