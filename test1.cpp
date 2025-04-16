@@ -21,6 +21,7 @@ int main() {
     puts(strRes2);
     delete diffExpression;
     delete [] str;
+    delete [] strRes2;
     //puts("dgs");
 
     //delete expression;
