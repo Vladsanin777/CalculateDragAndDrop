@@ -69,14 +69,14 @@ enum ArifmeticAction { \
 	log, sin, cos, tan, cot, sec, csc, \
 	asin, acos, atan, acot, asec, acsc, \
 	sqrt, qrt, cbrt, unaryMinus, _abs, \
-	sgn, log2, lg, ln, exp\
+	sgn, lg, ln, exp\
 };
 static const char *ARIFMETIC_STR_ACTION[] { \
 	"none", "+", "-", "mod", "^", "*", "/", "log", \
 	"sin", "cos", "tan", "cot", "sec", "csc", \
 	"asin", "acos", "atan", "acot", "asec", "acsc", \
 	"sqrt", "qrt", "cbrt", "-", "abs", "sgn", \
-	"log2", "lg", "ln", "exp" \
+	"lg", "ln", "exp" \
 };
 enum Diff { \
 	numberDi, variableDi, actionVaribleDi \
@@ -228,7 +228,7 @@ private:
 	TypeData _typeData;
 
 	static size_t size;
-	static Expression *ZERO, *ONE, *TEN, *VAR_X;
+	static Expression *ZERO, *ONE, *TEN, *VAR_X, MINUS_ONE;
 	inline explicit Expression (
 		const char * const number, \
 		Expression * parent = nullptr, \
@@ -379,10 +379,12 @@ public:
 		if (ONE) delete ONE;
 		if (TEN) delete TEN;
 		if (VAR_X) delete VAR_X;
+		if (MINUS_ONE) delete MINUS_ONE;
 		ZERO = new Expression{"0", nullptr, false}, \
 		ONE = new Expression{"1", nullptr, false}, \
-		TEN = new Expression{"10", nullptr, false};
-		VAR_X = new Expression{"x", nullptr, false};
+		TEN = new Expression{"10", nullptr, false}, \
+		VAR_X = new Expression{"x", nullptr, false}, \
+		MINUS_ONE = new Expression{"-1", nullptr, false};
 	}
 	inline bool isTwoOperand(void) const {
 		return _data.action < sin;
@@ -444,7 +446,31 @@ public:
 		if (isDelete) delete [] expression;
 		return result;
 	}
+	inline bool operator==(const Expression * operand2) const {
+		if (_typeData != operand2->_typeData) return false;
+		switch (_typeData) {
+			case numberTD:
+				{
+					mpfr_t &operand1Num {_data.number}, \
+						&operand2Num {operand2->_data.number};
+					return mpfr_equal_p(operand1Num, operand2Num);
+				}
+			case variableTD:
+				return true;
+			case actionTD:
+				if (_data.action != _data.action) return false;
+				{
+					bool equalOperand1 \
+						{_operand1->operator==(operand2->_operand1)};
+					if (isTwoOperand()){
+						return equalOperand1 == \
+							_operand2->operator==(operand->_operand2);
+					}
+					return equalOperand1;
+				}
+		}
 
+	}
 	void setParent(Expression *parent) {
 		_parent = parent;
 	}
@@ -521,7 +547,7 @@ public:
 		}
 		return result;
 	}
-	inline Diff heandlerDiff(void) const {
+	inline Diff heandlerDifferentiate(void) const {
 		switch (_typeData) {
 			case numberTD:
 				//puts("svfjsjk");
@@ -529,15 +555,15 @@ public:
 			case variableTD:
 				return variableDi;
 		}
-		Diff diff {_operand1->heandlerDiff()};
+		Diff diff {_operand1->heandlerDifferentiate()};
 		if (diff != numberDi) return actionVaribleDi;
 		if (isTwoOperand())
-			if ((diff = _operand2->heandlerDiff()) == variableDi) 
+			if ((diff = _operand2->heandlerDifferentiate())) == variableDi) 
 				return actionVaribleDi;
 		return diff;
 	}
-	inline Expression * diff(Expression * parent = 0L) const {
-		switch (heandlerDiff()) {
+	inline Expression * differentiate(Expression * parent = 0L) const {
+		switch (heandlerDifferentiate()) {
 			case numberDi:
 				//puts("numberDi");
 				return ZERO->copy(parent);
@@ -546,8 +572,8 @@ public:
 				return ONE->copy(parent);
 		}
 		Expression * result {new Expression{none, parent}};
-		Diff operand1Di {_operand1->heandlerDiff()}, operand2Di;
-		if (_operand2) operand2Di = _operand2->heandlerDiff();
+		Diff operand1Di {_operand1->heandlerDifferentiate()}, operand2Di;
+		if (_operand2) operand2Di = _operand2->heandlerDifferentiate();
 		const ArifmeticAction &action {_data.action};
 		ArifmeticAction &resAction{result->_data.action};
 		Expression * &resOperand1 {result->_operand1}, \
@@ -564,16 +590,16 @@ public:
 					//puts("asd");
 					delete result;
 					//puts("asd");
-					result = _operand2->diff(parent);
+					result = _operand2->differentiate(parent);
 				} else if (operand2Di == numberDi) {
 					//puts("asd");
 					delete result;
 					//puts("asd");
-					result = _operand1->diff(parent);
+					result = _operand1->differentiate(parent);
 				} else {
 					resAction = action;
-					resOperand1 = _operand1->diff(result);
-					resOperand2 = _operand2->diff(result);
+					resOperand1 = _operand1->differentiate(result);
+					resOperand2 = _operand2->differentiate(result);
 				}
 				return result;
 			case multiplication:
@@ -584,19 +610,19 @@ public:
 					result = ZERO->copy(parent);
 				} else if (operand1Di == variableDi) {
 					delete result;
-					result = _operand2->diff(parent);
+					result = _operand2->differentiate(parent);
 				} else if (operand2Di == variableDi) {
 					//puts("operand2");
 					delete result;
-					result = _operand1->diff(parent);
+					result = _operand1->differentiate(parent);
 				} else {
 					resAction = addition;
 					resOperand1 = new Expression{multiplication, result};
-					resOperand1->_operand1 = _operand1->diff(resOperand1);
+					resOperand1->_operand1 = _operand1->differentiate(resOperand1);
 					resOperand1->_operand2 = _operand2->copy(resOperand1);
 					resOperand2 = new Expression{multiplication, result};
 					resOperand2->_operand1 = _operand1->copy(resOperand2);
-					resOperand2->_operand2 = _operand2->diff(resOperand2);
+					resOperand2->_operand2 = _operand2->differentiate(resOperand2);
 				}
 				return result;
 			case division:
@@ -607,14 +633,14 @@ public:
 				resOperand1Operand2 = \
 					new Expression {multiplication, resOperand1};
 				resOperand1Operand1->_operand1 = \
-					_operand1->diff(resOperand1Operand1);
+					_operand1->differentiate(resOperand1Operand1);
 				resOperand1Operand1->_operand2 = \
 					_operand2->copy(resOperand1Operand1);
 				resOperand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand2->_operand1 = 
 					_operand1->copy(resOperand1Operand2);
 				resOperand1Operand2->_operand2 = 
-					_operand2->diff(resOperand1Operand2);
+					_operand2->differentiate(resOperand1Operand2);
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand2 = new Expression{qrt, result};
 				resOperand2->_operand1 = _operand2->copy(resOperand2);
@@ -835,7 +861,7 @@ public:
 		Expression *mulOnDiffResult {new Expression {multiplication, parent}};
 		mulOnDiffResult->_operand1 = result;
 		result->_parent = mulOnDiffResult;
-		mulOnDiffResult->_operand2 = _operand1->diff(mulOnDiffResult);
+		mulOnDiffResult->_operand2 = _operand1->differentiate(mulOnDiffResult);
 		return mulOnDiffResult;
 	}
 	inline Expression *integrate(Expression * parent = 0L) const {
@@ -844,19 +870,150 @@ public:
 		ArifmeticAction &resAction{result->_data.action};
 		Expression * &resOperand1 {result->_operand1}, \
 			* &resOperand2 {result->_operand2};
-		switch (heandlerDiff()) {
+		switch (heandlerDifferentiate()) {
 			case numberDi:
 				resAction = multiplication;
 				resOperand1 = this->copy(result);
 				resOperand2 = 
 				return 
 		}
-		Diff operand1Di {_operand1->heandlerDiff()}, operand2Di;
-		if (_operand2) operand2Di = _operand2->heandlerDiff();
+		Diff operand1Di {_operand1->heandlerDifferentiate()}, operand2Di;
+		if (_operand2) operand2Di = _operand2->heandlerDifferentiate();
 		Expression * resOperand1Operand1, \
 			* resOperand1Operand2, \
 			* resOperand2Operand2, \
 			* resOperand2Operand1;
+		switch (action) {
+			case addition:
+			case subtraction:
+				resAction = action;
+				resOperand1 = _operand1->integrate(result);
+				resOperand2 = _operand2->integrate(result);
+				return result;
+			case multiplication:
+				resAction = multiplication;
+				// Попробовать упростить (если один из операндов — константа)
+				if (operand1Di == numberDi) {
+					resOperand1 = _operand1->copy(result);  // Константа выносится за знак интеграла
+					resOperand2 = _operand2->integrate(result);
+				}
+				else if (operand2Di == numberDi) {
+					resOperand1 = _operand1->integrate(result);
+					resOperand2 = _operand2->copy(result);
+				}
+				// Иначе применить интегрирование по частям: ∫u dv = uv - ∫v du
+				else {
+					resAction = subtraction;
+					resOperand1 = new Expression{multiplication, result};
+					resOperand1->_operand1 = _operand1.copy(resOperand1);
+					resOperand1->_operand2 = _operand2.integrate(resOperand1);
+					resOperand2 = new Expression{multiplication, result};
+					resOperand2->_operand1 = _operand2->integrate(resOperand2);
+					resOperand2->_operand2 = _operand1->differantiate(resOperand2);
+					resOperand2Operand2 = resOperand2->integrate(result);  // Вторая часть: ∫v du
+					delete resOperand2;
+					resOperand2 = resOperand2Operand2;
+
+				}
+				return result;
+
+			
+			case division:  // Деление: ∫(u / v) dx → зависит от формы u и v
+				resAction = division;
+				// Если знаменатель — константа
+				if (operand2Di == numberDi) {
+					resOperand1 = _operand1->integrate(result);
+					resOperand2 = _operand2->copy(result);
+					return result;
+				}
+				// Случай 2: Числитель — производная знаменателя → ∫(f'/f) dx = ln|f| + C
+				{
+					Expression *operand2Diff = _operand2->differentiate();
+					if (_operand1->operator==(_operand2->differentiate(result))) {
+						resAction = ln;  // ln(f)
+						resOperand1 = _operand2->copy(result);   // аргумент логарифма
+						delete operand2Diff;
+						return result;
+					}
+					delete operand2Diff;
+				}
+				/*
+				// Случай 3: Рациональная дробь (многочлен / многочлен) → разложение на простые дроби
+				if (num.isPolynomial() && denom.isPolynomial()) {
+					// Проверяем степень числителя и знаменателя
+					if (num.degree() >= denom.degree()) {
+						// Делим многочлены (например, (x^2+1)/(x+1) → x - 1 + 2/(x+1))
+						Expression quotient = num.polynomialDivide(denom);
+						Expression remainder = num.polynomialRemainder(denom);
+						// ∫(quotient + remainder/denom) dx = ∫quotient dx + ∫(remainder/denom) dx
+						resAction = addition;
+						resOperand1 = quotient.integrate(parent);
+						resOperand2 = (remainder / denom).integrate(parent);
+						return result;
+					} else {
+						// Разложение знаменателя на множители и метод неопределённых коэффициентов
+						Expression partialFractions = denom.partialFractionDecomposition();
+						return partialFractions.integrate(parent);
+					}
+				}
+
+				// Случай 4: Тригонометрические подстановки (например, ∫1/(x^2 + a^2) dx)
+				if (denom.isQuadraticForm()) {
+					Expression a = denom.extractCoefficient(); // например, для x^2 + a^2
+					resAction = arctangent;                    // (1/a) arctan(x/a)
+					resOperand1 = num / a;                     // коэффициент
+					resOperand2 = denom.symbol() / a;          // аргумент arctan
+					return result;
+				}
+
+				// Случай 5: Подстановка (u-подстановка)
+				Expression substitution = denom.findSubstitution();
+				if (substitution.isValid()) {
+					Expression u = substitution;
+					Expression du = u.differentiate(parent);
+					// Замена: ∫(num / denom) dx = ∫(num / u) * (dx/du) du
+					resAction = substitution;
+					resOperand1 = (num / u).substitute(u, du).integrate(parent);
+					return result;
+				}
+			*/
+			case power:
+				if (_operand2->heandlerDifferentiate() != numberTD)
+					throw "Not Constant Two Operand Power Integrate";
+				if (_operand2->operator==(MINUS_ONE)) {
+					resAction = ln;
+					resOperand1 = _operand1->copy();
+					return result;
+				}
+				resAction = division;
+				resOperand2 = new Expression{addition, result};
+				resOperand2->_operand1 = _operand2->copy(resOperand2);
+				resOperand2->_operand2 = ONE->copy(resOperand2);
+				resOperand1 = new Expression{power, result};
+				resOperand1->_operand1 = _operand1->copy(resOperand1);
+				resOperand1->_operand2 = _operand2->copy(resOperand2);
+				return result;
+			case _abs:
+				resAction = division;
+				resOperand2 = TWO->copy(result);
+				resOperand1 = new Expression{multiplication, result};
+				resOperand1->_operand1 = _operand1->copy(resOperand1);
+				resOperand1Operand2 = new Expression{_abs, resOperand1};
+				resOperand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = \
+					_operand1->copy(resOperand1Operand2);
+				return result;
+			case log:
+				resAction = subtraction;
+				resOperand1 = new Expression{multiplication, result};
+				resOperand1->operand1 = _operand2->copy(resOperand1);
+				resOperand1Operand2 = new Expression{log, result};
+				resOperand1->operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = \
+					_operand1->copy(resOperand1Operand2);
+				resOperand1Operand2->_operand2 = \
+					_operand2->
+
 	/*
 	def reverse_derivate(self: Self, expression: [list | str], const: bool = False):
         is_const: bool = False
