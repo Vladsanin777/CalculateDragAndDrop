@@ -1143,7 +1143,20 @@ public:
 				return result;			
 			case asec:
 				resAction = subtraction;
-				resOperand1-
+				resOperand1 = new Expression{multiplication, result};
+				resOperand1->_operand1 = _operand1->copy(resOperand1);
+				resOperand1Operand2 = new Expression{asec, resOperand1};
+				resOperand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				resOperand2 = new Expression{multiplication, result};
+				resOperand2Operand1 = new Expression{sgn, resOperand2};
+				resOperand2->_operand1 = resOperand2Operand1;
+				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
+				resOperand2Operand2 = new Expression{ln, resOperand2};
+				resOperand2->_operand2 = resOperand2Operand2;
+				resOperand2Operand1 = new Expression{_abs, resOperand2Operand2};
+				
+
                         case 'arctan':
                             expression = [[expression_1, "*", ["arctan", expression_1]], "-", ["/", "2", "*", "ln", ["1", "+", [expression_1, "^", "2"]]]]
                         case 'arccot':
