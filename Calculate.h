@@ -1012,8 +1012,147 @@ public:
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
 				resOperand1Operand2->_operand2 = \
-					_operand2->
-
+					_operand2->copy(resOperand1Operand2);
+				resOperand2 = new Expression{division, result};
+				resOperand2->_operand1 = _operand2->copy(resOperand2);
+				resOperand2Operand2 = new Expression{ln, resOperand2};
+				resOperand2->_operand2 = resOperand2Operand2;
+				resOperand2Operand2->_operand1 = \
+					_operand1->copy(resOperand2Operand2);
+				return result;
+			case ln:
+				resAction = subtraction;
+				resOperand2 = _operand1->copy(result);
+				resOperand1 = new Expression{multiplication, result};
+				resOperand1->_operand1 = _operand1->copy(result);
+				resOperand1Operand2 = new Expression{ln, resOperand1};
+				resOperand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = \
+					_operand1->copy(resOperand1Operand2);
+				return result;
+			case sin:
+				resAction = unaryMinus;
+				resOperand1 = new Expression{cos, result};
+				resOperand1->_operand1 = _operand1->copy(resOperand1);
+				return result;
+			case cos:
+				resAction = sin;
+				resOperand1 = _operand1->copy(result);
+				return result;
+			case tan:
+				resAction = ln;
+				resOperand1 = new Expression{_abs, result};
+				resOperand1Operand1 = new Expression{sec, resOperand1};
+				resOperand1->_operand1 = resOperand1Operand1;
+				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
+				return result;
+			case cot:
+				resAction = ln;
+				resOperand1 = new Expression{_abs, result};
+				resOperand1Operand1 = new Expression{sin, resOperand1};
+				resOperand1->_operand1 = resOperand1Operand1;
+				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
+				return result;
+			case sec:
+				resAction = ln;
+				resOperand1 = new Expression{_abs, result};
+				resOperand1Operand1 = new Expression{addition, resOperand1};
+				resOperand1->_operand1 = resOperand1Operand1;
+				resOperand2Operand1 = new Expression{sec, resOperand1Operand1};
+				resOperand1Operand1->_operand1 = resOperand2Operand1;
+				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
+				resOperand1Operand2 = new Expression{tan, resOperand1Operand1};
+				resOperand1Operand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				return result;
+			case csc:
+				resAction = ln;
+				resOperand1 = new Expression{_abs, result};
+				resOperand1Operand1 = new Expression{tan, resOperand1};
+				resOperand1->_operand1 = resOperand1Operand1;
+				resOperand2Operand1 = new Expression{division, resOperand1Operand1};
+				resOperand1Operand1->_operand1 = resOperand2Operand1;
+				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
+				resOperand2Operand1->_operand2 = TWO->copy(resOperand2Operand1);
+				return result;
+			case asin:
+				resAction = addition;
+				resOperand1 = new Expression{multiplication, result};
+				resOperand1->_operand1 = _operand1->copy(resOperand1);
+				resOperand1Operand2 = new Expression{asin, resOperand1};
+				resOperand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				resOperand2 = new Expression{sqrt, result};
+				resOperand2Operand1 = new Expression{subtraction, resOperand2};
+				resOperand2->_operand1 = resOperand2Operand1;
+				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
+				resOperand1Operand2 = new Expression{qrt};
+				resOperand2Operand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				return result;
+			case acos:
+				resAction = subtraction;
+				resOperand1 = new Expression{multiplication, result};
+				resOperand1->_operand1 = _operand1->copy(resOperand1);
+				resOperand1Operand2 = new Expression{acos, resOperand1};
+				resOperand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				resOperand2 = new Expression{sqrt, result};
+				resOperand2Operand1 = new Expression{subtraction, resOperand2};
+				resOperand2->_operand1 = resOperand2Operand1;
+				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
+				resOperand1Operand2 = new Expression{qrt};
+				resOperand2Operand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				return result;
+			case atan:
+				resAction = subtraction;
+				resOperand1 = new Expression{multiplication, result};
+				resOperand1->_operand1 = _operand1->copy(resOperand1);
+				resOperand1Operand2 = new Expression{atan, resOperand1};
+				resOperand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				resOperand2 = new Expression{division, result};
+				resOperand2->_operand2 = TWO->copy(resOperand2);
+				resOperand2Operand1 = new Expression{ln, resOperand2};
+				resOperand2->_operand1 = resOperand2Operand1;
+				resOperand1Operand1 = new Expression{addition, resOperand2Operand1};
+				resOperand2Operand1->_operand1 = resOperand1Operand1;
+				resOperand1Operand1->_operand1 = ONE->copy(resOperand1Operand1);
+				resOperand1Operand2 = new Expression{qrt, resOperand1Operand1};
+				resOperand1Operand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				return result;
+			case acot:
+				resAction = addition;
+				resOperand1 = new Expression{multiplication, result};
+				resOperand1->_operand1 = _operand1->copy(resOperand1);
+				resOperand1Operand2 = new Expression{acot, resOperand1};
+				resOperand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				resOperand2 = new Expression{division, result};
+				resOperand2->_operand2 = TWO->copy(resOperand2);
+				resOperand2Operand1 = new Expression{ln, resOperand2};
+				resOperand2->_operand1 = resOperand2Operand1;
+				resOperand1Operand1 = new Expression{addition, resOperand2Operand1};
+				resOperand2Operand1->_operand1 = resOperand1Operand1;
+				resOperand1Operand1->_operand1 = ONE->copy(resOperand1Operand1);
+				resOperand1Operand2 = new Expression{qrt, resOperand1Operand1};
+				resOperand1Operand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				return result;			
+			case asec:
+				resAction = subtraction;
+				resOperand1-
+                        case 'arctan':
+                            expression = [[expression_1, "*", ["arctan", expression_1]], "-", ["/", "2", "*", "ln", ["1", "+", [expression_1, "^", "2"]]]]
+                        case 'arccot':
+                            expression = [[expression_1, "*", ["arccot", expression_1]], "+", ["/", "2", "*", "ln", ["1", "+", [expression_1, "^", "2"]]]]
+                        case 'arcsec':
+                            expression = [[x, "*", ["arcsec", x]], "-", ["ln", ["x", "+", ["sqrt", [x, "^", "2", "-", "1"]]]]]
+                        case 'arccsc':
+                            expression = [[x, "*", "arccsc", x], "+", "ln", ["x", "+", ["sqrt", [x, "^", "2", "-", "1"]]]]
+ 
 	/*
 	def reverse_derivate(self: Self, expression: [list | str], const: bool = False):
         is_const: bool = False
