@@ -378,13 +378,12 @@ public:
 		if (ZERO) delete ZERO;
 		if (ONE) delete ONE;
 		if (TEN) delete TEN;
-		if (VAR_X) delete VAR_X;
 		if (MINUS_ONE) delete MINUS_ONE;
 		ZERO = new Expression{"0", nullptr, false}, \
 		ONE = new Expression{"1", nullptr, false}, \
 		TEN = new Expression{"10", nullptr, false}, \
-		VAR_X = new Expression{"x", nullptr, false}, \
 		MINUS_ONE = new Expression{"-1", nullptr, false};
+		if (!VAR_X) VAR_X = new Expression{"x", nullptr, false};
 	}
 	inline bool isTwoOperand(void) const {
 		return _data.action < sin;
@@ -874,8 +873,8 @@ public:
 			case numberDi:
 				resAction = multiplication;
 				resOperand1 = this->copy(result);
-				resOperand2 = 
-				return 
+				resOperand2 = VAR_X;
+				return result;
 		}
 		Diff operand1Di {_operand1->heandlerDifferentiate()}, operand2Di;
 		if (_operand2) operand2Di = _operand2->heandlerDifferentiate();
@@ -976,7 +975,7 @@ public:
 					resOperand1 = (num / u).substitute(u, du).integrate(parent);
 					return result;
 				}
-			*/
+				*/
 			case power:
 				if (_operand2->heandlerDifferentiate() != numberTD)
 					throw "Not Constant Two Operand Power Integrate";
@@ -1154,163 +1153,49 @@ public:
 				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
 				resOperand2Operand2 = new Expression{ln, resOperand2};
 				resOperand2->_operand2 = resOperand2Operand2;
-				resOperand2Operand1 = new Expression{_abs, resOperand2Operand2};
-				
+				resOperand2Operand1 = new Expression{addition, resOperand2Operand2};
+				resOperand2Operand2->_operand1 = resOperand2Operand1;
+				resOperand1Operand1 = new Expression{_abs, resOperand2Operand1};
+				resOperand2Operand1->_operand1 = resOperand1Operand1;
+				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
+				resOperand1Operand2 = new Expression{sqrt, resOperand2Operand1};
+				resOperand2Operand1->_operand2 = resOperand1Operand2;
+				resOperand2Operand1 = new Expression{subtraction, resOperand1Operand2};
+				resOperand1Operand2->_operand1 = resOperand2Operand1;
+				resOperand2Operand1->_operand2 = ONE->copy(resOperand2Operand1);
+				resOperand1Operand1 = new Expression{qrt, resOperand2Operand1};
+				resOperand2Operand1->_operand1 = resOperand1Operand1;
+				resOperand1Operand1->_operand1 = _operand->copy(resOperand1Operand1);
+				return result;
 
-                        case 'arctan':
-                            expression = [[expression_1, "*", ["arctan", expression_1]], "-", ["/", "2", "*", "ln", ["1", "+", [expression_1, "^", "2"]]]]
-                        case 'arccot':
-                            expression = [[expression_1, "*", ["arccot", expression_1]], "+", ["/", "2", "*", "ln", ["1", "+", [expression_1, "^", "2"]]]]
-                        case 'arcsec':
-                            expression = [[x, "*", ["arcsec", x]], "-", ["ln", ["x", "+", ["sqrt", [x, "^", "2", "-", "1"]]]]]
-                        case 'arccsc':
-                            expression = [[x, "*", "arccsc", x], "+", "ln", ["x", "+", ["sqrt", [x, "^", "2", "-", "1"]]]]
- 
-	/*
-	def reverse_derivate(self: Self, expression: [list | str], const: bool = False):
-        is_const: bool = False
-        if len(expression[0]) == 0:
-            expression.pop(0)
-        print(len(expression), "er")
-        match len(expression):
-            case 1:
-                print(19)
-                index: int
-                # Константа или переменная
-                if len(expression[0]) == 1:
-                    index = 0
-                else: 
-                    index = 1
-                if expression[0].isdigit():
-                    expression = [expression[0], "*", "x"]  # C -> C*x
-                    is_const = True
-                elif expression[0] == 'x':
-                    expression = [["x", "^", "2"], "/", "2"]  # x -> x^2/2
-                else:
-                    expression = "Error"
-                
-            case 2:
-                expression_1: [str | list] = expression[1]
-                print(self.reverse_derivate(expression_1, True)[1], expression_1)
-                if not self.reverse_derivate(expression_1, True)[1]:
-                    is_minus: bool = expression[0][0] == '-'
-                    match expression[0][-6:]:
-                        case 'arcsin':
-                            expression = [[expression_1, "*", ["arcsin", expression_1]], "+", ["sqrt", [1, "-", [expression_1, "^", "2"]]]]
-                        case 'arccos':
-                            expression = [[expression_1, "*", ["arccos", expression_1]], "-", ["sqrt", [1, "-", [expression_1, "^", "2"]]]]
-                        case 'arctan':
-                            expression = [[expression_1, "*", ["arctan", expression_1]], "-", ["/", "2", "*", "ln", ["1", "+", [expression_1, "^", "2"]]]]
-                        case 'arccot':
-                            expression = [[expression_1, "*", ["arccot", expression_1]], "+", ["/", "2", "*", "ln", ["1", "+", [expression_1, "^", "2"]]]]
-                        case 'arcsec':
-                            expression = [[x, "*", ["arcsec", x]], "-", ["ln", ["x", "+", ["sqrt", [x, "^", "2", "-", "1"]]]]]
-                        case 'arccsc':
-                            expression = [[x, "*", "arccsc", x], "+", "ln", ["x", "+", ["sqrt", [x, "^", "2", "-", "1"]]]]
-                        case _:
-                            match expression[0][-3:]:
-                                case 'sin':
-                                    expression = ['cos' if is_minus else '-cos', expression_1]
-                                case 'cos':
-                                    expression = ['-sin' if is_minus else 'sin', expression_1]
-                                case 'tan':
-                                    expression_1: list[Any] = ["abs", ["cos", expression_1]]
-                                    expression = ["ln", expression_1] if is_minus else ["-ln", expression_1]
-                                case 'cot':
-                                    expression_1: list[Any] = ["abs", ["sin", expression_1]]
-                                    expression = ['-ln', expression_1] if is_minus else ['ln', expression_1]
-                                case 'sec':
-                                    expression_1: list[Any] = ["abs", [["sec", expression_1], "+", ["tan", expression_1]]]
-                                    expression = ["ln", expression_1] if is_minus else ["-ln", expression_1]
-                                case 'csc':
-                                    expression_1: list[Any] = ["abs", [["sec", expression_1], "+", ["tan", expression_1]]]
-                                    expression = ["-ln", expression_1] if is_minus else ["ln", expression_1]
-                                case 'abs':
-                                    expression = [[expression_1, "*", "abs", expression_1], "/", "2"]
-                                case 'sgn':
-                                    expression = [expression_1]
-                                case 'log':
-                                    ...
-                                case _:
-                                    match expression[0][-2:]:
-                                        case 'ln':
-                                            if len(expression) == 2 and isinstance(expression[1], str):
-                                                # Простая форма ln(x)
-                                                expression = [
-                                                    [expression_1, "*", ["ln", expression_1]], "-", expression_1
-                                                ]
-                                            elif len(expression) == 2 and isinstance(expression[1], list):
-                                                # Сложная форма ln(f(x))
-                                                expression = [
-                                                    [expression, "*", ["ln", expression]], "-", self.reverse_derivate(expression_1)
-                                                ]
-                else:
-                    expression = [
-                        expression,
-                        '*',
-                        'x'
-                    ]
-                    is_const = True
-            case 3:
-                expression_0: [str | list] = expression[0]
-                expression_2: [str | list] = expression[2]
-                match expression[1]:
-                    case "+" | "-":
-                        expression = [
-                            self.reverse_derivate(expression_0),
-                            expression[1],
-                            self.reverse_derivate(expression_2)
-                        ]
-                    case "/":
-                        expression = [
-                            "ln", 
-                            [
-                                "abs", 
-                                expression_0
-                            ]
-                        ]
-
-                    case "*":
-                        # Интеграл произведения
-                        if isinstance(expression_0, str) and expression_0.isdigit():
-                            expression = [
-                                expression_0,
-                                "*",
-                                self.reverse_derivate(expression_2)
-                            ]
-                        elif isinstance(expression_2, str) and expression_2.isdigit():
-                            expression = [
-                                expression_2,
-                                "*",
-                                self.reverse_derivate(expression_0)
-                            ]
-                        else:
-                            # Найдем du и v
-                            du = self.ordinar_derivate(expression_0)  # Найдем производную от u
-                            v = self.reverse_derivate(expression_2)  # Интегрируем dv
-
-                            # Применяем формулу интегрирования по частям
-                            # \int u dv = uv - \int v du
-                            expression = [
-                                [expression_0, "*", v],  # uv
-                                "-",  # Минус
-                                [v, "*", du]  # Интеграл v du
-                            ]
-                    case "^":
-                        if isinstance(expression_2, str) and expression_2.isdigit():
-                            new_exponent = str(Decimal(expression_2) + Decimal(1))
-                            expression = [
-                                [
-                                    expression_0,
-                                    "^",
-                                    new_exponent
-                                ],
-                                "/",
-                                new_exponent
-                            ]
-                        else:
-                            expression = [expression, '/', ['ln', expression_0]]
-		*/
+			case acsc:
+				resAction = addition;
+				resOperand1 = new Expression{multiplication, result};
+				resOperand1->_operand1 = _operand1->copy(resOperand1);
+				resOperand1Operand2 = new Expression{asec, resOperand1};
+				resOperand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				resOperand2 = new Expression{multiplication, result};
+				resOperand2Operand1 = new Expression{sgn, resOperand2};
+				resOperand2->_operand1 = resOperand2Operand1;
+				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
+				resOperand2Operand2 = new Expression{ln, resOperand2};
+				resOperand2->_operand2 = resOperand2Operand2;
+				resOperand2Operand1 = new Expression{addition, resOperand2Operand2};
+				resOperand2Operand2->_operand1 = resOperand2Operand1;
+				resOperand1Operand1 = new Expression{_abs, resOperand2Operand1};
+				resOperand2Operand1->_operand1 = resOperand1Operand1;
+				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
+				resOperand1Operand2 = new Expression{sqrt, resOperand2Operand1};
+				resOperand2Operand1->_operand2 = resOperand1Operand2;
+				resOperand2Operand1 = new Expression{subtraction, resOperand1Operand2};
+				resOperand1Operand2->_operand1 = resOperand2Operand1;
+				resOperand2Operand1->_operand2 = ONE->copy(resOperand2Operand1);
+				resOperand1Operand1 = new Expression{qrt, resOperand2Operand1};
+				resOperand2Operand1->_operand1 = resOperand1Operand1;
+				resOperand1Operand1->_operand1 = _operand->copy(resOperand1Operand1);
+				return result;
+		}
 	}
 	~Expression() {
 		//puts("delete Expression");
@@ -1334,5 +1219,6 @@ public:
 size_t Expression::size = 256;
 Expression * Expression::ZERO, \
 	* Expression::ONE, \
-	* Expression::TEN;
+	* Expression::TEN, \
+	* Expression::VAR_X;
 
