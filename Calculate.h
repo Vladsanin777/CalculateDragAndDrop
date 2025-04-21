@@ -118,10 +118,10 @@ static inline void _replaceOnX(char *expression, const size_t level = 0UL) {
 	}
 }
 static inline const char * _shearchNotPriorityOperator( \
-	const char * const expression, bool &isTwoOperand, unsigned char &lenOperator, \
+	const char * const expression, unsigned char &lenOperator, \
 	ArifmeticAction &action \
 ) {
-	action = none, lenOperator = 0, isTwoOperand = true;
+	action = none, lenOperator = 0;
 	size_t len{strlen(expression)};
 	puts(expression);
 
@@ -133,12 +133,14 @@ static inline const char * _shearchNotPriorityOperator( \
 		strcpy(copyExpression, expression);
 		_replaceOnX(copyExpression, levelBrakets);
 		//puts(copyExpression);
-		isTwoOperand = true;
 		if (ptr = strrstr(copyExpression, "+")) {
 			lenOperator = 1, action = addition; break;
 		}
 		if (ptr = strrstr(copyExpression, "-")) {
-			lenOperator = 1, action = subtraction; break;
+			lenOperator = 1;
+			if (_isOperatorSub(ptr, expression)) action = subtraction;
+			else action = unaryMinus;
+			break;
 		}
 		if (ptr = strrstr(copyExpression, "*")) {
 			lenOperator = 1, action = multiplication; break;
@@ -149,7 +151,6 @@ static inline const char * _shearchNotPriorityOperator( \
 		if (ptr = strrstr(copyExpression, "mod")) {
 			lenOperator = 3, action = remainderFromDivision; break;
 		}
-		isTwoOperand = false;
 		if ((temp = strrstr(copyExpression, "sin")) < ptr != !ptr)
 			lenOperator = 3, action = sin, ptr = temp; 
 		if ((temp = strrstr(copyExpression, "cos")) < ptr != !ptr)
@@ -183,8 +184,7 @@ static inline const char * _shearchNotPriorityOperator( \
 		if ((temp = strrstr(copyExpression, "sgn")) < ptr && !ptr)
 			lenOperator = 3, action = sgn, ptr = temp;
 		if ((temp = strrstr(copyExpression, "log")) < ptr && !ptr)
-			lenOperator = 3, action = log, ptr = temp, \
-				isTwoOperand = true;
+			lenOperator = 3, action = log, ptr = temp;
 		//puts("rfjvkfkml");
 	}
 	//std::cout << ptr << std::endl;
@@ -228,7 +228,7 @@ private:
 	TypeData _typeData;
 
 	static size_t size;
-	static Expression *ZERO, *ONE, *TEN, *VAR_X, MINUS_ONE;
+	static Expression *ZERO, *ONE, *TWO, *TEN, *VAR_X, *MINUS_ONE;
 	inline explicit Expression (
 		const char * const number, \
 		Expression * parent = nullptr, \
@@ -377,10 +377,12 @@ public:
 	static void init(void) {
 		if (ZERO) delete ZERO;
 		if (ONE) delete ONE;
+		if (TWO) delete TWO;
 		if (TEN) delete TEN;
 		if (MINUS_ONE) delete MINUS_ONE;
 		ZERO = new Expression{"0", nullptr, false}, \
 		ONE = new Expression{"1", nullptr, false}, \
+		TWO = new Expression{"2", nullptr, false}, \
 		TEN = new Expression{"10", nullptr, false}, \
 		MINUS_ONE = new Expression{"-1", nullptr, false};
 		if (!VAR_X) VAR_X = new Expression{"x", nullptr, false};
@@ -399,7 +401,8 @@ public:
 		ArifmeticAction action;
 		const char * ptrOperator = \
 			_shearchNotPriorityOperator(expression, \
-				isTwoOperand, lenOperator, action);
+				lenOperator, action);
+		puts(ARIFMETIC_STR_ACTION[action]);
 		//std::cout << action << std::endl;
 		//if (ptrOperator)
 			//putchar(*ptrOperator);
@@ -419,7 +422,11 @@ public:
 		//puts("nm");
 		Expression * result = new Expression{action, parent};
 		//puts("nm");
-		if (isTwoOperand) {
+		if (action < sin) {
+			puts("two operator");
+			puts(ARIFMETIC_STR_ACTION[action]);
+			std::cout << action << std::endl;
+
 			size_t lenExpression{(size_t)(ptrOperator - expression)};
 			char * newExpression = new char[lenExpression+1]();
 			strncpy(newExpression, expression, lenExpression);
@@ -436,7 +443,8 @@ public:
 			//puts(newExpression);
 			result->setSecondOperand(buildExpressionTree(newExpression, result));
 		} else {
-			size_t lenExpression{ptrOperator - expression + lenOperator + 1UL};
+			puts("one operator");
+			size_t lenExpression{ptrOperator - expression + strlen(expression) + lenOperator + 1UL};
 			char * const newExpression = new char[lenExpression + 1]();
 			strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
 			result->setFirstOperand(buildExpressionTree(newExpression, result));
@@ -450,7 +458,7 @@ public:
 		switch (_typeData) {
 			case numberTD:
 				{
-					mpfr_t &operand1Num {_data.number}, \
+					const mpfr_t &operand1Num {_data.number}, \
 						&operand2Num {operand2->_data.number};
 					return mpfr_equal_p(operand1Num, operand2Num);
 				}
@@ -463,12 +471,12 @@ public:
 						{_operand1->operator==(operand2->_operand1)};
 					if (isTwoOperand()){
 						return equalOperand1 == \
-							_operand2->operator==(operand->_operand2);
+							_operand2->operator==(operand2->_operand2);
 					}
 					return equalOperand1;
 				}
 		}
-
+		return false;
 	}
 	void setParent(Expression *parent) {
 		_parent = parent;
@@ -504,15 +512,19 @@ public:
 		if (isTwoOperand()) {
 			const char *operand2 {_operand2->print()};
 			expression = new char[strlen(operand1) + \
-				strlen(action) + strlen(operand2) + 1UL];
-			strcpy(expression, operand1);
+				strlen(action) + strlen(operand2) + 3UL];
+			strcpy(expression, "(");
+			strcat(expression, operand1);
 			strcat(expression, action);
 			strcat(expression, operand2);
+			strcat(expression, ")");
 			delete [] operand2;
 		} else {
 			expression = new char[strlen(action) + strlen(operand1) + 1UL];
-			strcpy(expression, action);
+			strcpy(expression, "(");
+			strcat(expression, action);
 			strcat(expression, operand1);
+			strcat(expression, ")");
 		}
 		delete [] operand1;
 		return expression;
@@ -557,7 +569,7 @@ public:
 		Diff diff {_operand1->heandlerDifferentiate()};
 		if (diff != numberDi) return actionVaribleDi;
 		if (isTwoOperand())
-			if ((diff = _operand2->heandlerDifferentiate())) == variableDi) 
+			if ((diff = _operand2->heandlerDifferentiate()) == variableDi) 
 				return actionVaribleDi;
 		return diff;
 	}
@@ -729,7 +741,10 @@ public:
 				resOperand1 = _operand1->copy();
 				if (operand1Di == variableDi) return result;
 				break;
-
+			case unaryMinus:
+				resAction = unaryMinus;
+				resOperand1 = _operand1->differentiate();
+				return result;
 			case asin:
 				resAction = division;
 				resOperand1 = ONE->copy();
@@ -904,11 +919,11 @@ public:
 				else {
 					resAction = subtraction;
 					resOperand1 = new Expression{multiplication, result};
-					resOperand1->_operand1 = _operand1.copy(resOperand1);
-					resOperand1->_operand2 = _operand2.integrate(resOperand1);
+					resOperand1->_operand1 = _operand1->copy(resOperand1);
+					resOperand1->_operand2 = _operand2->integrate(resOperand1);
 					resOperand2 = new Expression{multiplication, result};
 					resOperand2->_operand1 = _operand2->integrate(resOperand2);
-					resOperand2->_operand2 = _operand1->differantiate(resOperand2);
+					resOperand2->_operand2 = _operand1->differentiate(resOperand2);
 					resOperand2Operand2 = resOperand2->integrate(result);  // Вторая часть: ∫v du
 					delete resOperand2;
 					resOperand2 = resOperand2Operand2;
@@ -977,7 +992,7 @@ public:
 				}
 				*/
 			case power:
-				if (_operand2->heandlerDifferentiate() != numberTD)
+				if (_operand2->heandlerDifferentiate() != numberDi)
 					throw "Not Constant Two Operand Power Integrate";
 				if (_operand2->operator==(MINUS_ONE)) {
 					resAction = ln;
@@ -1005,9 +1020,9 @@ public:
 			case log:
 				resAction = subtraction;
 				resOperand1 = new Expression{multiplication, result};
-				resOperand1->operand1 = _operand2->copy(resOperand1);
+				resOperand1->_operand1 = _operand2->copy(resOperand1);
 				resOperand1Operand2 = new Expression{log, result};
-				resOperand1->operand2 = resOperand1Operand2;
+				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
 				resOperand1Operand2->_operand2 = \
@@ -1028,6 +1043,10 @@ public:
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
+				return result;
+			case unaryMinus:
+				resAction = unaryMinus;
+				resOperand1 = _operand1->integrate();
 				return result;
 			case sin:
 				resAction = unaryMinus;
@@ -1165,7 +1184,7 @@ public:
 				resOperand2Operand1->_operand2 = ONE->copy(resOperand2Operand1);
 				resOperand1Operand1 = new Expression{qrt, resOperand2Operand1};
 				resOperand2Operand1->_operand1 = resOperand1Operand1;
-				resOperand1Operand1->_operand1 = _operand->copy(resOperand1Operand1);
+				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
 				return result;
 
 			case acsc:
@@ -1193,9 +1212,10 @@ public:
 				resOperand2Operand1->_operand2 = ONE->copy(resOperand2Operand1);
 				resOperand1Operand1 = new Expression{qrt, resOperand2Operand1};
 				resOperand2Operand1->_operand1 = resOperand1Operand1;
-				resOperand1Operand1->_operand1 = _operand->copy(resOperand1Operand1);
+				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
 				return result;
 		}
+		return 0L;
 	}
 	~Expression() {
 		//puts("delete Expression");
@@ -1217,8 +1237,10 @@ public:
 };
 
 size_t Expression::size = 256;
-Expression * Expression::ZERO, \
-	* Expression::ONE, \
-	* Expression::TEN, \
-	* Expression::VAR_X;
+Expression * Expression::ZERO {0L}, \
+	* Expression::ONE {0L}, \
+	* Expression::TWO {0L}, \
+	* Expression::TEN {0L}, \
+	* Expression::MINUS_ONE {0L}, \
+	* Expression::VAR_X {0L};
 

@@ -3,19 +3,21 @@
 #include <iostream>
 
 int main() {
-    const char *str = new char[100] {"sincosx+2"};
+    const char *str = new char[100] {"-sincosx+2"};
     puts(str);
     Expression::init();
     Expression * expression = Expression::buildExpressionTree(str);
     puts("Expression89");
-    //puts(expression->print());
-    Expression * diffExpression {expression->diff()};
+    const char * const strTemp{expression->print()};
+    puts(strTemp);
+    delete [] strTemp;
+    Expression * diffExpression {expression->integrate()};
     delete expression;
     puts("Expression");
     const char *strRes {diffExpression->print()};
     puts(strRes);
     delete [] strRes;
-    const char * const strRes2 = diffExpression->calc();
+    const char * const strRes2 {diffExpression->calc()};
     std::cout << (void*)strRes2 << std::endl;
     std::cout << &strRes2 << std::endl;
     puts(strRes2);
