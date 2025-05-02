@@ -30,7 +30,10 @@
 #include <QTabBar>
 #include <QTabWidget>
 
-using namespace std;
+#define BYTE_MAX 255
+#define COUNT_LOCAL_HISTORI 5
+
+using byte = unsigned char;
 
 class CalculateDragAndDrop;
 class Window;
@@ -200,11 +203,11 @@ public:
 class Window : public QWidget {
 private:
 	CreateHistori::HistoriScroll ** const _localHistori \
-		{new CreateHistori::HistoriScroll*[5]{nullptr}};
+		{new CreateHistori::HistoriScroll*[COUNT_LOCAL_HISTORI]{nullptr}};
 	CreateHistori::HistoriWidget ** const _resizeLocalHistori \
-		{new CreateHistori::HistoriWidget*[5]{nullptr}};
+		{new CreateHistori::HistoriWidget*[COUNT_LOCAL_HISTORI]{nullptr}};
 	CreateHistori::HistoriVBox ** const _addLocalHistori \
-		{new CreateHistori::HistoriVBox*[5]{nullptr}};
+		{new CreateHistori::HistoriVBox*[COUNT_LOCAL_HISTORI]{nullptr}};
 	LineEdit::LineEdit ** const * const _lineEdit { \
 		new LineEdit::LineEdit ** const [1]{nullptr}, \
 		new LineEdit::LineEdit ** const [3]{nullptr, nullptr, nullptr}, \
@@ -221,7 +224,7 @@ private:
 			{new const char * [3]{"x", "0", "0"}} \
 		} \
 	};
-	short * const _inputtin {new short [2]{0, 0}};
+	byte * const _inputtin {new byte [2]{0, 0}};
 	Button::ButtonDrag *_resultButton {nullptr};
 	CreateHistori::HistoriScroll *_globalHistori {nullptr};
 	CreateHistori::HistoriVBox *_addGlobalHistori {nullptr};
@@ -248,7 +251,7 @@ public:
 			rect(), \
             QBrush(CreateGradient( \
                 static_cast<QWidget *>(this), nullptr, \
-                vector<tuple<float, QColor>>{
+                std::vector<std::tuple<float, QColor>>{
 					{0.0f, QColor(100, 0, 0)},
 					{0.5f, QColor(0, 0, 0)},
 					{1.0f, QColor(0, 0, 100)}
@@ -284,130 +287,127 @@ public:
 		return;
 	}
 
-	uintptr_t getAddGlobalHistori( \
+	CreateHistori::HistoriVBox* getAddGlobalHistori( \
 	) const {
 		return _addGlobalHistori;
 	}
 	void setAddGlobalHistori( \
-			uintptr_t newAddGlobalHistori \
+		CreateHistori::HistoriVBox* newAddGlobalHistori \
 	) {
 		_addGlobalHistori = newAddGlobalHistori;
 		return;
 	}
-	uintptr_t getLocalHistori( \
-			unsigned short *index = nullptr \
+	CreateHistori::HistoriScroll* getLocalHistori( \
+		byte index \
 	) const {
-		if (index == nullptr) {
-			if (_inputtin[0] >= _localHistori.size()) {
-				std::cerr << "Ошибка: индекс вне диапазона вектора _inputtin или _localHistori!" << std::endl;
-				return 0; // или другое значение по умолчанию
-			}
-			return _localHistori.at(_inputtin[0]);
-		} else {
-			if (*index >= _localHistori.size()) {
-				std::cerr << "Ошибка: индекс вне диапазона вектора _localHistori!" << std::endl;
-				return 0; // или другое значение по умолчанию
-			}
-			return _localHistori.at(*index);
-		}
+		return _localHistori[index];
+	}
+	CreateHistori::HistoriScroll* getLocalHistori( \
+		void \
+	) const {
+		return _localHistori[_inputtin[0]];
 	}
 	void setLocalHistori( \
-			uintptr_t newLocalHistori \
+		CreateHistori::HistoriScroll* newLocalHistori, \
+		byte index \
 	) {
-		_localHistori.push_back(newLocalHistori);
+		_localHistori[index] = newLocalHistori;
 		return;
 	}	
-	uintptr_t getResizeLocalHistori( \
-			unsigned short *index = nullptr \
+	CreateHistori::HistoriWidget* getResizeLocalHistori( \
+			byte index \
 	) const {
-		if (index == nullptr) {
-			if (_inputtin[0] >= _resizeLocalHistori.size()) {
-				std::cerr << "Ошибка: индекс вне диапазона вектора _inputtin или _localHistori!" << std::endl;
-				return 0; // или другое значение по умолчанию
-			}
-			return _resizeLocalHistori.at(_inputtin[0]);
-		} else {
-			if (*index >= _resizeLocalHistori.size()) {
-				std::cerr << "Ошибка: индекс вне диапазона вектора _localHistori!" << std::endl;
-				return 0; // или другое значение по умолчанию
-			}
-			return _resizeLocalHistori.at(*index);
-		}
+		return _resizeLocalHistori[index];
+	}
+	CreateHistori::HistoriWidget* getResizeLocalHistori( \
+		void \
+	) const {
+		return _resizeLocalHistori[_inputtin[0]];
 	}
 	void setResizeLocalHistori( \
-			uintptr_t newResizeLocalHistori \
+		CreateHistori::HistoriWidget* newResizeLocalHistori, \
+		byte index \
 	) {
-		_resizeLocalHistori.push_back(newResizeLocalHistori);
+		_resizeLocalHistori[index] = newResizeLocalHistori;
 		return;
 	}
 
-	uintptr_t getAddLocalHistori( \
-			unsigned short *index = nullptr \
+	CreateHistori::HistoriVBox* getAddLocalHistori( \
+		byte index \
 	) const {
-		if (index == nullptr) {
-			if (_inputtin[0] >= _addLocalHistori.size()) {
-				std::cerr << "Ошибка: индекс вне диапазона вектора _inputtin или _localHistori!" << std::endl;
-				return 0; // или другое значение по умолчанию
-			}
-			return _addLocalHistori.at(_inputtin[0]);
-		} else {
-			if (*index >= _addLocalHistori.size()) {
-				std::cerr << "Ошибка: индекс вне диапазона вектора _localHistori!" << std::endl;
-				return 0; // или другое значение по умолчанию
-			}
-			return _addLocalHistori.at(*index);
-		}
+		return _addLocalHistori[index];
+	}
+	CreateHistori::HistoriVBox* getAddLocalHistori( \
+		void \
+	) const {
+		return _addLocalHistori[_inputtin[0]];
 	}
 	void setAddLocalHistori( \
-			uintptr_t newAddLocalHistori \
+		CreateHistori::HistoriVBox* newAddLocalHistori, \
+		byte index
 	) {
-		_addLocalHistori.push_back(newAddLocalHistori);
+		_addLocalHistori[index] = newAddLocalHistori;
 		return;
 	}
-	uintptr_t getLineEdit( \
-			short tab = -1, short index = -1 \
+	LineEdit::LineEdit* getLineEdit( \
+		byte tab, byte index \
 	) const {
-		if (tab < -1 || index < -1)
-			return _lineEdit.at(_inputtin[0]).at(_inputtin[1]);
-		else
-			return _lineEdit.at(tab).at(index);
+		return _lineEdit[tab][index];
+	}
+	LineEdit::LineEdit* getLineEdit(void) const {
+		return _lineEdit[*_inputtin][_inputtin[1]];
 	}
 	void setLineEdit( \
-			short tab, uintptr_t newLineEdit \
-	) const {
-		_lineEdit.at(tab).push_back(newLineEdit);
+			byte tab, byte index, LineEdit::LineEdit* newLineEdit \
+	) {
+		_lineEdit[tab][index] = newLineEdit;
+		return;
 	}
-	array<short, 2> getInputtin() {
+	byte* getInputtin() const {
 		return _inputtin;
 	}
-	void setInputtin(array<short, 2> inputtin) {
-		_inputtin = inputtin;
+	void setInputtin(const byte &tab, const byte &index) {
+		*_inputtin = tab;
+		_inputtin[1] = index;
+		return;
 	}
-	uintptr_t getResultButton() {
+	Button::ButtonDrag* getResultButton() {
 		return _resultButton;
 	}
 	void setResultButton( \
-		uintptr_t resultButton \
+		Button::ButtonDrag* resultButton \
 	) {
 		_resultButton = resultButton;
 		return;
 	}
 	const char *getResult( \
-		short tab = -1, short index = -1 \
-	) {
-		if (tab < 0 || index < 0)
-			return _result.at(_inputtin[0]).at(_inputtin[1]);
-		else
-			return _result.at(tab).at(index);
+		byte tab, byte index \
+	) const {
+		return _result[tab][index];
+	}
+	const char *getResult(void) const {
+		return _result[*_inputtin][_inputtin[1]];
 	}
 	void setResult( \
 		const char *newResult,
-		short tab = -1, short index = -1 \
+		byte tab, byte index \
 	) {
-		if (tab < 0 || index < 0)
-			_result.at(_inputtin[0]).at(_inputtin[1]) = newResult;
-		else
-			_result.at(tab).at(index) = newResult;
+		const char * & res {_result[tab][index]};
+		delete[] res;
+		res = newResult;
+		return;
+	}
+	void setResult( \
+		const char *newResult \
+	) {
+		const char * & res {_result[*_inputtin][_inputtin[1]]};
+		delete [] res;
+		res = newResult;
+		return;
+	}
+	~Window(void) {
+
+		return;
 	}
 };
 
