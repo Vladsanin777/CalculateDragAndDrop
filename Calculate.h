@@ -68,14 +68,14 @@ enum ArifmeticAction { \
 	multiplication, division, \
 	log, sin, cos, tan, cot, sec, csc, \
 	asin, acos, atan, acot, asec, acsc, \
-	sqrt, qrt, cbrt, unaryMinus, _abs, \
+	sqrt, sqr, cbrt, unaryMinus, _abs, \
 	sgn, lg, ln, exp\
 };
 static const char *ARIFMETIC_STR_ACTION[] { \
 	"none", "+", "-", "mod", "^", "*", "/", "log", \
 	"sin", "cos", "tan", "cot", "sec", "csc", \
 	"asin", "acos", "atan", "acot", "asec", "acsc", \
-	"sqrt", "qrt", "cbrt", "-", "abs", "sgn", \
+	"sqrt", "sqr", "cbrt", "-", "abs", "sgn", \
 	"lg", "ln", "exp" \
 };
 enum Diff { \
@@ -276,78 +276,85 @@ private:
 		bool isTwoOperandBool {isTwoOperand()};
 		if (isTwoOperandBool)
 			operand2 = _operand2->calculate();
+		puts(ARIFMETIC_STR_ACTION[arifmeticAction]);
 		switch (arifmeticAction) {
 			case addition:
 				mpfr_add(*result, *operand1, *operand2, MPFR_RNDN);
-				puts("add");
 				break;
 			case subtraction:
 				mpfr_sub(*result, *operand1, *operand2, MPFR_RNDN);
-				puts("sub");
 				break;
 			case remainderFromDivision:
 				mpfr_fmod(*result, *operand1, *operand2, MPFR_RNDN);
-				puts("fmod");
 				break;
 			case multiplication:
 				mpfr_mul(*result, *operand1, *operand2, MPFR_RNDN);
-				puts("mul");
 				break;
 			case division:
 				mpfr_div(*result, *operand1, *operand2, MPFR_RNDN);
-				puts("div");
 				break;
 			case unaryMinus:
 				mpfr_sub(*result, ZERO->_data.number, *operand1, MPFR_RNDN);
-				puts("unary minus");
 				break;
 			case sin:
 				mpfr_sin(*result, *operand1, MPFR_RNDN);
-				puts("sin");
 				break;
 			case cos:
 				mpfr_cos(*result, *operand1, MPFR_RNDN);
-				puts("cos");
 				break;
 			case tan:
 				mpfr_tan(*result, *operand1, MPFR_RNDN);
-				puts("tan");
 				break;
 			case sec:
 				mpfr_sec(*result, *operand1, MPFR_RNDN);
-				puts("sec");
 				break;
 			case csc:
 				mpfr_csc(*result, *operand1, MPFR_RNDN);
-				puts("csc");
 				break;
 			case cot:
 				mpfr_cot(*result, *operand1, MPFR_RNDN);
-				puts("cot");
 				break;
 			case asin:
 				mpfr_asin(*result, *operand1, MPFR_RNDN);
-				puts("asin");
 				break;
 			case acos:
 				mpfr_acos(*result, *operand1, MPFR_RNDN);
-				puts("acos");
 				break;
 			case atan:
 				mpfr_atan(*result, *operand1, MPFR_RNDN);
-				puts("atan");
 				break;
 			case asec:
 				mpfr_asec(*result, *operand1, MPFR_RNDN);
-				puts("asec");
 				break;
 			case acsc:
 				mpfr_acsc(*result, *operand1, MPFR_RNDN);
-				puts("acsc");
 				break;
 			case acot:
 				mpfr_acot(*result, *operand1, MPFR_RNDN);
-				puts("acot");
+				break;
+			case sqr:
+				mpfr_sqr(*result, *operand1, MPFR_RNDN);
+				break;
+			case sqrt:
+				mpfr_sqrt(*result, *operand1, MPFR_RNDN);
+				break;
+			
+			case cbrt:
+				mpfr_cbrt(*result, *operand1, MPFR_RNDN);
+				break;
+			case exp:
+				mpfr_exp(*result, *operand1, MPFR_RNDN);
+				break;
+			case log:
+				mpfr_log(*operand1, *operand1, MPFR_RNDN);
+				mpfr_log(*operand2, *operand2, MPFR_RNDN);
+				mpfr_div(*result, *operand1, *operand2, MPFR_RNDN);
+				break;
+			case ln:
+				mpfr_log(*result, *operand1, MPFR_RNDN);
+				break;
+			case lg:
+				mpfr_log10(*result, *operand1, MPFR_RNDN);
 				break;
 			//case sgn:
 				//result = mpfr_sgn(operand1);
@@ -366,13 +373,13 @@ private:
 	}
 public:
 	const char *calc(void) {
-		char *resStr = new char[100];
-		mpfr_t *result = calculate();
+		char * const resStr{new char[100]{0}};
+		mpfr_t * const result{calculate()};
 		mpfr_sprintf(resStr, "%.77Rf", *result);
 		mpfr_clear(*result);
 		delete [] result;
-		std::cout << (void*)resStr << std::endl;
-		return resStr;
+		std::cout << resStr << std::endl;
+		return (const char *)resStr;
 	}
 	static void init(void) {
 		if (ZERO) delete ZERO;
@@ -653,7 +660,7 @@ public:
 				resOperand1Operand2->_operand2 = 
 					_operand2->differentiate(resOperand1Operand2);
 				resOperand1->_operand2 = resOperand1Operand2;
-				resOperand2 = new Expression{qrt, result};
+				resOperand2 = new Expression{sqr, result};
 				resOperand2->_operand1 = _operand2->copy(resOperand2);
 				return result;
 			case power:
@@ -693,6 +700,10 @@ public:
 				resOperand2->_operand2 = resOperand2Operand2;
 				resOperand2Operand2->_operand1 = \
 					TEN->copy(resOperand2Operand2);
+				break;
+			case exp:
+				resAction = exp;
+				resOperand1 = _operand1->copy();
 				break;
 			case sin:
 				resAction = cos;
@@ -754,7 +765,7 @@ public:
 				resOperand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
 				resOperand1Operand2 = \
-					new Expression{qrt, resOperand2Operand1};
+					new Expression{sqr, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				if (operand1Di == variableDi) return result;
@@ -772,7 +783,7 @@ public:
 				resOperand2Operand1->_operand1 = \
 					ONE->copy(resOperand2Operand1);
 				resOperand1Operand2 = \
-					new Expression{qrt, resOperand2Operand1};
+					new Expression{sqr, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = \
 					resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
@@ -788,7 +799,7 @@ public:
 				resOperand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
 				resOperand1Operand2 = \
-					new Expression{qrt, resOperand2Operand1};
+					new Expression{sqr, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				if (operand1Di == variableDi) return result;
@@ -807,7 +818,7 @@ public:
 				resOperand2Operand1->_operand1 = \
 					ONE->copy(resOperand2Operand1);
 				resOperand1Operand2 = \
-					new Expression{qrt, resOperand2Operand1};
+					new Expression{sqr, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = \
 					resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
@@ -833,7 +844,7 @@ public:
 				resOperand2Operand1->_operand1 = \
 					ONE->copy(resOperand2Operand1);
 				resOperand1Operand2 = \
-					new Expression{qrt, resOperand2Operand1};
+					new Expression{sqr, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = \
 					resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
@@ -859,7 +870,7 @@ public:
 				resOperand2Operand1->_operand1 = \
 					ONE->copy(resOperand2Operand1);
 				resOperand1Operand2 = \
-					new Expression{qrt, resOperand2Operand1};
+					new Expression{sqr, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = \
 					resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
@@ -1044,9 +1055,25 @@ public:
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
 				return result;
+			case lg:
+				resAction = subtraction;
+				resOperand1 = new Expression{multiplication, result};
+				resOperand1->_operand1 = _operand1->copy(resOperand1);
+				resOperand1Operand2 = new Expression{lg, resOperand1};
+				resOperand1->_operand2 = resOperand1Operand2;
+				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
+				resOperand2 = new Expression{division, result};
+				resOperand2->_operand1 = _operand1->copy(resOperand2);
+				resOperand2Operand2 = new Expression{lg, resOperand2};
+				resOperand2->_operand2 = resOperand2Operand2;
+				resOperand2Operand2->_operand1 = _operand1->copy(resOperand2Operand2);
+				return result;
 			case unaryMinus:
 				resAction = unaryMinus;
 				resOperand1 = _operand1->integrate();
+				return result;
+			case exp:
+				throw std::runtime_error("exp integrate");
 				return result;
 			case sin:
 				resAction = unaryMinus;
@@ -1104,7 +1131,7 @@ public:
 				resOperand2Operand1 = new Expression{subtraction, resOperand2};
 				resOperand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
-				resOperand1Operand2 = new Expression{qrt};
+				resOperand1Operand2 = new Expression{sqr};
 				resOperand2Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				return result;
@@ -1119,7 +1146,7 @@ public:
 				resOperand2Operand1 = new Expression{subtraction, resOperand2};
 				resOperand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
-				resOperand1Operand2 = new Expression{qrt};
+				resOperand1Operand2 = new Expression{sqr};
 				resOperand2Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				return result;
@@ -1137,7 +1164,7 @@ public:
 				resOperand1Operand1 = new Expression{addition, resOperand2Operand1};
 				resOperand2Operand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand1->_operand1 = ONE->copy(resOperand1Operand1);
-				resOperand1Operand2 = new Expression{qrt, resOperand1Operand1};
+				resOperand1Operand2 = new Expression{sqr, resOperand1Operand1};
 				resOperand1Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				return result;
@@ -1155,7 +1182,7 @@ public:
 				resOperand1Operand1 = new Expression{addition, resOperand2Operand1};
 				resOperand2Operand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand1->_operand1 = ONE->copy(resOperand1Operand1);
-				resOperand1Operand2 = new Expression{qrt, resOperand1Operand1};
+				resOperand1Operand2 = new Expression{sqr, resOperand1Operand1};
 				resOperand1Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				return result;			
@@ -1182,7 +1209,7 @@ public:
 				resOperand2Operand1 = new Expression{subtraction, resOperand1Operand2};
 				resOperand1Operand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand2 = ONE->copy(resOperand2Operand1);
-				resOperand1Operand1 = new Expression{qrt, resOperand2Operand1};
+				resOperand1Operand1 = new Expression{sqr, resOperand2Operand1};
 				resOperand2Operand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
 				return result;
@@ -1210,7 +1237,7 @@ public:
 				resOperand2Operand1 = new Expression{subtraction, resOperand1Operand2};
 				resOperand1Operand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand2 = ONE->copy(resOperand2Operand1);
-				resOperand1Operand1 = new Expression{qrt, resOperand2Operand1};
+				resOperand1Operand1 = new Expression{sqr, resOperand2Operand1};
 				resOperand2Operand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
 				return result;
