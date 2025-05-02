@@ -32,7 +32,52 @@
 
 using namespace std;
 
-
+class CalculateDragAndDrop;
+class Window;
+class MainLayout;
+class LogicCalculate;
+namespace GradientFont {
+	class Pen;
+	class Path;
+	class StyleBase;
+	class StyleButton;
+	class StyleLineEdit;
+}
+namespace LineEdit {
+	class LineEdit;
+}
+namespace Button {
+	class ButtonBase;
+	class ButtonDrag;
+	class ButtonDragAndDrop;
+}
+namespace CreateHistori {
+	class HistoriVBox;
+	class HistoriWidget;
+	class HistoriScroll;
+}
+namespace Title {
+	class Action;
+	class Menu;
+	class TitleLayout;
+	class TitleBar;
+}
+namespace Grid {
+	class BuildingGridKeyboard;
+	class GridCalculateKeyboard;
+	class GridCalculateCommon;
+	class GridBaseCalc;
+	class GridBasicCalc;
+	class GridIntegralCalc;
+	class GridDerivateOrIntegrateCalc;
+	class GridReplacementCalc;
+}
+namespace TabWindow {
+	class CustomTabBar;
+	class TabQWidget;
+	class TabWidgetKeyboard;
+	class MainTabWidget;
+}
 
 class CalculateDragAndDrop : public QApplication {
 
@@ -154,23 +199,38 @@ public:
 
 class Window : public QWidget {
 private:
-	vector<uintptr_t> _localHistori = {};
-	vector<uintptr_t> _resizeLocalHistori = {};
-	vector<uintptr_t> _addLocalHistori = {};
-	mutable vector<vector<uintptr_t>> _lineEdit = {{}, {}, {}, {}, {}};
-	array<short, 2> _inputtin = {0, 0};
-	vector<vector<const char *>> _result = {
-		{"0"}, {"1", "2", "0"}, {"0"}, {"0"}, {"x", "0", "0"}
+	CreateHistori::HistoriScroll ** const _localHistori \
+		{new CreateHistori::HistoriScroll*[5]{nullptr}};
+	CreateHistori::HistoriWidget ** const _resizeLocalHistori \
+		{new CreateHistori::HistoriWidget*[5]{nullptr}};
+	CreateHistori::HistoriVBox ** const _addLocalHistori \
+		{new CreateHistori::HistoriVBox*[5]{nullptr}};
+	LineEdit::LineEdit ** const * const _lineEdit { \
+		new LineEdit::LineEdit ** const [1]{nullptr}, \
+		new LineEdit::LineEdit ** const [3]{nullptr, nullptr, nullptr}, \
+		new LineEdit::LineEdit ** const [1]{nullptr}, \
+		new LineEdit::LineEdit ** const [1]{nullptr}, \
+		new LineEdit::LineEdit ** const [3]{nullptr, nullptr, nullptr} \
+	}
+	const char ** const * const _result { \
+		new const char ** const [5]{ \
+			{new const char * [1]{"0"}}, \
+			{new const char * [3]{"1", "2", "0"}}, \
+			{new const char * [1]{"0"}}, \
+			{new const char * [1]{"0"}}, \
+			{new const char * [3]{"x", "0", "0"}} \
+		} \
 	};
-	uintptr_t _resultButton;
-	uintptr_t _globalHistori;
-	uintptr_t _addGlobalHistori;
-	uintptr_t _resizeGlobalHistori;
-	CalculateDragAndDrop *_app = nullptr;
+	short * const _inputtin {new short [2]{0, 0}};
+	Button::ButtonDrag *_resultButton {nullptr};
+	CreateHistori::HistoriScroll *_globalHistori {nullptr};
+	CreateHistori::HistoriVBox *_addGlobalHistori {nullptr};
+	CreateHistori::HistoriWidget *_resizeGlobalHistori {nullptr};
+	CalculateDragAndDrop *_app {nullptr};
 public:
 	explicit Window( \
 			CalculateDragAndDrop *app = nullptr \
-	) : QWidget(), _app(app) {
+	) : QWidget(), _app{app} {
 		setWindowTitle("CalculateDragAndDrop");
 		resize(400, 800);
 		setObjectName("Window");
@@ -203,22 +263,22 @@ public:
 
 	void changeFon(QPushButton *button) {}
 
-	uintptr_t getGlobalHistori( \
+	CreateHistori::HistoriScroll* getGlobalHistori( \
 	) const {
 		return _globalHistori;
 	}
 	void setGlobalHistori( \
-			uintptr_t newGlobalHistori \
+		CreateHistori::HistoriScroll* newGlobalHistori \
 	) {
 		_globalHistori = newGlobalHistori;
 		return;
 	}	
-	uintptr_t getResizeGlobalHistori( \
+	CreateHistori::HistoriWidget* getResizeGlobalHistori( \
 	) const {
 		return _resizeGlobalHistori;
 	}
 	void setResizeGlobalHistori( \
-			uintptr_t newResizeGlobalHistori \
+		CreateHistori::HistoriWidget* newResizeGlobalHistori \
 	) {
 		_resizeGlobalHistori = newResizeGlobalHistori;
 		return;
@@ -448,7 +508,7 @@ public:
 
 	void addHistori() {
 
-		QLayout *element;
+		QLayout *element{0L};
 		short tab = _window->getInputtin()[0];
 
 		switch (tab) {
