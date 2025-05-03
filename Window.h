@@ -317,6 +317,12 @@ public:
 		_localHistori[index] = newLocalHistori;
 		return;
 	}	
+	inline void setLocalHistori( \
+		CreateHistori::HistoriScroll* newLocalHistori \
+	) noexcept {
+		_localHistori[_inputtin[0]] = newLocalHistori;
+		return;
+	}	
 	inline CreateHistori::HistoriWidget* getResizeLocalHistori( \
 			byte index \
 	) const noexcept {
@@ -361,7 +367,7 @@ public:
 		return _lineEdit[*_inputtin][_inputtin[1]];
 	}
 	inline void setLineEdit( \
-			byte tab, byte index, LineEdit* newLineEdit \
+		LineEdit* newLineEdit, byte tab, byte index \
 	) noexcept {
 		_lineEdit[tab][index] = newLineEdit;
 		return;
@@ -1068,7 +1074,7 @@ namespace Title {
 				new Button::ButtonBase{ \
 					"Derivative",  window, 15, \
 					new std::function<void(QPushButton *)>( \
-						bind( \
+						std::bind( \
 							&TitleLayout::localHistoriDerivativeVisible, \
 							this, std::placeholders::_1 \
 						) \
@@ -1077,7 +1083,7 @@ namespace Title {
 				new Button::ButtonBase{ \
 					"Integrate",   window, 15, \
 					new std::function<void(QPushButton *)>( \
-						bind( \
+						std::bind( \
 							&TitleLayout::localHistoriIntegrateVisible, \
 							this, std::placeholders::_1 \
 						) \
@@ -1086,7 +1092,7 @@ namespace Title {
 				new Button::ButtonBase{ \
 					"Replacement", window, 15, \
 					new std::function<void(QPushButton *)>( \
-						bind( \
+						std::bind( \
 							&TitleLayout::localHistoriReplacementVisible, \
 							this, std::placeholders::_1 \
 						) \
@@ -1096,7 +1102,7 @@ namespace Title {
 				new Button::ButtonBase{ \
 					"Global Histori", window, 15, \
 					new std::function<void(QPushButton *)>( \
-						bind(
+						std::bind(
 							&TitleLayout::globalHistoriVisible, \
 							this, std::placeholders::_1 \
 						) \
@@ -1191,10 +1197,8 @@ namespace Grid {
 				std::function<void(QPushButton *)> *callback, \
 				Window *window \
 			) -> QWidget* {
-				return static_cast<QWidget *>( \
-					new Button::ButtonDrag( \
-						label, window, 20, callback \
-					) \
+				return new Button::ButtonDrag( \
+					label, window, 20, callback \
 				);
 			} \
 		) {
@@ -1210,10 +1214,13 @@ namespace Grid {
 					rowIndex != buttonsLenght; rowIndex++ \
 				) {
 					const char *labelButton = rowLabelsButton.at(rowIndex);
+					std::function<void(QPushButton *)> * func = new std::function<void(QPushButton*)>(
+						[window](QPushButton* btn) {
+							LogicCalculate::inputtinLineEdit(btn, window);
+						}
+					);
 					grid->addWidget(createButton( \
-						labelButton, \
-						&LogicCalculate::inputtinLineEdit, \
-						window \
+						labelButton, func, window \
 					), row, column, 1, 1);
 					column++;
 				}
@@ -1230,26 +1237,24 @@ namespace Grid {
 		) {
 			setContentsMargins(0, 0, 0, 0);
 			setSpacing(0);
-			BuildingGridKeyboard( \
+			BuildingGridKeyboard{ \
 				buttons, \
 				static_cast<QGridLayout *>(this), \
 				window \
-			);
+			};
 		}
 	};
 
 
 	class GridCalculateCommon : public QGridLayout {
 	private:
-		Window *_window = nullptr;
+		Window *_window {nullptr};
 	public:
 		explicit GridCalculateCommon( \
 			Window *window
-		) {
+		) : _window{window} {
 			setSpacing(0);
 			setContentsMargins(0, 0, 0, 0);
-
-			_window = window;
 
 			createButton("_ALL", 0, 0);
 			createButton("_DO", 0, 1);
@@ -1258,7 +1263,7 @@ namespace Grid {
 			createButton("_O", 0, 4);
 
 			BuildingGridKeyboard( \
-				vector<vector<const char *>>{
+				std::vector<std::vector<const char *>>{
 					{"()", "(", ")", "mod", "_PI"}, 
 					{"7", "8", "9", ":", "sqrt"}, 
 					{"4", "5", "6", "*", "^"}, 
@@ -1268,7 +1273,7 @@ namespace Grid {
 				}, this, window, 1, \
 				[]( \
 					const char* label, \
-					function<void(QPushButton *)> *callback, \
+					std::function<void(QPushButton *)> *callback, \
 					Window *window \
 				) -> QWidget* {
 					return static_cast<QWidget *>( \
@@ -1278,21 +1283,14 @@ namespace Grid {
 					);
 				} \
 			);
-			Button::ButtonDrag *resultButton = \
-				nullptr;
-			window->setResultButton( \
-				reinterpret_cast<uintptr_t>(
-					resultButton = \
-						new Button::ButtonDrag( \
-							window->getResult(0, 0), \
-							window, 20 \
-						) \
-				) \
-			);
-			addWidget( \
-				resultButton, \
-				7, 0, 1, 5 \
-			);
+			Button::ButtonDrag *resultButton {\
+				new Button::ButtonDrag { \
+					window->getResult(0, 0), \
+					window, 20 \
+				}
+			};
+			window->setResultButton(resultButton);
+			addWidget(resultButton, 7, 0, 1, 5);
 		}
 
 		void createButton( \
@@ -1301,7 +1299,7 @@ namespace Grid {
 			std::function<QWidget *( \
 				const char *, short, Window *, \
 				std::function<void(QPushButton *)> *, const char * \
-			)> creatorButton = []( \
+			)> creatorButtonFunc = []( \
 				const char *label, \
 				short fontSize, \
 				Window *window, \
@@ -1316,40 +1314,33 @@ namespace Grid {
 				);
 			} \
 		) {
-			addWidget(creatorButton( \
-				label, 20, _window, \
-				&LogicCalculate::inputinLineEdit, \
-				"keybord" \
-			), row, column, 1, 1);
+			Window* window {_window};
+			std::function<void(QPushButton *)> * func {
+				new std::function<void(QPushButton*)> { \
+					[window](QPushButton* btn) {
+						LogicCalculate::inputtinLineEdit(btn, window);
+					}
+				}
+			};
+			addWidget(creatorButtonFunc(label, 20, _window, func, "keybord" \
+					), row, column, 1, 1);
 		}
 	};
 
 	class GridBaseCalc : public QGridLayout {
 	public:
 		explicit GridBaseCalc( \
-			Window *window \
+			Window *window, byte tab \
 		) : QGridLayout() {
 			setSpacing(0);
 			setContentsMargins(0, 0, 0, 0);
-			CreateHistori::HistoriScroll *localHistori = nullptr;
-			window->setLocalHistori( \
-				reinterpret_cast<uintptr_t>( \
-					localHistori = \
-						new CreateHistori::HistoriScroll()
-				) \
-			);
-			CreateHistori::HistoriWidget *resizeLocalHistori = nullptr;
-			window->setResizeLocalHistori( \
-				reinterpret_cast<uintptr_t>(
-					resizeLocalHistori = \
-						localHistori->getResizeHistori() \
-				) \
-			);
-			window->setAddLocalHistori( \
-				reinterpret_cast<uintptr_t>( \
-					resizeLocalHistori->getAddHistori() \
-				) \
-			);
+			CreateHistori::HistoriScroll *localHistori \
+				{new CreateHistori::HistoriScroll{}};
+			window->setLocalHistori(localHistori, tab);
+			CreateHistori::HistoriWidget *resizeLocalHistori \
+				{new CreateHistori::HistoriWidget{}};
+			window->setResizeLocalHistori(resizeLocalHistori, tab);
+			window->setAddLocalHistori(resizeLocalHistori->getAddHistori(), tab);
 			addWidget(localHistori, 0, 0, 1, 6);
 		}
 	};
@@ -1358,13 +1349,10 @@ namespace Grid {
 	public:
 		explicit GridBasicCalc( \
 			Window *window \
-		) : GridBaseCalc(window) {
-			short input[2] = {0, 0};
+		) : GridBaseCalc(window, byte(0)) {
 			LineEdit *lineEdit = \
-				new LineEdit(window, input);
-			window->setLineEdit( \
-				0, reinterpret_cast<uintptr_t>(lineEdit) \
-			);
+				new LineEdit{window, byte(0), byte(0)};
+			window->setLineEdit(lineEdit, byte(0), byte(0));
 			addWidget(lineEdit);
 		}
 	};
@@ -1374,45 +1362,30 @@ namespace Grid {
 	public:
 		explicit GridIntegralCalc( \
 			Window *window \
-		) : GridBaseCalc(window) {
+		) : GridBaseCalc(window, byte(1)) {
 			addWidget( \
-				new Button::ButtonBase( \
+				new Button::ButtonBase{ \
 					"a = ", window, 20, \
 					nullptr, "calculate" \
-				), 1, 0, 1, 1 \
+				}, 1, 0, 1, 1 \
 			);
-			short input[2] = {1, 0};
-			LineEdit *aLineEdit = \
-				new LineEdit(window, input, "1");
-			window->setLineEdit( \
-				1, reinterpret_cast<uintptr_t>( \
-					aLineEdit \
-				) \
-			);
+			LineEdit *aLineEdit \
+				{new LineEdit{window, 1, 0, "1"}};
+			window->setLineEdit(aLineEdit, byte(1), byte(0));
 			addWidget(aLineEdit, 1, 1, 1, 2);
 			addWidget( \
-				new Button::ButtonBase( \
+				new Button::ButtonBase{ \
 					"b = ", window, 20, \
 					nullptr, "calculate" \
-				), 1, 3, 1, 1 \
+				}, 1, 3, 1, 1 \
 			);
-			input[0] = 1, input[1] = 1;
-			LineEdit *bLineEdit = \
-				new LineEdit(window, input, "2");
-			window->setLineEdit( \
-				1, reinterpret_cast<uintptr_t>( \
-					bLineEdit \
-				) \
-			);
+			LineEdit *bLineEdit \
+				{new LineEdit{window, byte(1), byte(1), "2"}};
+			window->setLineEdit(bLineEdit, byte(1), byte(1));
 			addWidget(bLineEdit, 1, 4, 1, 2);
-			input[0] = 1, input[1] = 2;
-			LineEdit *mainLineEdit = \
-				new LineEdit(window, input);
-			window->setLineEdit( \
-				1, reinterpret_cast<uintptr_t>( \
-					mainLineEdit \
-				) \
-			);
+			LineEdit *mainLineEdit \
+				{new LineEdit{window, byte(1), byte(2)}};
+			window->setLineEdit(mainLineEdit, byte(1), byte(2));
 			addWidget(mainLineEdit, 2, 0, 1, 6);
 		}
 	};
@@ -1420,15 +1393,11 @@ namespace Grid {
 	class GridDerivativeOrIntegrateCalc : public GridBaseCalc {
 	public:
 		explicit GridDerivativeOrIntegrateCalc( \
-			Window *window, short numberTab \
-		) : GridBaseCalc(window) {
-			short input[2] = {numberTab, 0};
-			LineEdit *lineEdit = \
-				new LineEdit(window, input);
-			window->setLineEdit( \
-				numberTab, \
-				reinterpret_cast<uintptr_t>(lineEdit) \
-			);
+			Window *window, byte tab \
+		) : GridBaseCalc(window, tab) {
+			LineEdit *lineEdit \
+				{new LineEdit{window, tab, byte(0)}};
+			window->setLineEdit(lineEdit, tab, byte(0));
 			addWidget(lineEdit);
 		}
 	};
@@ -1436,21 +1405,16 @@ namespace Grid {
 	public:
 		explicit GridReplacementCalc( \
 			Window *window \
-		) : GridBaseCalc(window) {
+		) : GridBaseCalc{window, byte(4)} {
 			addWidget( \
-				new Button::ButtonBase( \
+				new Button::ButtonBase{ \
 					"with =", window, 20, \
 					nullptr, "calculate" \
-				), 1, 0, 1, 1 \
+				}, 1, 0, 1, 1 \
 			);
-			short input[2] = {4, 0};
 			LineEdit *withLineEdit = \
-				new LineEdit(window, input, "x");
-			window->setLineEdit( \
-				4, reinterpret_cast<uintptr_t>( \
-					withLineEdit \
-				) \
-			);
+				new LineEdit(window, byte(4), byte(0), "x");
+			window->setLineEdit(withLineEdit, byte(4), byte(0));
 			addWidget(withLineEdit, 1, 1, 1, 2);
 			addWidget( \
 				new Button::ButtonBase( \
@@ -1458,23 +1422,13 @@ namespace Grid {
 					nullptr, "calculate" \
 				), 1, 3, 1, 1 \
 			);
-			input[1] = 1;
-			LineEdit *onLineEdit = \
-				new LineEdit(window, input, "0");
-			window->setLineEdit( \
-				4, reinterpret_cast<uintptr_t>( \
-					onLineEdit \
-				) \
-			);
+			LineEdit *onLineEdit \
+				{new LineEdit{window, byte(4), byte(1), "0"}};
+			window->setLineEdit(onLineEdit, byte(4), byte(1));
 			addWidget(onLineEdit, 1, 4, 1, 2);
-			input[1] = 2;
-			LineEdit *mainLineEdit = \
-				new LineEdit(window, input);
-			window->setLineEdit( \
-				4, reinterpret_cast<uintptr_t>( \
-					mainLineEdit \
-				) \
-			);
+			LineEdit *mainLineEdit \
+				{new LineEdit{window, byte(4), byte(2)}};
+			window->setLineEdit(mainLineEdit, byte(4), byte(2));
 			addWidget(mainLineEdit, 2, 0, 1, 6);
 		}
 	};
@@ -1485,9 +1439,9 @@ namespace Grid {
 namespace TabWindow {
 	class CustomTabBar : public QTabBar {
 	private:
-		CreateGradient *_gradient = nullptr;
-		QTabWidget *_tabWidget = nullptr;
-		Window *_window = nullptr;
+		CreateGradient *_gradient {nullptr};
+		QTabWidget *_tabWidget {nullptr};
+		Window *_window {nullptr};
 	public:
 		explicit CustomTabBar( \
 			QTabWidget *tabWidget, Window *window \
@@ -1576,7 +1530,7 @@ namespace TabWindow {
 			setTabBar(_tabBar);  // Устанавливаем кастомный TabBar
 			addTab(new TabQWidget( \
 				new Grid::GridCalculateKeyboard( \
-					vector<vector<const char *>>{
+					std::vector<std::vector<const char *>>{
 						{"1", "2", "3", "4", "5"},
 						{"6", "7", "8", "9", "0"}
 					}, window \
@@ -1584,7 +1538,7 @@ namespace TabWindow {
 			), "digits 10");
 			addTab(new TabQWidget( \
 				new Grid::GridCalculateKeyboard( \
-					vector<vector<const char *>>{
+					std::vector<std::vector<const char *>>{
 						{"A", "B", "C"},
 						{"D", "E", "F"}
 					}, window \
@@ -1592,7 +1546,7 @@ namespace TabWindow {
 			), "digits 16");
 			addTab(new TabQWidget( \
 				new Grid::GridCalculateKeyboard( \
-					vector<vector<const char *>>{
+					std::vector<std::vector<const char *>>{
 						{"+", "-", ":", "*", "^"},
 						{"!", "sqrt", "ln", "log", "lg"}
 					}, window \
@@ -1600,14 +1554,14 @@ namespace TabWindow {
 			), "operators");
 			addTab(new TabQWidget( \
 				new Grid::GridCalculateKeyboard( \
-					vector<vector<const char *>>{
+					std::vector<std::vector<const char *>>{
 						{"_E", "_PI"}
 					}, window \
 				) \
 			), "consts");
 			addTab(new TabQWidget( \
 				new Grid::GridCalculateKeyboard( \
-					vector<vector<const char *>>{
+					std::vector<std::vector<const char *>>{
 						{"sin(", "cos(", "tan("},
 						{"sec(", "csc(", "cot("}
 					}, window \
@@ -1615,21 +1569,21 @@ namespace TabWindow {
 			), "trigonometric functions");
 			addTab(new TabQWidget( \
 				new Grid::GridCalculateKeyboard( \
-					vector<vector<const char *>>{
+					std::vector<std::vector<const char *>>{
 						{"sgn(", "abs(", "mod"}
 					}, window \
 				) \
 			), "other functions");
 			addTab(new TabQWidget( \
 				new Grid::GridCalculateKeyboard( \
-					vector<vector<const char *>>{
+					std::vector<std::vector<const char *>>{
 						{"0x", "0b", "0t"}
 					}, window \
 				) \
 			), "number system");
 			addTab(new TabQWidget( \
 				new Grid::GridCalculateKeyboard( \
-					vector<vector<const char *>>{
+					std::vector<std::vector<const char *>>{
 						{"%", "mod", ".", "|"}
 					}, window \
 				) \
@@ -1689,34 +1643,24 @@ public:
 	) : QVBoxLayout() {
 		setContentsMargins(0, 0, 0, 0);
 		setSpacing(0);
-		addWidget(new Title::TitleBar(app, window));
-		CreateHistori::HistoriScroll *globalHistori = nullptr;
-		window->setGlobalHistori( \
-			reinterpret_cast<uintptr_t>( \
-				globalHistori = new CreateHistori::HistoriScroll() \
-			) \
-		);
-		CreateHistori::HistoriWidget *resizeGlobalHistori = nullptr;
-		window->setResizeGlobalHistori( \
-			reinterpret_cast<uintptr_t>(
-				resizeGlobalHistori = \
-					globalHistori->getResizeHistori() \
-			) \
-		);
+		addWidget(new Title::TitleBar{app, window});
+		CreateHistori::HistoriScroll *globalHistori \
+			{new CreateHistori::HistoriScroll{}};
+		window->setGlobalHistori(globalHistori);
+		CreateHistori::HistoriWidget *resizeGlobalHistori \
+			{globalHistori->getResizeHistori()};
+		window->setResizeGlobalHistori(resizeGlobalHistori);
 		window->setAddGlobalHistori( \
-			reinterpret_cast<uintptr_t>( \
-				resizeGlobalHistori->getAddHistori() \
-			) \
-		);
+			resizeGlobalHistori->getAddHistori());
 		addWidget(globalHistori);
-		addWidget(new TabWindow::MainTabWidget(window));
-		addLayout(new Grid::GridCalculateCommon(window));
-		addWidget(new TabWindow::TabWidgetKeyboard(window));
+		addWidget(new TabWindow::MainTabWidget{window});
+		addLayout(new Grid::GridCalculateCommon{window});
+		addWidget(new TabWindow::TabWidgetKeyboard{window});
 	}
 };
 
 inline void Window::postInit() noexcept {
-    setLayout(new MainLayout(_app, this));
+    setLayout(new MainLayout{_app, this});
 }
 
 inline Window::~Window(void) {
