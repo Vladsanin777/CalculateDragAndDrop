@@ -37,8 +37,7 @@ using byte = unsigned char;
 
 class CalculateDragAndDrop;
 class Window;
-class MainLayout;
-class LogicCalculate;
+
 namespace GradientFont {
 	class Pen;
 	class Path;
@@ -46,9 +45,8 @@ namespace GradientFont {
 	class StyleButton;
 	class StyleLineEdit;
 }
-namespace LineEdit {
-	class LineEdit;
-}
+class LineEdit;
+class LogicCalculate;
 namespace Button {
 	class ButtonBase;
 	class ButtonDrag;
@@ -81,6 +79,7 @@ namespace TabWindow {
 	class TabWidgetKeyboard;
 	class MainTabWidget;
 }
+class MainLayout;
 
 class CalculateDragAndDrop : public QApplication {
 
@@ -208,13 +207,13 @@ private:
 		{new CreateHistori::HistoriWidget*[COUNT_LOCAL_HISTORI]{nullptr}};
 	CreateHistori::HistoriVBox ** const _addLocalHistori \
 		{new CreateHistori::HistoriVBox*[COUNT_LOCAL_HISTORI]{nullptr}};
-	LineEdit::LineEdit ** const * const _lineEdit { \
-		new LineEdit::LineEdit ** const [COUNT_LOCAL_HISTORI] { \
-			new LineEdit::LineEdit * [1]{nullptr}, \
-			new LineEdit::LineEdit * [3]{nullptr, nullptr, nullptr}, \
-			new LineEdit::LineEdit * [1]{nullptr}, \
-			new LineEdit::LineEdit * [1]{nullptr}, \
-			new LineEdit::LineEdit * [3]{nullptr, nullptr, nullptr} \
+	LineEdit ** const * const _lineEdit { \
+		new LineEdit ** const [COUNT_LOCAL_HISTORI] { \
+			new LineEdit * [1]{nullptr}, \
+			new LineEdit * [3]{nullptr, nullptr, nullptr}, \
+			new LineEdit * [1]{nullptr}, \
+			new LineEdit * [1]{nullptr}, \
+			new LineEdit * [3]{nullptr, nullptr, nullptr} \
 		}
 	};
 	const char ** const * const _result { \
@@ -270,7 +269,7 @@ public:
 
 	inline void changeFon(QPushButton *button) noexcept {}
 
-	inline const CreateHistori::HistoriScroll* getGlobalHistori( \
+	inline CreateHistori::HistoriScroll* getGlobalHistori( \
 	) const noexcept {
 		return _globalHistori;
 	}
@@ -280,7 +279,7 @@ public:
 		_globalHistori = newGlobalHistori;
 		return;
 	}	
-	inline const CreateHistori::HistoriWidget* getResizeGlobalHistori( \
+	inline CreateHistori::HistoriWidget* getResizeGlobalHistori( \
 	) const noexcept {
 		return _resizeGlobalHistori;
 	}
@@ -291,7 +290,7 @@ public:
 		return;
 	}
 
-	inline const CreateHistori::HistoriVBox* getAddGlobalHistori( \
+	inline CreateHistori::HistoriVBox* getAddGlobalHistori( \
 	) const noexcept {
 		return _addGlobalHistori;
 	}
@@ -301,12 +300,12 @@ public:
 		_addGlobalHistori = newAddGlobalHistori;
 		return;
 	}
-	inline const CreateHistori::HistoriScroll* getLocalHistori( \
+	inline CreateHistori::HistoriScroll* getLocalHistori( \
 		byte index \
 	) const noexcept {
 		return _localHistori[index];
 	}
-	inline const CreateHistori::HistoriScroll* getLocalHistori( \
+	inline CreateHistori::HistoriScroll* getLocalHistori( \
 		void \
 	) const noexcept {
 		return _localHistori[_inputtin[0]];
@@ -318,12 +317,12 @@ public:
 		_localHistori[index] = newLocalHistori;
 		return;
 	}	
-	inline const CreateHistori::HistoriWidget* getResizeLocalHistori( \
+	inline CreateHistori::HistoriWidget* getResizeLocalHistori( \
 			byte index \
 	) const noexcept {
 		return _resizeLocalHistori[index];
 	}
-	inline const CreateHistori::HistoriWidget* getResizeLocalHistori( \
+	inline CreateHistori::HistoriWidget* getResizeLocalHistori( \
 		void \
 	) const noexcept {
 		return _resizeLocalHistori[_inputtin[0]];
@@ -336,12 +335,12 @@ public:
 		return;
 	}
 
-	inline const CreateHistori::HistoriVBox* getAddLocalHistori( \
+	inline CreateHistori::HistoriVBox* getAddLocalHistori( \
 		byte index \
 	) const noexcept {
 		return _addLocalHistori[index];
 	}
-	inline const CreateHistori::HistoriVBox* getAddLocalHistori( \
+	inline CreateHistori::HistoriVBox* getAddLocalHistori( \
 		void \
 	) const noexcept {
 		return _addLocalHistori[_inputtin[0]];
@@ -353,16 +352,16 @@ public:
 		_addLocalHistori[index] = newAddLocalHistori;
 		return;
 	}
-	inline const LineEdit::LineEdit* getLineEdit( \
+	inline LineEdit* getLineEdit( \
 		byte tab, byte index \
 	) const noexcept {
 		return _lineEdit[tab][index];
 	}
-	inline const LineEdit::LineEdit* getLineEdit(void) const noexcept {
+	inline LineEdit* getLineEdit(void) const noexcept {
 		return _lineEdit[*_inputtin][_inputtin[1]];
 	}
 	inline void setLineEdit( \
-			byte tab, byte index, LineEdit::LineEdit* newLineEdit \
+			byte tab, byte index, LineEdit* newLineEdit \
 	) noexcept {
 		_lineEdit[tab][index] = newLineEdit;
 		return;
@@ -375,7 +374,7 @@ public:
 		_inputtin[1] = index;
 		return;
 	}
-	inline const Button::ButtonDrag* getResultButton() noexcept {
+	inline Button::ButtonDrag* getResultButton() noexcept {
 		return _resultButton;
 	}
 	inline void setResultButton( \
@@ -435,235 +434,7 @@ inline void CalculateDragAndDrop::createWindow( \
 }
 
 
-class LogicCalculate {
-private:
-    char *_lineEditText;
-	Window *_window = nullptr;
-public:
-	explicit LogicCalculate( \
-		char *lineEditText, \
-		Window *window \
-	) : _lineEditText(lineEditText), \
-	_window(window) {}
 
-	void button_ALL() {
-		char* pos;
-
-		// Удаляем "_ALL" из строки
-		pos = strstr(_lineEditText, "_ALL");
-		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
-
-		if (strlen(_lineEditText) > 0) {
-			// window->setResult(_lineEditText);  // Устанавливаем результат
-			
-			buttonOther();                         // Вызываем другую функцию
-			addHistori();    // Добавляем в историю
-
-			_window->setResult("0");            // Сбрасываем результат
-		}
-
-		_window->getLineEdit()->setText(""); // Очищаем поле ввода
-	}
-
-	void button_DO() {
-		char* pos;
-		pos = strstr(_lineEditText, "_DO");
-		memmove(pos, pos + 3, strlen(pos + 3) + 1);
-
-		if (strlen(_lineEditText) > 0) {
-			// _window->setResult(_lineEditText);
-			buttonOther();
-			*pos = '\0';
-			addHistori();
-		}
-		_window->getLineEdit()->setText(_lineEditText);
-	}
-
-	void button_POS() {
-		char* pos;
-		// Удаляем "_POS" из строки
-		pos = strstr(_lineEditText, "_POS");
-		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
-
-		if (strlen(_lineEditText) > 0) {
-			// _window->setResult(_lineEditText);
-			buttonOther();
-			pos += strlen("_POS");
-			memmove(_lineEditText, pos, strlen(pos) + 1);
-			addHistori();
-		}
-		reinterpret_cast<QLineEdit *>(
-			_window->getLineEdit() \
-		)->setText(pos);
-	}
-
-	void button_RES() {
-
-
-        const char *result = _window->getResult();
-		char *pos = strstr(_lineEditText, "_RES");
-		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
-
-		if (strlen(_lineEditText) > 0) {
-            // window.setResult(_lineEditText);
-            buttonOther();
-            addHistori();
-		}
-        QLineEdit *line_edit = reinterpret_cast<QLineEdit *>( \
-			_window->getLineEdit() \
-		);
-        line_edit->setText(result);
-        line_edit->setCursorPosition(strlen(result)-1);
-	}
-
-	void addHistori() {
-
-		QLayout *element{0L};
-		short tab = _window->getInputtin()[0];
-
-		switch (tab) {
-			case 1:
-				element = new CustomBoxHistoriElement(
-					_lineEditText, _window, 
-					1, "Integral",
-					"a", window->getResult(1, 0),
-					"b", window->getResult(1, 1)
-				);
-				break;
-
-			case 4:
-				element = new CustomBoxHistoriElement(
-					_lineEditText, _window, 
-					4, "Replacement",
-					"with", window->getResult(4, 0),
-					"on", window->getResult(4, 1)
-				);
-				break;
-
-			default:
-				{
-					std::map<short, const char*> lstTabs = {
-						{0, "Basic"}, {2, "Derivate"}, {3, "Integrate"}
-					};
-					element = new BasicBoxHistoriElement(
-						line_edit_text, window,
-						window->result, lst_tabs[tab]
-					);
-				}
-				break;
-		}
-
-
-		// Добавление элемента в глобальную историю
-		reinterpret_cast<QVBoxLayout *>(
-			_window->getAddGlobalHistori()
-		)->addLayout(element);
-		reinterpret_cast<QWidget *>(
-			_window->getResizeGlobalHistori()
-		)->adjustSize();
-		QScrollArea *globalHistori = \
-			reinterpret_cast<QScrollArea *>(
-				_window->getGlobalHistori()
-			);
-		globalHistori->verticalScrollBar()->setValue(
-			globalHistori->verticalScrollBar()->maximum()
-		);
-
-		// Добавление элемента в локальную историю
-		reinterpret_cast<QVBoxLayout *>(
-			_window->getAddLocalHistori()
-		)->addLayout(element);
-		reinterpret_cast<QWidget *>(
-			_window->getResizeLocalHistori()
-		)->adjustSize();
-		QScrollArea *localHistori = \
-			reinterpret_cast<QScrollArea *>(
-				_window->getLocalHistori()
-			);
-		localHistori->verticalScrollBar()->setValue(
-			localHistori->verticalScrollBar()->maximum()
-		);
-	}
-
-    void button_O() {
-		char *pos = strstr(_lineEditText, "_O");
-		memmove(pos-1, pos + 3, strlen(pos + 3) + 1);
-
-		reinterpret_cast<QLineEdit *>(
-			_window->getLineEdit()
-		)->setText(
-			_lineEditText
-		);
-	}
-
-	
-	void buttonOther() {
-		auto integral = [_window = this->_window]() {
-			char* equation = strdup( \
-				reinterpret_cast<QLineEdit *>(
-					_window->getLineEdit(1, 2)
-				)->text().toUtf8().data() \
-			);
-			// _window->setResult(equation, 1, 2);
-		};
-
-		auto otherTab = [_window = this->_window]() {
-			// _window->setResult(_window->getLineEdit(), 0, 0);
-		};
-		array<short, 2> inputtin = _window->getInputtin();
-		switch (inputtin[0] * 10 + inputtin[1]) {
-			case 10:
-			case 11:
-				otherTab();
-			case 12:
-				integral();
-				break;
-			case 20:
-				//_window->setResult({0, 0}, window.line_edit_text); // Пример для Derivative
-				break;
-			case 30:
-				// _window.setResult({0, 0}, window.line_edit_text); // Пример для Derivative с true
-				break;
-			case 40:
-			case 41:
-				// _window.setResult({0, 0}, window.line_edit_text);
-				break;
-			case 42: {
-				// char* modified_text = replaceAll(window.line_edit_text, window.getResult(4, 0), window.getResult(4, 1));
-				// _window.setResult({0, 0}, modified_text);
-				break;
-			}
-			default:
-				otherTab();
-				break;
-		}
-
-		// _window.setForResult(window.result);
-	}
-            
-	static void inputtinLineEdit( \
-		QPushButton *button, Window *window \
-	) {
-		char *label = strdup(button->text().toUtf8().data());
-		QLineEdit *lineEdit = reinterpret_cast<QLineEdit *>( \
-				window->getLineEdit() \
-		);
-		char *text = strdup(lineEdit->text().toUtf8().data());
-		short positionCursor = lineEdit->cursorPosition();
-		char *result;
-		// Копируем часть строки до курсора
-		strncpy(result, text, positionCursor);
-		result[positionCursor] = '\0'; // Завершаем строку
-
-		// Добавляем label
-		strcat(result, label);
-
-		// Добавляем оставшуюся часть строки после курсора
-		strcat(result, text + positionCursor);
-        lineEdit->setText(result);
-        lineEdit->setCursorPosition(positionCursor + strlen(label));
-	}
-};
 
 
 namespace GradientFont {
@@ -726,14 +497,14 @@ namespace GradientFont {
 		explicit StyleButton( \
 				QPushButton *parent, Window *window \
 		) : StyleBase(){
-			function<int(QPushButton *, QFontMetrics *)> textX = \
+			std::function<int(QPushButton *, QFontMetrics *)> textX = \
 			[](QPushButton *parent, QFontMetrics *metrics) {
 				if (metrics->horizontalAdvance(parent->text()) < parent->width())
 					return (parent->width() - \
 						metrics->horizontalAdvance(parent->text())) / 2;
 				return 0;
 			};
-			function<int(QPushButton *, QFontMetrics *)> textY = \
+			std::function<int(QPushButton *, QFontMetrics *)> textY = \
 			[](QPushButton *parent, QFontMetrics *metrics) {
 				return (parent->height() + metrics->height()) \
 					/ 2 - metrics->descent();
@@ -759,14 +530,14 @@ namespace GradientFont {
 				QLineEdit *parent, Window *window, \
 				QRect rect
 		) {
-			function<int(QLineEdit *, QFontMetrics *, QRect)> textX = \
+			std::function<int(QLineEdit *, QFontMetrics *, QRect)> textX = \
 			[](QLineEdit *parent, QFontMetrics *metrics, QRect rect) {
 				return rect.x() - \
 					metrics->horizontalAdvance( \
 						parent->text()[parent->cursorPosition()] = '\0' \
 					) + 5;
 			};
-			function<int(QLineEdit *, QFontMetrics *)> textY = \
+			std::function<int(QLineEdit *, QFontMetrics *)> textY = \
 			[](QLineEdit *parent, QFontMetrics *metrics) {
 				return (parent->height() + metrics->ascent() - \
 					metrics->descent()) / 2;
@@ -789,73 +560,7 @@ namespace GradientFont {
 }
 
 
-namespace LineEdit {
-	class  LineEdit : public QLineEdit {
-	private:
-		Window *_window;
-		array<short, 2> _inputtin;
-	public:
-		explicit LineEdit ( \
-				Window *window, \
-				array<short, 2> inputtin, const char *text = "" \
-		) : _window(window), QLineEdit() {
-			_inputtin = inputtin;
-			setText(QString::fromUtf8(text));
-			QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-			setSizePolicy(sizePolicy);
-			setObjectName("keybord");
-			connect( \
-				this, &QLineEdit::textChanged, this, \
-				&LineEdit::onLineEditChanged \
-			);
-			QFont font = this->font();
-			font.setPointSize(25);
-			setFont(font);
-			setMaximumHeight(40);
-			setMinimumWidth(40);
-			setContentsMargins(0, 0, 0, 0);
-		}
-		void focusInEvent( \
-				QFocusEvent *event \
-		) override {
-			if (event->reason())
-				_window->setInputtin(_inputtin);
-			QLineEdit::focusInEvent(event);
-		}
-		
-		void paintEvent( \
-				QPaintEvent *event \
-		) override {
-			GradientFont::StyleLineEdit(static_cast<QLineEdit *>(this), _window, cursorRect());
-			QLineEdit::paintEvent(event);
-		}
 
-	private:
-		void onLineEditChanged( \
-				const QString& text \
-		) const {
-
-			// Преобразуем QString в QByteArray
-			QByteArray byteArray = text.toUtf8();
-
-			// Копируем данные QByteArray в char[]
-			char textCh[byteArray.size() + 1]; // +1 для нулевого завершающего символа
-			strcpy(textCh, byteArray.constData());
-			/*
-			LogicCalculate *logicCalculate = \
-				new LogicCalculate(textCh, _window);
-			if (strstr(textCh, "_ALL") != nullptr)
-				logicCalculate.button_ALL();
-			else if (strstr(textCh, "_O") != nullptr)
-				logicCalculate.button_O();
-			else if (strstr(textCh, "_RES") != nullptr)
-				logicCalculate.button_RES();
-			else
-				logicCalculate.buttonOther();
-			*/
-		}
-	};
-}
 
 namespace Button {
 	class ButtonBase : public QPushButton {
@@ -864,7 +569,7 @@ namespace Button {
 	public:
 		explicit ButtonBase( \
 			const char *label, Window *window, short fontSize, \
-			function<void(QPushButton *)> *callback = nullptr, \
+			std::function<void(QPushButton *)> *callback = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : _window(window), QPushButton(label) {
 			setContentsMargins(0, 0, 0, 0);
@@ -897,7 +602,7 @@ namespace Button {
 	public:
 		explicit ButtonDrag( \
 			const char *label, Window *window, short fontSize, \
-			function<void(QPushButton *)> *callback = nullptr, \
+			std::function<void(QPushButton *)> *callback = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonBase(
 			label, window, fontSize, callback, cssName, menu
@@ -929,7 +634,7 @@ namespace Button {
 	public:
 		explicit ButtonDragAndDrop( \
 			const char *label, Window *window, short fontSize, \
-			function<void(QPushButton *)> *callback = nullptr, \
+			std::function<void(QPushButton *)> *callback = nullptr, \
 			const char *cssName = "keybord", QMenu *menu = nullptr \
 		) : ButtonDrag ( \
 			label, window, fontSize, callback, cssName, menu \
@@ -991,7 +696,276 @@ namespace CreateHistori {
 		}
 	};
 }
+class  LineEdit : public QLineEdit {
+private:
+	Window *_window;
+	byte tab {0}, index {0};
+	void onLineEditChanged( \
+		const QString& text \
+	) const noexcept;
+public:
+	explicit LineEdit ( \
+		Window *window, byte tab, byte index, \
+		const char *text = "" \
+	) : _window(window), QLineEdit() {
+		setText(QString::fromUtf8(text));
+		QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+		setSizePolicy(sizePolicy);
+		setObjectName("keybord");
+		connect( \
+			this, &QLineEdit::textChanged, this, \
+			&LineEdit::onLineEditChanged \
+		);
+		QFont font = this->font();
+		font.setPointSize(25);
+		setFont(font);
+		setMaximumHeight(40);
+		setMinimumWidth(40);
+		setContentsMargins(0, 0, 0, 0);
+	}
+	void focusInEvent( \
+			QFocusEvent *event \
+	) override {
+		if (event->reason())
+			_window->setInputtin(tab, index);
+		QLineEdit::focusInEvent(event);
+	}
+	
+	void paintEvent( \
+			QPaintEvent *event \
+	) override {
+		GradientFont::StyleLineEdit(static_cast<QLineEdit *>(this), _window, cursorRect());
+		QLineEdit::paintEvent(event);
+	}
+};
+class LogicCalculate {
+private:
+    char *_lineEditText;
+	Window *_window = nullptr;
+public:
+	explicit LogicCalculate( \
+		char *lineEditText, \
+		Window *window \
+	) : _lineEditText(lineEditText), \
+	_window(window) {}
 
+	void button_ALL() {
+		char* pos;
+
+		// Удаляем "_ALL" из строки
+		pos = strstr(_lineEditText, "_ALL");
+		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
+
+		if (strlen(_lineEditText) > 0) {
+			// window->setResult(_lineEditText);  // Устанавливаем результат
+			
+			buttonOther();                         // Вызываем другую функцию
+			addHistori();    // Добавляем в историю
+
+			_window->setResult("0");            // Сбрасываем результат
+		}
+
+		_window->getLineEdit()->setText(""); // Очищаем поле ввода
+	}
+
+	void button_DO() {
+		char* pos;
+		pos = strstr(_lineEditText, "_DO");
+		memmove(pos, pos + 3, strlen(pos + 3) + 1);
+
+		if (strlen(_lineEditText) > 0) {
+			// _window->setResult(_lineEditText);
+			buttonOther();
+			*pos = '\0';
+			addHistori();
+		}
+		_window->getLineEdit()->setText(_lineEditText);
+	}
+
+	void button_POS() {
+		char* pos;
+		// Удаляем "_POS" из строки
+		pos = strstr(_lineEditText, "_POS");
+		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
+
+		if (strlen(_lineEditText) > 0) {
+			// _window->setResult(_lineEditText);
+			buttonOther();
+			pos += strlen("_POS");
+			memmove(_lineEditText, pos, strlen(pos) + 1);
+			addHistori();
+		}
+		_window->getLineEdit()->setText(pos);
+	}
+
+	void button_RES() {
+
+
+        const char *result = _window->getResult();
+		char *pos = strstr(_lineEditText, "_RES");
+		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
+
+		if (strlen(_lineEditText) > 0) {
+            // window.setResult(_lineEditText);
+            buttonOther();
+            addHistori();
+		}
+        QLineEdit *line_edit {_window->getLineEdit()};
+        line_edit->setText(result);
+        line_edit->setCursorPosition(strlen(result)-1);
+	}
+
+	void addHistori() {
+
+		QLayout *element{0L};
+		short tab = _window->getInputtin()[0];
+
+		switch (tab) {
+			case 1:
+				element = new CustomBoxHistoriElement(
+					_lineEditText, _window, 
+					1, "Integral",
+					"a", window->getResult(1, 0),
+					"b", window->getResult(1, 1)
+				);
+				break;
+
+			case 4:
+				element = new CustomBoxHistoriElement(
+					_lineEditText, _window, 
+					4, "Replacement",
+					"with", window->getResult(4, 0),
+					"on", window->getResult(4, 1)
+				);
+				break;
+
+			default:
+				{
+					std::map<short, const char*> lstTabs = {
+						{0, "Basic"}, {2, "Derivate"}, {3, "Integrate"}
+					};
+					element = new BasicBoxHistoriElement(
+						line_edit_text, window,
+						window->result, lst_tabs[tab]
+					);
+				}
+				break;
+		}
+
+
+		// Добавление элемента в глобальную историю
+		_window->getAddGlobalHistori()->addLayout(element);
+		_window->getResizeGlobalHistori()->adjustSize();
+		QScrollArea *globalHistori \
+			{_window->getGlobalHistori()};
+		globalHistori->verticalScrollBar()->setValue(
+			globalHistori->verticalScrollBar()->maximum()
+		);
+
+		// Добавление элемента в локальную историю
+		_window->getAddLocalHistori()->addLayout(element);
+		_window->getResizeLocalHistori()->adjustSize();
+		QScrollArea *localHistori \
+			{_window->getLocalHistori()};
+		localHistori->verticalScrollBar()->setValue(
+			localHistori->verticalScrollBar()->maximum()
+		);
+	}
+
+    void button_O() {
+		char *pos = strstr(_lineEditText, "_O");
+		memmove(pos-1, pos + 3, strlen(pos + 3) + 1);
+
+		_window->getLineEdit()->setText(_lineEditText);
+	}
+
+	
+	void buttonOther() {
+		auto integral = [_window = this->_window]() {
+			char* equation = strdup( \
+				_window->getLineEdit(1, 2)->text().toUtf8().data() \
+			);
+			// _window->setResult(equation, 1, 2);
+		};
+
+		auto otherTab = [_window = this->_window]() {
+			// _window->setResult(_window->getLineEdit(), 0, 0);
+		};
+		const byte * inputtin {_window->getInputtin()};
+		switch (*inputtin * 10 + inputtin[1]) {
+			case 10:
+			case 11:
+				otherTab();
+			case 12:
+				integral();
+				break;
+			case 20:
+				//_window->setResult({0, 0}, window.line_edit_text); // Пример для Derivative
+				break;
+			case 30:
+				// _window.setResult({0, 0}, window.line_edit_text); // Пример для Derivative с true
+				break;
+			case 40:
+			case 41:
+				// _window.setResult({0, 0}, window.line_edit_text);
+				break;
+			case 42: {
+				// char* modified_text = replaceAll(window.line_edit_text, window.getResult(4, 0), window.getResult(4, 1));
+				// _window.setResult({0, 0}, modified_text);
+				break;
+			}
+			default:
+				otherTab();
+				break;
+		}
+
+		// _window.setForResult(window.result);
+	}
+            
+	static void inputtinLineEdit( \
+		QPushButton *button, Window *window \
+	) {
+		char *label = strdup(button->text().toUtf8().data());
+		QLineEdit *lineEdit \
+			{window->getLineEdit()};
+		char *text = strdup(lineEdit->text().toUtf8().data());
+		short positionCursor = lineEdit->cursorPosition();
+		char *result;
+		// Копируем часть строки до курсора
+		strncpy(result, text, positionCursor);
+		result[positionCursor] = '\0'; // Завершаем строку
+
+		// Добавляем label
+		strcat(result, label);
+
+		// Добавляем оставшуюся часть строки после курсора
+		strcat(result, text + positionCursor);
+        lineEdit->setText(result);
+        lineEdit->setCursorPosition(positionCursor + strlen(label));
+	}
+};
+void LineEdit::onLineEditChanged( \
+		const QString& text \
+) const noexcept {
+
+	// Преобразуем QString в QByteArray
+	QByteArray byteArray = text.toUtf8();
+
+	// Копируем данные QByteArray в char[]
+	char textCh[byteArray.size() + 1]; // +1 для нулевого завершающего символа
+	strcpy(textCh, byteArray.constData());
+	LogicCalculate *logicCalculate \
+		{new LogicCalculate(textCh, _window)};
+	if (strstr(textCh, "_ALL") != nullptr)
+		logicCalculate->button_ALL();
+	else if (strstr(textCh, "_O") != nullptr)
+		logicCalculate->button_O();
+	else if (strstr(textCh, "_RES") != nullptr)
+		logicCalculate->button_RES();
+	else
+		logicCalculate->buttonOther();
+	return;
+}
 namespace Title {
 	class Action : public QWidgetAction {
 	public:
@@ -1003,7 +977,7 @@ namespace Title {
 	class Menu : public QMenu {
 	public:
 		explicit Menu( \
-				vector<Button::ButtonBase *> buttons \
+				std::vector<Button::ButtonBase *> buttons \
 		) : QMenu() {
 			setAttribute( \
 					Qt::WidgetAttribute::WA_TranslucentBackground \
@@ -1043,136 +1017,112 @@ namespace Title {
 			setContentsMargins(0, 0, 0, 0);
         	setSpacing(0);
 			addWidget( \
-				static_cast<QWidget *>( \
-					new Button::ButtonBase( \
-						"+ Add", window, 15, \
-						new function<void(QPushButton *)>( \
-							bind( \
-								&CalculateDragAndDrop::createWindow, app, placeholders::_1 \
-							) \
+				new Button::ButtonBase{ \
+					"+ Add", window, 15, \
+					new std::function<void(QPushButton *)>( \
+						std::bind( \
+							&CalculateDragAndDrop::createWindow, app, std::placeholders::_1 \
 						) \
 					) \
-				) \
+				} \
 			);
 			addWidget( \
-				static_cast<QWidget *>( \
-					new Button::ButtonBase( \
-						"EN",    window, 15, \
-						new function<void(QPushButton *)>( \
-							bind( \
-								&Window::changeLanguage, window, placeholders::_1 \
-							) \
+				new Button::ButtonBase{ \
+					"EN", window, 15, \
+					new std::function<void(QPushButton *)>( \
+						std::bind( \
+							&Window::changeLanguage, window, std::placeholders::_1 \
 						) \
 					) \
-				) \
+				} \
 			);
 			addWidget( \
-				static_cast<QWidget *>( \
-					new Button::ButtonBase( \
-						"Fon",   window, 15, \
-						new function<void(QPushButton *)>( \
-							bind( \
-								&Window::changeFon, window, placeholders::_1 \
-							) \
+				new Button::ButtonBase{ \
+					"Fon",   window, 15, \
+					new std::function<void(QPushButton *)>( \
+						std::bind( \
+							&Window::changeFon, window, std::placeholders::_1 \
 						) \
 					) \
-				) \
+				} \
 			);
-			vector<Button::ButtonBase *> vectorButtonLocalHistori = {
-				new Button::ButtonBase( \
+			std::vector<Button::ButtonBase *> vectorButtonLocalHistori = {
+				new Button::ButtonBase{ \
 					"Basic",       window, 15, \
-					new function<void(QPushButton *)>( \
-						bind( \
+					new std::function<void(QPushButton *)>( \
+						std::bind( \
 							&TitleLayout::localHistoriBasicVisible, \
-							this, placeholders::_1 \
+							this, std::placeholders::_1 \
 						) \
 					) \
-				),
-				new Button::ButtonBase( \
+				},
+				new Button::ButtonBase{ \
 					"Integral",    window, 15, \
-					new function<void(QPushButton *)>( \
-						bind( \
+					new std::function<void(QPushButton *)>( \
+						std::bind( \
 							&TitleLayout::localHistoriIntegralVisible \
-							, this, placeholders::_1 \
+							, this, std::placeholders::_1 \
 						) \
 					) \
-				),
-				new Button::ButtonBase( \
+				},
+				new Button::ButtonBase{ \
 					"Derivative",  window, 15, \
-					new function<void(QPushButton *)>( \
+					new std::function<void(QPushButton *)>( \
 						bind( \
 							&TitleLayout::localHistoriDerivativeVisible, \
-							this, placeholders::_1 \
+							this, std::placeholders::_1 \
 						) \
 					) \
-				),
-				new Button::ButtonBase( \
+				},
+				new Button::ButtonBase{ \
 					"Integrate",   window, 15, \
-					new function<void(QPushButton *)>( \
+					new std::function<void(QPushButton *)>( \
 						bind( \
 							&TitleLayout::localHistoriIntegrateVisible, \
-							this, placeholders::_1 \
+							this, std::placeholders::_1 \
 						) \
 					) \
-				),
-				new Button::ButtonBase( \
+				},
+				new Button::ButtonBase{ \
 					"Replacement", window, 15, \
-					new function<void(QPushButton *)>( \
+					new std::function<void(QPushButton *)>( \
 						bind( \
 							&TitleLayout::localHistoriReplacementVisible, \
-							this, placeholders::_1 \
+							this, std::placeholders::_1 \
 						) \
 					) \
-				),
+				},
 			}, vectorButtonView = {
-				new Button::ButtonBase( \
+				new Button::ButtonBase{ \
 					"Global Histori", window, 15, \
-					new function<void(QPushButton *)>( \
+					new std::function<void(QPushButton *)>( \
 						bind(
 							&TitleLayout::globalHistoriVisible, \
-							this, placeholders::_1 \
+							this, std::placeholders::_1 \
 						) \
 					) \
-				),
-				new Button::ButtonBase( \
+				},
+				new Button::ButtonBase{ \
 					"Local Histori",  window, 15, nullptr, \
 					"keybord", static_cast<QMenu *>( \
 						new Menu(vectorButtonLocalHistori) \
 					) \
-				) \
+				} \
 			};
 			addWidget( \
 				static_cast<QWidget *>( \
-					new Button::ButtonBase( \
+					new Button::ButtonBase{ \
 						"View", window, 15, nullptr, \
 						"keybord", static_cast<QMenu *>(new Menu(vectorButtonView)) \
-					) \
+					} \
 				) \
 			);
-			_globalHistori           = \
-				reinterpret_cast<CreateHistori::HistoriScroll *>( \
-					window->getGlobalHistori() \
-				);
-			_localHistoriBasic       = \
-				reinterpret_cast<CreateHistori::HistoriScroll *>( \
-					window->getLocalHistori(new unsigned short(0))
-				);
-			_localHistoriIntegral    = \
-				reinterpret_cast<CreateHistori::HistoriScroll *>( \
-					window->getLocalHistori(new unsigned short(1))
-				);
-			_localHistoriDerivative  = \
-				reinterpret_cast<CreateHistori::HistoriScroll *>( \
-					window->getLocalHistori(new unsigned short(2))
-				);
-			_localHistoriIntegrate   = \
-				reinterpret_cast<CreateHistori::HistoriScroll *>( \
-					window->getLocalHistori(new unsigned short(3))
-				);
-			_localHistoriReplacement = \
-				reinterpret_cast<CreateHistori::HistoriScroll *>( \
-					window->getLocalHistori(new unsigned short(4))
-				);
+			_globalHistori           = window->getGlobalHistori();
+			_localHistoriBasic       = window->getLocalHistori(0);
+			_localHistoriIntegral    = window->getLocalHistori(1);
+			_localHistoriDerivative  = window->getLocalHistori(2);
+			_localHistoriIntegrate   = window->getLocalHistori(3);
+			_localHistoriReplacement = window->getLocalHistori(4);
 			return;
 		}
 		void globalHistoriVisible(QPushButton *button) const {
@@ -1231,14 +1181,14 @@ namespace Grid {
 	class BuildingGridKeyboard {
 	public:
 		explicit BuildingGridKeyboard( \
-			vector<vector<const char *>> buttons, \
+			std::vector<std::vector<const char *>> buttons, \
 			QGridLayout *grid, \
 			Window *window, short row = short(0), \
 			std::function<QWidget*( \
-				const char*, function<void(QPushButton *)> *, Window* \
+				const char*, std::function<void(QPushButton *)> *, Window* \
 			)> createButton = []( \
 				const char* label, \
-				function<void(QPushButton *)> *callback, \
+				std::function<void(QPushButton *)> *callback, \
 				Window *window \
 			) -> QWidget* {
 				return static_cast<QWidget *>( \
@@ -1254,7 +1204,7 @@ namespace Grid {
 				index != buttonsLenght; index++ \
 			) {
 				short column = short(0);
-				vector<const char *> rowLabelsButton = buttons.at(index);
+				std::vector<const char *> rowLabelsButton = buttons.at(index);
 				for ( \
 					short rowIndex = short(0); \
 					rowIndex != buttonsLenght; rowIndex++ \
@@ -1262,7 +1212,7 @@ namespace Grid {
 					const char *labelButton = rowLabelsButton.at(rowIndex);
 					grid->addWidget(createButton( \
 						labelButton, \
-						&LogicCalculate::inputinLineEdit, \
+						&LogicCalculate::inputtinLineEdit, \
 						window \
 					), row, column, 1, 1);
 					column++;
@@ -1275,7 +1225,7 @@ namespace Grid {
 	class GridCalculateKeyboard : public QGridLayout {
 	public:
 		explicit GridCalculateKeyboard( \
-			vector<vector<const char *>> buttons, \
+			std::vector<std::vector<const char *>> buttons, \
 			Window *window
 		) {
 			setContentsMargins(0, 0, 0, 0);
@@ -1348,14 +1298,14 @@ namespace Grid {
 		void createButton( \
 			const char *label, short row, \
 			short column, \
-			function<QWidget *( \
+			std::function<QWidget *( \
 				const char *, short, Window *, \
-				function<void(QPushButton *)> *, const char * \
+				std::function<void(QPushButton *)> *, const char * \
 			)> creatorButton = []( \
 				const char *label, \
 				short fontSize, \
 				Window *window, \
-				function<void(QPushButton *)> *callback, \
+				std::function<void(QPushButton *)> *callback, \
 				const char *cssName \
 			) {
 				return static_cast<QWidget *>( \
@@ -1410,8 +1360,8 @@ namespace Grid {
 			Window *window \
 		) : GridBaseCalc(window) {
 			short input[2] = {0, 0};
-			LineEdit::LineEdit *lineEdit = \
-				new LineEdit::LineEdit(window, input);
+			LineEdit *lineEdit = \
+				new LineEdit(window, input);
 			window->setLineEdit( \
 				0, reinterpret_cast<uintptr_t>(lineEdit) \
 			);
@@ -1432,8 +1382,8 @@ namespace Grid {
 				), 1, 0, 1, 1 \
 			);
 			short input[2] = {1, 0};
-			LineEdit::LineEdit *aLineEdit = \
-				new LineEdit::LineEdit(window, input, "1");
+			LineEdit *aLineEdit = \
+				new LineEdit(window, input, "1");
 			window->setLineEdit( \
 				1, reinterpret_cast<uintptr_t>( \
 					aLineEdit \
@@ -1447,8 +1397,8 @@ namespace Grid {
 				), 1, 3, 1, 1 \
 			);
 			input[0] = 1, input[1] = 1;
-			LineEdit::LineEdit *bLineEdit = \
-				new LineEdit::LineEdit(window, input, "2");
+			LineEdit *bLineEdit = \
+				new LineEdit(window, input, "2");
 			window->setLineEdit( \
 				1, reinterpret_cast<uintptr_t>( \
 					bLineEdit \
@@ -1456,8 +1406,8 @@ namespace Grid {
 			);
 			addWidget(bLineEdit, 1, 4, 1, 2);
 			input[0] = 1, input[1] = 2;
-			LineEdit::LineEdit *mainLineEdit = \
-				new LineEdit::LineEdit(window, input);
+			LineEdit *mainLineEdit = \
+				new LineEdit(window, input);
 			window->setLineEdit( \
 				1, reinterpret_cast<uintptr_t>( \
 					mainLineEdit \
@@ -1473,8 +1423,8 @@ namespace Grid {
 			Window *window, short numberTab \
 		) : GridBaseCalc(window) {
 			short input[2] = {numberTab, 0};
-			LineEdit::LineEdit *lineEdit = \
-				new LineEdit::LineEdit(window, input);
+			LineEdit *lineEdit = \
+				new LineEdit(window, input);
 			window->setLineEdit( \
 				numberTab, \
 				reinterpret_cast<uintptr_t>(lineEdit) \
@@ -1494,8 +1444,8 @@ namespace Grid {
 				), 1, 0, 1, 1 \
 			);
 			short input[2] = {4, 0};
-			LineEdit::LineEdit *withLineEdit = \
-				new LineEdit::LineEdit(window, input, "x");
+			LineEdit *withLineEdit = \
+				new LineEdit(window, input, "x");
 			window->setLineEdit( \
 				4, reinterpret_cast<uintptr_t>( \
 					withLineEdit \
@@ -1509,8 +1459,8 @@ namespace Grid {
 				), 1, 3, 1, 1 \
 			);
 			input[1] = 1;
-			LineEdit::LineEdit *onLineEdit = \
-				new LineEdit::LineEdit(window, input, "0");
+			LineEdit *onLineEdit = \
+				new LineEdit(window, input, "0");
 			window->setLineEdit( \
 				4, reinterpret_cast<uintptr_t>( \
 					onLineEdit \
@@ -1518,8 +1468,8 @@ namespace Grid {
 			);
 			addWidget(onLineEdit, 1, 4, 1, 2);
 			input[1] = 2;
-			LineEdit::LineEdit *mainLineEdit = \
-				new LineEdit::LineEdit(window, input);
+			LineEdit *mainLineEdit = \
+				new LineEdit(window, input);
 			window->setLineEdit( \
 				4, reinterpret_cast<uintptr_t>( \
 					mainLineEdit \
@@ -1770,8 +1720,8 @@ inline void Window::postInit() noexcept {
 }
 
 inline Window::~Window(void) {
-	LineEdit::LineEdit *** ptrLineEdit \
-		{const_cast<LineEdit::LineEdit ***>(_lineEdit)};
+	LineEdit *** ptrLineEdit \
+		{const_cast<LineEdit ***>(_lineEdit)};
 	const char ***ptrResult {const_cast<const char ***>(_result)};
 	deleteResultOrLineEdit(ptrLineEdit);
 	deleteResultOrLineEdit(ptrResult);
