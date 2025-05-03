@@ -163,7 +163,7 @@ public:
 	explicit CreateGradient( \
 		QWidget *window, \
 		QWidget *widget = nullptr, \
-		vector<tuple<float, QColor>> gradient = \
+		std::vector<std::tuple<float, QColor>> gradient = \
 			{
 				{0.0f, Qt::GlobalColor::red}, 
 				{1.0f, Qt::GlobalColor::blue}
@@ -192,7 +192,7 @@ public:
 		}
 		short gradient_lenght = gradient.size();
 		for (short index = 0; index != gradient_lenght; index++) {
-			tuple<float, QColor> colorAt = gradient.at(index);
+			std::tuple<float, QColor> colorAt = gradient.at(index);
 			// cout << get<0>(colorAt) << endl;
 			setColorAt(get<0>(colorAt), get<1>(colorAt));
 		}
@@ -209,19 +209,23 @@ private:
 	CreateHistori::HistoriVBox ** const _addLocalHistori \
 		{new CreateHistori::HistoriVBox*[COUNT_LOCAL_HISTORI]{nullptr}};
 	LineEdit::LineEdit ** const * const _lineEdit { \
-		new LineEdit::LineEdit ** const [1]{nullptr}, \
-		new LineEdit::LineEdit ** const [3]{nullptr, nullptr, nullptr}, \
-		new LineEdit::LineEdit ** const [1]{nullptr}, \
-		new LineEdit::LineEdit ** const [1]{nullptr}, \
-		new LineEdit::LineEdit ** const [3]{nullptr, nullptr, nullptr} \
-	}
+		new LineEdit::LineEdit ** const [COUNT_LOCAL_HISTORI] { \
+			new LineEdit::LineEdit * [1]{nullptr}, \
+			new LineEdit::LineEdit * [3]{nullptr, nullptr, nullptr}, \
+			new LineEdit::LineEdit * [1]{nullptr}, \
+			new LineEdit::LineEdit * [1]{nullptr}, \
+			new LineEdit::LineEdit * [3]{nullptr, nullptr, nullptr} \
+		}
+	};
 	const char ** const * const _result { \
 		new const char ** const [5]{ \
-			{new const char * [1]{"0"}}, \
-			{new const char * [3]{"1", "2", "0"}}, \
-			{new const char * [1]{"0"}}, \
-			{new const char * [1]{"0"}}, \
-			{new const char * [3]{"x", "0", "0"}} \
+			{new const char * [1]{new const char [] {"0"}}}, \
+			{new const char * [3]{new const char [] {"1"}, \
+				new const char [] {"2"}, new const char [] {"0"}}}, \
+			{new const char * [1]{new const char [] {"0"}}}, \
+			{new const char * [1]{new const char [] {"0"}}}, \
+			{new const char * [3]{new const char [] {"x"}, \
+				new const char [] {"0"}, new const char [] {"0"}}} \
 		} \
 	};
 	byte * const _inputtin {new byte [2]{0, 0}};
@@ -231,7 +235,7 @@ private:
 	CreateHistori::HistoriWidget *_resizeGlobalHistori {nullptr};
 	CalculateDragAndDrop *_app {nullptr};
 public:
-	explicit Window( \
+	explicit inline Window( \
 			CalculateDragAndDrop *app = nullptr \
 	) : QWidget(), _app{app} {
 		setWindowTitle("CalculateDragAndDrop");
@@ -241,7 +245,7 @@ public:
 		return;
 	}
 
-	void paintEvent(QPaintEvent *event) override {
+	inline void paintEvent(QPaintEvent *event) noexcept override {
         // Создаём QPainter для рисования
         QPainter painter = QPainter(this);
         painter.setRenderHint(QPainter::RenderHint::Antialiasing);
@@ -260,155 +264,165 @@ public:
         );
 	}
 
-	void postInit();
+	inline void postInit() noexcept;
 	
-	void changeLanguage(QPushButton *button) {}
+	inline void changeLanguage(QPushButton *button) noexcept {}
 
-	void changeFon(QPushButton *button) {}
+	inline void changeFon(QPushButton *button) noexcept {}
 
-	CreateHistori::HistoriScroll* getGlobalHistori( \
-	) const {
+	inline const CreateHistori::HistoriScroll* getGlobalHistori( \
+	) const noexcept {
 		return _globalHistori;
 	}
-	void setGlobalHistori( \
+	inline void setGlobalHistori( \
 		CreateHistori::HistoriScroll* newGlobalHistori \
-	) {
+	) noexcept {
 		_globalHistori = newGlobalHistori;
 		return;
 	}	
-	CreateHistori::HistoriWidget* getResizeGlobalHistori( \
-	) const {
+	inline const CreateHistori::HistoriWidget* getResizeGlobalHistori( \
+	) const noexcept {
 		return _resizeGlobalHistori;
 	}
-	void setResizeGlobalHistori( \
+	inline void setResizeGlobalHistori( \
 		CreateHistori::HistoriWidget* newResizeGlobalHistori \
-	) {
+	) noexcept {
 		_resizeGlobalHistori = newResizeGlobalHistori;
 		return;
 	}
 
-	CreateHistori::HistoriVBox* getAddGlobalHistori( \
-	) const {
+	inline const CreateHistori::HistoriVBox* getAddGlobalHistori( \
+	) const noexcept {
 		return _addGlobalHistori;
 	}
-	void setAddGlobalHistori( \
+	inline void setAddGlobalHistori( \
 		CreateHistori::HistoriVBox* newAddGlobalHistori \
-	) {
+	) noexcept {
 		_addGlobalHistori = newAddGlobalHistori;
 		return;
 	}
-	CreateHistori::HistoriScroll* getLocalHistori( \
+	inline const CreateHistori::HistoriScroll* getLocalHistori( \
 		byte index \
-	) const {
+	) const noexcept {
 		return _localHistori[index];
 	}
-	CreateHistori::HistoriScroll* getLocalHistori( \
+	inline const CreateHistori::HistoriScroll* getLocalHistori( \
 		void \
-	) const {
+	) const noexcept {
 		return _localHistori[_inputtin[0]];
 	}
-	void setLocalHistori( \
+	inline void setLocalHistori( \
 		CreateHistori::HistoriScroll* newLocalHistori, \
 		byte index \
-	) {
+	) noexcept {
 		_localHistori[index] = newLocalHistori;
 		return;
 	}	
-	CreateHistori::HistoriWidget* getResizeLocalHistori( \
+	inline const CreateHistori::HistoriWidget* getResizeLocalHistori( \
 			byte index \
-	) const {
+	) const noexcept {
 		return _resizeLocalHistori[index];
 	}
-	CreateHistori::HistoriWidget* getResizeLocalHistori( \
+	inline const CreateHistori::HistoriWidget* getResizeLocalHistori( \
 		void \
-	) const {
+	) const noexcept {
 		return _resizeLocalHistori[_inputtin[0]];
 	}
-	void setResizeLocalHistori( \
+	inline void setResizeLocalHistori( \
 		CreateHistori::HistoriWidget* newResizeLocalHistori, \
 		byte index \
-	) {
+	) noexcept {
 		_resizeLocalHistori[index] = newResizeLocalHistori;
 		return;
 	}
 
-	CreateHistori::HistoriVBox* getAddLocalHistori( \
+	inline const CreateHistori::HistoriVBox* getAddLocalHistori( \
 		byte index \
-	) const {
+	) const noexcept {
 		return _addLocalHistori[index];
 	}
-	CreateHistori::HistoriVBox* getAddLocalHistori( \
+	inline const CreateHistori::HistoriVBox* getAddLocalHistori( \
 		void \
-	) const {
+	) const noexcept {
 		return _addLocalHistori[_inputtin[0]];
 	}
-	void setAddLocalHistori( \
+	inline void setAddLocalHistori( \
 		CreateHistori::HistoriVBox* newAddLocalHistori, \
 		byte index
-	) {
+	) noexcept {
 		_addLocalHistori[index] = newAddLocalHistori;
 		return;
 	}
-	LineEdit::LineEdit* getLineEdit( \
+	inline const LineEdit::LineEdit* getLineEdit( \
 		byte tab, byte index \
-	) const {
+	) const noexcept {
 		return _lineEdit[tab][index];
 	}
-	LineEdit::LineEdit* getLineEdit(void) const {
+	inline const LineEdit::LineEdit* getLineEdit(void) const noexcept {
 		return _lineEdit[*_inputtin][_inputtin[1]];
 	}
-	void setLineEdit( \
+	inline void setLineEdit( \
 			byte tab, byte index, LineEdit::LineEdit* newLineEdit \
-	) {
+	) noexcept {
 		_lineEdit[tab][index] = newLineEdit;
 		return;
 	}
-	byte* getInputtin() const {
+	inline const byte* getInputtin() const noexcept {
 		return _inputtin;
 	}
-	void setInputtin(const byte &tab, const byte &index) {
+	inline void setInputtin(const byte &tab, const byte &index) noexcept {
 		*_inputtin = tab;
 		_inputtin[1] = index;
 		return;
 	}
-	Button::ButtonDrag* getResultButton() {
+	inline const Button::ButtonDrag* getResultButton() noexcept {
 		return _resultButton;
 	}
-	void setResultButton( \
+	inline void setResultButton( \
 		Button::ButtonDrag* resultButton \
-	) {
+	) noexcept {
 		_resultButton = resultButton;
 		return;
 	}
-	const char *getResult( \
+	inline const char *getResult( \
 		byte tab, byte index \
-	) const {
+	) const noexcept {
 		return _result[tab][index];
 	}
-	const char *getResult(void) const {
+	inline const char *getResult(void) const noexcept {
 		return _result[*_inputtin][_inputtin[1]];
 	}
-	void setResult( \
+	inline void setResult( \
 		const char *newResult,
 		byte tab, byte index \
-	) {
+	) noexcept {
 		const char * & res {_result[tab][index]};
 		delete[] res;
 		res = newResult;
 		return;
 	}
-	void setResult( \
+	inline void setResult( \
 		const char *newResult \
-	) {
+	) noexcept {
 		const char * & res {_result[*_inputtin][_inputtin[1]]};
 		delete [] res;
 		res = newResult;
 		return;
 	}
-	~Window(void) {
-
+	template<typename TDel>
+	inline void deleteResultOrLineEdit(TDel ptr) const noexcept {
+		delete **ptr;
+		delete *ptr[1];
+		delete ptr[1][1];
+		delete ptr[1][2];
+		delete *ptr[2];
+		delete *ptr[3];
+		delete *ptr[4];
+		delete ptr[4][1];
+		delete ptr[4][2];
 		return;
 	}
+	inline ~Window(void);
 };
 
 
@@ -448,9 +462,7 @@ public:
 			_window->setResult("0");            // Сбрасываем результат
 		}
 
-		reinterpret_cast<QLineEdit *>( \
-			_window->getLineEdit() \
-		)->setText(""); // Очищаем поле ввода
+		_window->getLineEdit()->setText(""); // Очищаем поле ввода
 	}
 
 	void button_DO() {
@@ -464,9 +476,7 @@ public:
 			*pos = '\0';
 			addHistori();
 		}
-		reinterpret_cast<QLineEdit *>(
-			_window->getLineEdit() \
-		)->setText(_lineEditText);
+		_window->getLineEdit()->setText(_lineEditText);
 	}
 
 	void button_POS() {
@@ -1755,6 +1765,39 @@ public:
 	}
 };
 
-inline void Window::postInit() {
+inline void Window::postInit() noexcept {
     setLayout(new MainLayout(_app, this));
+}
+
+inline Window::~Window(void) {
+	LineEdit::LineEdit *** ptrLineEdit \
+		{const_cast<LineEdit::LineEdit ***>(_lineEdit)};
+	const char ***ptrResult {const_cast<const char ***>(_result)};
+	deleteResultOrLineEdit(ptrLineEdit);
+	deleteResultOrLineEdit(ptrResult);
+	size_t len {COUNT_LOCAL_HISTORI};
+	CreateHistori::HistoriScroll ** ptrLocalHistori{_localHistori};
+	CreateHistori::HistoriWidget ** ptrResizeLocalHistori{_resizeLocalHistori};
+	CreateHistori::HistoriVBox ** ptrAddLocalHistori{_addLocalHistori};
+	for (; len--; ptrLocalHistori++, \
+		ptrResizeLocalHistori++, \
+		ptrAddLocalHistori++ \
+	) {
+		delete *ptrLocalHistori;
+		delete *ptrResizeLocalHistori;
+		delete *ptrAddLocalHistori;
+		delete [] *ptrLineEdit;
+	}
+	delete [] _localHistori;
+	delete [] _resizeLocalHistori;
+	delete [] _addLocalHistori;
+
+	delete [] _lineEdit;
+	delete [] _inputtin;
+	delete _resultButton;
+	delete _globalHistori;
+	delete _addGlobalHistori;
+	delete _resizeGlobalHistori;
+	QWidget::~QWidget();
+	return;
 }
