@@ -7,6 +7,7 @@
 #include <memory>
 #include <QPushButton>
 #include <QApplication>
+#include <QMainWindow>
 #include <QWidget>
 #include <QPointF>
 #include <QVBoxLayout>
@@ -29,6 +30,7 @@
 #include <QWidgetAction>
 #include <QTabBar>
 #include <QTabWidget>
+#include <QLabel>
 
 #define BYTE_MAX 255
 #define COUNT_LOCAL_HISTORI 5
@@ -42,21 +44,29 @@ namespace GradientFont {
 	class Pen;
 	class Path;
 	class StyleBase;
-	class StyleButton;
+	template<class TBLEL>
+	class StyleButtonOrLabel;
 	class StyleLineEdit;
 }
-class LineEdit;
-class LogicCalculate;
 namespace Button {
 	class ButtonBase;
 	class ButtonDrag;
 	class ButtonDragAndDrop;
+}
+class LineEdit;
+namespace NewHistoriElement {
+	class LabelHistori;
+	class BaseBoxHistoriElement;
+	class BasicBoxHistoriElement;
+	class SubCustomBoxHistoriElement;
+	class CustomBoxHistoriElement;
 }
 namespace CreateHistori {
 	class HistoriVBox;
 	class HistoriWidget;
 	class HistoriScroll;
 }
+class LogicCalculate;
 namespace Title {
 	class Action;
 	class Menu;
@@ -64,7 +74,9 @@ namespace Title {
 	class TitleBar;
 }
 namespace Grid {
+	template<class TButton>
 	class BuildingGridKeyboard;
+	template<class TButton>
 	class GridCalculateKeyboard;
 	class GridCalculateCommon;
 	class GridBaseCalc;
@@ -88,75 +100,47 @@ public:
 			int argc, char *argv[] \
 	) : QApplication(argc, argv) {
 		setStyleSheet(R"(
-			QMenu {
-                background: transparent;
-                border: 1px solid white;
-            }
-            #histori {
-                background-color: transparent;
-            }
-            QTabWidget::pane {
-                border: none;
-                background: transparent;
-            }
-            
-            QTabBar QToolButton {
-                border: none;
-                background: rgba(0, 0, 0, 0.3);
-                color: white; 
-            }
-            QTabWidget {
-                background: transparent;
-                border: none;
-                margin: 0px;
-            }
-            QTabBar::tab {
-                background: transparent;
-                border: none;
-                padding: 0px auto;
-                margin: 0px;
-                color: transparent;
-            }
-            QTabBar {
-                background: transparent;
-                border: none;
-                margin: 0px;
-            }
-            QLineEdit {
-                background: transparent;
-                border: 1px solid white;
-                text-align: center;
-                color: transparent;
-            }
-            QScrollBar:vertical {
-                background: transparent;
-                border: none;
-            }
-            QScrollBar::handle:vertical {
-                background: rgba(255, 255, 255, 0.1);
-                border: none;
-            }
-            QScrollBar::handle:vertical:hover {
-                background: rgba(255, 255, 255, 0.3);
-            }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical{
-                background: none;
-                height: 0;
-            }
-            QTabWidget::tab-bar {
-                alignment: center;
-            }
-			QPushButton {
-				background-color: transparent;
-				color: transparent;
-				border: none;
+			QMainWindow {
+				background-color: rgb(9, 10, 12);
 			}
-        )");
+			QPushButton#function {
+				background-color: rgb(204, 69, 50);
+			}
+			QPushButton#empty {
+				background-color: rgb(95, 96, 127);
+			}
+			QPushButton#const {
+				background-color: rgb(118, 176, 48);
+			}
+			QPushButton#operator {
+				background-color: rgb(187, 180, 52);
+			}
+			QPushButton#number {
+				background-color: rgb(34, 71, 171);
+			}
+			QPushButton#bracket {
+				background-color: rgb(106, 35, 169);
+			}
+			QPushButton#prefix {
+				background-color: rgb(94, 0, 0);
+			}
+			QPushButton {
+				color: white;
+				border-radius: 10px;
+				border: 1px;
+				border-color: rgb(4, 5, 7);
+			}
+			QTabWidget {
+				background: transparent;
+				border: none;
+				margin: 0px;
+			}
+		)");
 		createWindow(nullptr);
 	}
 	void createWindow(QPushButton *button);
 };
-
+/*
 class CreateGradient : public QLinearGradient {
 public:
 	explicit CreateGradient( \
@@ -198,8 +182,9 @@ public:
 		// cout<<endl<<endl;
 	}
 };
+*/
 
-class Window : public QWidget {
+class Window : public QMainWindow {
 private:
 	CreateHistori::HistoriScroll ** const _localHistori \
 		{new CreateHistori::HistoriScroll*[COUNT_LOCAL_HISTORI]{nullptr}};
@@ -236,14 +221,14 @@ private:
 public:
 	explicit inline Window( \
 			CalculateDragAndDrop *app = nullptr \
-	) : QWidget(), _app{app} {
+	) : QMainWindow(), _app{app} {
 		setWindowTitle("CalculateDragAndDrop");
 		resize(400, 800);
 		setObjectName("Window");
 		show();
 		return;
 	}
-
+	/*
 	inline void paintEvent(QPaintEvent *event) noexcept override {
         // Создаём QPainter для рисования
         QPainter painter = QPainter(this);
@@ -262,6 +247,7 @@ public:
             )) \
         );
 	}
+	*/
 
 	inline void postInit() noexcept;
 	
@@ -442,7 +428,7 @@ inline void CalculateDragAndDrop::createWindow( \
 
 
 
-
+/*
 namespace GradientFont {
 	
 	class Pen : public QPen {
@@ -497,21 +483,23 @@ namespace GradientFont {
 		}
 	};
 
-
-	class StyleButton : public StyleBase {
+	template<class TBLEL>
+	class StyleButtonOrLabel : public StyleBase {
 	public:
-		explicit StyleButton( \
-				QPushButton *parent, Window *window \
-		) : StyleBase(){
-			std::function<int(QPushButton *, QFontMetrics *)> textX = \
-			[](QPushButton *parent, QFontMetrics *metrics) {
-				if (metrics->horizontalAdvance(parent->text()) < parent->width())
+		explicit StyleButtonOrLabel( \
+				TBLEL parent, Window *window \
+		) : StyleBase() {
+			std::function<int(TBLEL, QFontMetrics *)> textX = \
+			[](TBLEL parent, QFontMetrics *metrics) {
+				if (metrics->horizontalAdvance( \
+					parent->text()) < parent->width())
 					return (parent->width() - \
-						metrics->horizontalAdvance(parent->text())) / 2;
+						metrics->horizontalAdvance( \
+						parent->text())) / 2;
 				return 0;
 			};
-			std::function<int(QPushButton *, QFontMetrics *)> textY = \
-			[](QPushButton *parent, QFontMetrics *metrics) {
+			std::function<int(TBLEL, QFontMetrics *)> textY = \
+			[](TBLEL parent, QFontMetrics *metrics) {
 				return (parent->height() + metrics->height()) \
 					/ 2 - metrics->descent();
 			};
@@ -528,20 +516,21 @@ namespace GradientFont {
 			);
 		}
 	};
-
-
 	class StyleLineEdit : public StyleBase {
 	public:
 		explicit StyleLineEdit( \
 				QLineEdit *parent, Window *window, \
 				QRect rect
 		) {
-			std::function<int(QLineEdit *, QFontMetrics *, QRect)> textX = \
+			std::function<int(QLineEdit *, QFontMetrics *, QRect)> textX = 
 			[](QLineEdit *parent, QFontMetrics *metrics, QRect rect) {
-				return rect.x() - \
-					metrics->horizontalAdvance( \
-						parent->text()[parent->cursorPosition()] = '\0' \
-					) + 5;
+				QString text = parent->text();
+				int pos = parent->cursorPosition();
+				
+				// Обрезаем текст до курсора
+				QString leftPart = text.left(pos);
+				
+				return rect.x() - metrics->horizontalAdvance(leftPart) + 5;
 			};
 			std::function<int(QLineEdit *, QFontMetrics *)> textY = \
 			[](QLineEdit *parent, QFontMetrics *metrics) {
@@ -564,7 +553,7 @@ namespace GradientFont {
 		}
 	};
 }
-
+*/
 
 
 
@@ -595,11 +584,14 @@ namespace Button {
 			buttonFont.setPointSize(fontSize);
 			setFont(buttonFont);
 		}
+		/*
 		void paintEvent(QPaintEvent *event) override {
-			GradientFont::StyleButton(this, _window);
+			GradientFont::StyleButtonOrLabel<QPushButton *>{ \
+				this, _window};
 			QPushButton::paintEvent(event);
 			return;
 		}
+		*/
 	};
 
 	class ButtonDrag : public ButtonBase {
@@ -609,10 +601,10 @@ namespace Button {
 		explicit ButtonDrag( \
 			const char *label, Window *window, short fontSize, \
 			std::function<void(QPushButton *)> *callback = nullptr, \
-			const char *cssName = "keybord", QMenu *menu = nullptr \
+			const char *cssName = "keyboard", QMenu *menu = nullptr \
 		) : ButtonBase(
 			label, window, fontSize, callback, cssName, menu
-		) {}
+		) {puts(cssName);}
 		void mousePressEvent( \
 				QMouseEvent *event \
 		) override {
@@ -641,7 +633,7 @@ namespace Button {
 		explicit ButtonDragAndDrop( \
 			const char *label, Window *window, short fontSize, \
 			std::function<void(QPushButton *)> *callback = nullptr, \
-			const char *cssName = "keybord", QMenu *menu = nullptr \
+			const char *cssName = "keyboard", QMenu *menu = nullptr \
 		) : ButtonDrag ( \
 			label, window, fontSize, callback, cssName, menu \
 		) {}
@@ -659,7 +651,189 @@ namespace Button {
 		}
 	};
 }
+class  LineEdit : public QLineEdit {
+private:
+	Window *_window;
+	byte tab {0}, index {0};
+	void onLineEditChanged( \
+		const QString& text \
+	) const noexcept;
+public:
+	explicit LineEdit ( \
+		Window *window, byte tab, byte index, \
+		const char *text = "" \
+	) : _window(window), QLineEdit() {
+		setText(QString::fromUtf8(text));
+		QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+		setSizePolicy(sizePolicy);
+		setObjectName("keybord");
+		connect( \
+			this, &QLineEdit::textChanged, this, \
+			&LineEdit::onLineEditChanged \
+		);
+		QFont font = this->font();
+		font.setPointSize(25);
+		setFont(font);
+		setMaximumHeight(40);
+		setMinimumWidth(40);
+		setContentsMargins(0, 0, 0, 0);
+	}
+	void focusInEvent( \
+			QFocusEvent *event \
+	) override {
+		if (event->reason())
+			_window->setInputtin(tab, index);
+		QLineEdit::focusInEvent(event);
+	}
+	
+	/*
+	void paintEvent( \
+			QPaintEvent *event \
+	) override {
+		GradientFont::StyleLineEdit {
+			this, _window, cursorRect()};
+		QLineEdit::paintEvent(event);
+	}
+	*/
+};
+namespace NewHistoriElement {
+	class LabelHistori : public QLabel {
+	private:
+		Window *_window {nullptr};
+		const char *_callback {nullptr};
+	public:
+		explicit inline LabelHistori( \
+			const char* label, const char *cssName, \
+			Window *window, const char *customCallback = nullptr \
+		) : QLabel(label), _callback{customCallback}, \
+			_window{window} {
+			setAlignment(Qt::AlignmentFlag::AlignCenter);
+			setSizePolicy(QSizePolicy::Policy::Expanding, \
+				QSizePolicy::Policy::Expanding);
+			setContentsMargins(0, 0, 0, 0);
+			setObjectName(cssName);
+			this->setFont(QFont(this->font().family(), 20));
+			if (!customCallback)
+				_callback = label;
+			else 
+				delete [] label;
+			return;
+		}
+	private:
+		inline void mousePressEvent(QMouseEvent* event \
+		) noexcept override {
+			QDrag* drag {new QDrag{this}};
+			QMimeData* mimeData {new QMimeData{}};
+			mimeData->setText(_callback);
+			drag->setMimeData(mimeData);
+			drag->exec(Qt::MoveAction);
+		}
+		/*
+		inline void paintEvent(QPaintEvent* event \
+		) noexcept override {
+			GradientFont::StyleButtonOrLabel<QLabel *>{ \
+				this, _window};
+		}
+		*/
+		~LabelHistori(void) {
+			delete [] _callback;
+		}
+	};
+	class BaseBoxHistoriElement : public QHBoxLayout {
+	public:
+		explicit inline BaseBoxHistoriElement( \
+			const char * expression, Window *window, \
+			const char * result
+		) noexcept : QHBoxLayout() {
+			setSpacing(0);
+			setContentsMargins(0, 0, 0, 0);
+			addWidget(new LabelHistori{expression, "keyboard", window});
+			char * commonCallback {new char[ \
+				strlen(expression)+strlen(result)+2UL]{'\0'}};
+			strcpy(commonCallback, expression);
+			strcat(commonCallback, "=");
+			strcat(commonCallback, result);
+			addWidget(new LabelHistori{new char[]{"="}, "keyboard", \
+				window, commonCallback});
+			addWidget(new LabelHistori{result, "keyboard", window});
+		}
+	};
+	class BasicBoxHistoriElement : public QVBoxLayout {
+	public:
+		explicit inline BasicBoxHistoriElement( \
+			const char * expression, Window * window, \
+			const char * result, const char * nameOperation \
+		) noexcept : QVBoxLayout() {
+			setSpacing(0);
+			setContentsMargins(0, 0, 0, 0);
+			addWidget(new LabelHistori{nameOperation, \
+				"keyboard", window});
+			addLayout(new BaseBoxHistoriElement{ \
+				expression, window, result});
+		}
+	};
+	class SubCustomBoxHistoriElement : public QHBoxLayout {
+	public:
+		explicit inline SubCustomBoxHistoriElement( \
+			Window * window, \
+			const char * label1, const char * text1, \
+			const char * label2, const char * text2 \
+		) noexcept : QHBoxLayout() {
+			setSpacing(0);
+			setContentsMargins(0, 0, 0, 0);
+			addWidget(new LabelHistori{ \
+				label1, "keybord", window});
+			char *customCallback{new char[ \
+				strlen(label1) + strlen(text1) + 2UL]{'\0'}};
+			strcpy(customCallback, label1);
+			strcat(customCallback, "=");
+			strcat(customCallback, text1);
+			addWidget(new LabelHistori{ \
+				new char[]{"="}, "keybord", \
+				window, customCallback});
+			addWidget(new LabelHistori{ \
+				text1, "keyboard", window});
 
+			addWidget(new LabelHistori{ \
+				label2, "keyboard", window});
+			customCallback = new char[ \
+				strlen(label1) + strlen(text1) + 2UL]{'\0'};
+			strcpy(customCallback, label2);
+			strcat(customCallback, "=");
+			strcat(customCallback, text2);
+			addWidget(new LabelHistori{ \
+				new char[]{"="}, "keyboard", \
+				window, customCallback});
+			addWidget(new LabelHistori{ \
+				text2, "keyboard", window});
+		}
+	};
+	class CustomBoxHistoriElement : public QVBoxLayout {
+	public:
+		explicit inline CustomBoxHistoriElement( \
+			const char * const expression, \
+			Window * const  window, \
+			byte tab, const char * const  nameOperation, \
+			const char * const label1, \
+			const char * const text1, \
+			const char * const label2, \
+			const char * const text2 \
+		) noexcept : QVBoxLayout() {
+			setSpacing(0);
+			setContentsMargins(0, 0, 0, 0);
+			addWidget(new LabelHistori{ \
+				nameOperation, "keyboard", window});
+			addLayout(new SubCustomBoxHistoriElement{ \
+				window, label1, text1, \
+				label2, text2});
+			LineEdit * const lineEdit \
+				{window->getLineEdit(tab, byte(2))};
+			addLayout(new BaseBoxHistoriElement{ \
+				/*lineEdit->text().toUtf8().data(),*/ "io", \
+				window, window->getResult(tab, byte(2))});
+		}
+	};
+}
 namespace CreateHistori {
 	class HistoriVBox : public QVBoxLayout {
 	public:
@@ -702,48 +876,7 @@ namespace CreateHistori {
 		}
 	};
 }
-class  LineEdit : public QLineEdit {
-private:
-	Window *_window;
-	byte tab {0}, index {0};
-	void onLineEditChanged( \
-		const QString& text \
-	) const noexcept;
-public:
-	explicit LineEdit ( \
-		Window *window, byte tab, byte index, \
-		const char *text = "" \
-	) : _window(window), QLineEdit() {
-		setText(QString::fromUtf8(text));
-		QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-		setSizePolicy(sizePolicy);
-		setObjectName("keybord");
-		connect( \
-			this, &QLineEdit::textChanged, this, \
-			&LineEdit::onLineEditChanged \
-		);
-		QFont font = this->font();
-		font.setPointSize(25);
-		setFont(font);
-		setMaximumHeight(40);
-		setMinimumWidth(40);
-		setContentsMargins(0, 0, 0, 0);
-	}
-	void focusInEvent( \
-			QFocusEvent *event \
-	) override {
-		if (event->reason())
-			_window->setInputtin(tab, index);
-		QLineEdit::focusInEvent(event);
-	}
-	
-	void paintEvent( \
-			QPaintEvent *event \
-	) override {
-		GradientFont::StyleLineEdit(static_cast<QLineEdit *>(this), _window, cursorRect());
-		QLineEdit::paintEvent(event);
-	}
-};
+
 class LogicCalculate {
 private:
     char *_lineEditText;
@@ -823,26 +956,28 @@ public:
 
 	void addHistori() {
 
-		QLayout *element{0L};
+		QLayout *element{nullptr};
 		short tab = _window->getInputtin()[0];
 
 		switch (tab) {
 			case 1:
-				element = new CustomBoxHistoriElement(
-					_lineEditText, _window, 
-					1, "Integral",
-					"a", window->getResult(1, 0),
-					"b", window->getResult(1, 1)
-				);
+				element = new NewHistoriElement:: \
+					CustomBoxHistoriElement{ \
+					_lineEditText, _window, \
+					1, "Integral", \
+					"a", _window->getResult(1, 0), \
+					"b", _window->getResult(1, 1) \
+				};
 				break;
 
 			case 4:
-				element = new CustomBoxHistoriElement(
-					_lineEditText, _window, 
-					4, "Replacement",
-					"with", window->getResult(4, 0),
-					"on", window->getResult(4, 1)
-				);
+				element = new NewHistoriElement:: \
+					CustomBoxHistoriElement{ \
+					_lineEditText, _window, \
+					4, "Replacement", \
+					"with", _window->getResult(3, 0), \
+					"on", _window->getResult(4, 1) \
+				};
 				break;
 
 			default:
@@ -850,10 +985,11 @@ public:
 					std::map<short, const char*> lstTabs = {
 						{0, "Basic"}, {2, "Derivate"}, {3, "Integrate"}
 					};
-					element = new BasicBoxHistoriElement(
-						line_edit_text, window,
-						window->result, lst_tabs[tab]
-					);
+					element = new NewHistoriElement:: \
+						BasicBoxHistoriElement{ \
+						_lineEditText, _window, \
+						_window->getResult(), lstTabs[tab] \
+					};
 				}
 				break;
 		}
@@ -887,6 +1023,7 @@ public:
 
 	
 	void buttonOther() {
+		/*
 		auto integral = [_window = this->_window]() {
 			char* equation = strdup( \
 				_window->getLineEdit(1, 2)->text().toUtf8().data() \
@@ -926,17 +1063,19 @@ public:
 		}
 
 		// _window.setForResult(window.result);
+		*/
 	}
             
 	static void inputtinLineEdit( \
 		QPushButton *button, Window *window \
 	) {
-		char *label = strdup(button->text().toUtf8().data());
+		/*
+		const char *label = strdup(button->text().toUtf8().data());
 		QLineEdit *lineEdit \
 			{window->getLineEdit()};
-		char *text = strdup(lineEdit->text().toUtf8().data());
+		const char *text = strdup(lineEdit->text().toUtf8().data());
 		short positionCursor = lineEdit->cursorPosition();
-		char *result;
+		const char *result;
 		// Копируем часть строки до курсора
 		strncpy(result, text, positionCursor);
 		result[positionCursor] = '\0'; // Завершаем строку
@@ -948,12 +1087,13 @@ public:
 		strcat(result, text + positionCursor);
         lineEdit->setText(result);
         lineEdit->setCursorPosition(positionCursor + strlen(label));
+		*/
 	}
 };
 void LineEdit::onLineEditChanged( \
 		const QString& text \
 ) const noexcept {
-
+	/*
 	// Преобразуем QString в QByteArray
 	QByteArray byteArray = text.toUtf8();
 
@@ -970,8 +1110,9 @@ void LineEdit::onLineEditChanged( \
 		logicCalculate->button_RES();
 	else
 		logicCalculate->buttonOther();
-	return;
+	*/
 }
+
 namespace Title {
 	class Action : public QWidgetAction {
 	public:
@@ -1019,9 +1160,10 @@ namespace Title {
 	public:
 		explicit TitleLayout( \
 				CalculateDragAndDrop *app, Window *window \
-		) : _window(window), QHBoxLayout() {
+		) noexcept : _window(window), QHBoxLayout() {
 			setContentsMargins(0, 0, 0, 0);
         	setSpacing(0);
+			puts("op");
 			addWidget( \
 				new Button::ButtonBase{ \
 					"+ Add", window, 15, \
@@ -1184,63 +1326,59 @@ namespace Title {
 
 
 namespace Grid {
+	template<class TButton>
 	class BuildingGridKeyboard {
 	public:
-		explicit BuildingGridKeyboard( \
+		explicit inline BuildingGridKeyboard( \
 			std::vector<std::vector<const char *>> buttons, \
-			QGridLayout *grid, \
-			Window *window, short row = short(0), \
-			std::function<QWidget*( \
-				const char*, std::function<void(QPushButton *)> *, Window* \
-			)> createButton = []( \
-				const char* label, \
-				std::function<void(QPushButton *)> *callback, \
-				Window *window \
-			) -> QWidget* {
-				return new Button::ButtonDrag( \
-					label, window, 20, callback \
-				);
-			} \
-		) {
-			short buttonsLenght = buttons.size();
-			for ( \
-				short index = short(0); \
-				index != buttonsLenght; index++ \
-			) {
-				short column = short(0);
-				std::vector<const char *> rowLabelsButton = buttons.at(index);
-				for ( \
-					short rowIndex = short(0); \
-					rowIndex != buttonsLenght; rowIndex++ \
-				) {
-					const char *labelButton = rowLabelsButton.at(rowIndex);
-					std::function<void(QPushButton *)> * func = new std::function<void(QPushButton*)>(
-						[window](QPushButton* btn) {
-							LogicCalculate::inputtinLineEdit(btn, window);
-						}
-					);
-					grid->addWidget(createButton( \
-						labelButton, func, window \
-					), row, column, 1, 1);
-					column++;
+			QGridLayout *grid, Window *window, \
+			byte row = byte(0), byte columnStart = byte(0), \
+			const char * cssName = "opertor" \
+		) noexcept {
+			static std::function<void(QPushButton *)> * func { \
+				new std::function<void(QPushButton*)>{
+					[window](QPushButton* btn) {
+						LogicCalculate::inputtinLineEdit(btn, window);
+						return;
+					} \
 				}
-				row++;
+			};
+
+			const std::vector<std::vector<const char *>>::const_iterator \
+				itRowEnd {buttons.cend()};
+			std::vector<const char *>::const_iterator itColumnEnd {}, \
+				itColumn {};
+			byte column {byte(0)};
+			for ( \
+				std::vector<std::vector<const char *>>::const_iterator \
+				itRow {buttons.cbegin()}; itRow != itRowEnd; \
+				itRow++, row++ \
+			) {
+				itColumnEnd = itRow->cend();
+				for ( \
+					itColumn = itRow->cbegin(), column = columnStart; \
+					itColumn != itColumnEnd; itColumn++, column++ \
+				) {
+					const char * const labelButton = *itColumn;
+					grid->addWidget(new TButton { \
+						labelButton, window, 20, func, cssName\
+					}, row, column, 1, 1);
+				}
 			}
 		}
 	};
-
+	template<class TButton>
 	class GridCalculateKeyboard : public QGridLayout {
 	public:
 		explicit GridCalculateKeyboard( \
 			std::vector<std::vector<const char *>> buttons, \
-			Window *window
+			Window *window, const char * cssName \
 		) {
-			setContentsMargins(0, 0, 0, 0);
-			setSpacing(0);
-			BuildingGridKeyboard{ \
-				buttons, \
-				static_cast<QGridLayout *>(this), \
-				window \
+			setContentsMargins(10, 10, 10, 10);
+			setSpacing(10);
+			BuildingGridKeyboard<TButton>{ \
+				buttons, this, window, byte(0), \
+				byte(0), cssName \
 			};
 		}
 	};
@@ -1251,79 +1389,63 @@ namespace Grid {
 		Window *_window {nullptr};
 	public:
 		explicit GridCalculateCommon( \
-			Window *window
+			Window *window \
 		) : _window{window} {
-			setSpacing(0);
-			setContentsMargins(0, 0, 0, 0);
+			setSpacing(10);
+			setContentsMargins(10, 10, 10, 10);
 
-			createButton("_ALL", 0, 0);
-			createButton("_DO", 0, 1);
-			createButton("_RES", 0, 2);
-			createButton("_POS", 0, 3);
-			createButton("_O", 0, 4);
+			BuildingGridKeyboard<Button::ButtonDrag>{
+				std::vector<std::vector<const char *>> {
+					{"_ALL", "_DO", "_RES", "_POS", "_O"}
+				}, this, window, byte(0), byte(0), "function" \
+			};
 
-			BuildingGridKeyboard( \
-				std::vector<std::vector<const char *>>{
-					{"()", "(", ")", "mod", "_PI"}, 
-					{"7", "8", "9", ":", "sqrt"}, 
-					{"4", "5", "6", "*", "^"}, 
-					{"1", "2", "3", "-", "!"}, 
-					{"0", ".", "%", "+", "_E"},
+			BuildingGridKeyboard<Button::ButtonDragAndDrop>{
+				std::vector<std::vector<const char *>> {
+					{"()", "(", ")"},
+				}, this, window, byte(1), byte(0), "bracket" \
+			};
+
+			BuildingGridKeyboard<Button::ButtonDragAndDrop>{ \
+				std::vector<std::vector<const char *>> {
+					{"7", "8", "9"},
+					{"4", "5", "6"},
+					{"1", "2", "3"},
+					{"0", ".", "%"},
+				}, this, window, byte(2), byte(0), "number" \
+			};
+
+			BuildingGridKeyboard<Button::ButtonDragAndDrop>{
+				std::vector<std::vector<const char *>> {
+					{"mod", "sqrt"},
+					{"*", ":"},
+					{"+", "-"},
+					{"^", "!"},
+					{"_PI", "_E"}
+				}, this, window, byte(1), byte(3), "operator"\
+			};
+
+			BuildingGridKeyboard<Button::ButtonDragAndDrop>{
+				std::vector<std::vector<const char *>> {
+					{"_PI", "_E"}
+				}, this, window, byte(5), byte(3), "const"\
+			};
+
+			BuildingGridKeyboard<Button::ButtonDragAndDrop>{
+				std::vector<std::vector<const char *>> {
 					{"", "", "", "", ""}
-				}, this, window, 1, \
-				[]( \
-					const char* label, \
-					std::function<void(QPushButton *)> *callback, \
-					Window *window \
-				) -> QWidget* {
-					return static_cast<QWidget *>( \
-						new Button::ButtonDragAndDrop( \
-							label, window, 20, callback \
-						) \
-					);
-				} \
-			);
+				}, this, window, byte(6), byte(0), "empty"\
+			};
+
+			puts("hj");
 			Button::ButtonDrag *resultButton {\
 				new Button::ButtonDrag { \
 					window->getResult(0, 0), \
-					window, 20 \
+					window, 20, nullptr, "number" \
 				}
 			};
 			window->setResultButton(resultButton);
 			addWidget(resultButton, 7, 0, 1, 5);
-		}
-
-		void createButton( \
-			const char *label, short row, \
-			short column, \
-			std::function<QWidget *( \
-				const char *, short, Window *, \
-				std::function<void(QPushButton *)> *, const char * \
-			)> creatorButtonFunc = []( \
-				const char *label, \
-				short fontSize, \
-				Window *window, \
-				std::function<void(QPushButton *)> *callback, \
-				const char *cssName \
-			) {
-				return static_cast<QWidget *>( \
-					new Button::ButtonDrag( \
-						label, window, fontSize, \
-						callback, cssName \
-					) \
-				);
-			} \
-		) {
-			Window* window {_window};
-			std::function<void(QPushButton *)> * func {
-				new std::function<void(QPushButton*)> { \
-					[window](QPushButton* btn) {
-						LogicCalculate::inputtinLineEdit(btn, window);
-					}
-				}
-			};
-			addWidget(creatorButtonFunc(label, 20, _window, func, "keybord" \
-					), row, column, 1, 1);
 		}
 	};
 
@@ -1332,7 +1454,7 @@ namespace Grid {
 		explicit GridBaseCalc( \
 			Window *window, byte tab \
 		) : QGridLayout() {
-			setSpacing(0);
+			setSpacing(12);
 			setContentsMargins(0, 0, 0, 0);
 			CreateHistori::HistoriScroll *localHistori \
 				{new CreateHistori::HistoriScroll{}};
@@ -1439,7 +1561,7 @@ namespace Grid {
 namespace TabWindow {
 	class CustomTabBar : public QTabBar {
 	private:
-		CreateGradient *_gradient {nullptr};
+		//CreateGradient *_gradient {nullptr};
 		QTabWidget *_tabWidget {nullptr};
 		Window *_window {nullptr};
 	public:
@@ -1453,10 +1575,13 @@ namespace TabWindow {
 			setFont(fontTabBar);
 		}
 
+		/*
 		void createStyle() {
 			// Задаем градиенты
 			_gradient = new CreateGradient(_tabWidget, _window);
 		}
+		*/
+		/*
 		void paintEvent(QPaintEvent *event) override {
 			QPainter *painter = new QPainter(this);
 			painter->setRenderHint(QPainter::RenderHint::Antialiasing);
@@ -1502,6 +1627,7 @@ namespace TabWindow {
 			}
 			painter->end();
 		}
+		*/
 	};
 
 
@@ -1525,76 +1651,70 @@ namespace TabWindow {
 			Window *window \
 		) : QTabWidget() {
 			_window = window;
-			setFixedHeight(110);
+			//setFixedHeight(110);
 			_tabBar = new CustomTabBar(this, window);
 			setTabBar(_tabBar);  // Устанавливаем кастомный TabBar
-			addTab(new TabQWidget( \
-				new Grid::GridCalculateKeyboard( \
+			addTab(new TabQWidget{ \
+				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
 					std::vector<std::vector<const char *>>{
 						{"1", "2", "3", "4", "5"},
 						{"6", "7", "8", "9", "0"}
-					}, window \
-				) \
-			), "digits 10");
-			addTab(new TabQWidget( \
-				new Grid::GridCalculateKeyboard( \
+					}, window, "number" \
+				} \
+			}, "digits 10");
+			addTab(new TabQWidget{ \
+				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
 					std::vector<std::vector<const char *>>{
 						{"A", "B", "C"},
 						{"D", "E", "F"}
-					}, window \
-				) \
-			), "digits 16");
-			addTab(new TabQWidget( \
-				new Grid::GridCalculateKeyboard( \
+					}, window, "number" \
+				} \
+			}, "digits 16");
+			addTab(new TabQWidget{ \
+				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
 					std::vector<std::vector<const char *>>{
 						{"+", "-", ":", "*", "^"},
 						{"!", "sqrt", "ln", "log", "lg"}
-					}, window \
-				) \
-			), "operators");
-			addTab(new TabQWidget( \
-				new Grid::GridCalculateKeyboard( \
+					}, window, "operator" \
+				} \
+			}, "operators");
+			addTab(new TabQWidget{ \
+				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
 					std::vector<std::vector<const char *>>{
 						{"_E", "_PI"}
-					}, window \
-				) \
-			), "consts");
-			addTab(new TabQWidget( \
-				new Grid::GridCalculateKeyboard( \
+					}, window, "const" \
+				} \
+			}, "consts");
+			addTab(new TabQWidget{ \
+				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
 					std::vector<std::vector<const char *>>{
-						{"sin(", "cos(", "tan("},
-						{"sec(", "csc(", "cot("}
-					}, window \
-				) \
-			), "trigonometric functions");
-			addTab(new TabQWidget( \
-				new Grid::GridCalculateKeyboard( \
+						{"sin", "cos", "tan"},
+						{"sec", "csc", "cot"}
+					}, window, "operator" \
+				} \
+			}, "trigonometric functions");
+			addTab(new TabQWidget{ \
+				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
 					std::vector<std::vector<const char *>>{
-						{"sgn(", "abs(", "mod"}
-					}, window \
-				) \
-			), "other functions");
-			addTab(new TabQWidget( \
-				new Grid::GridCalculateKeyboard( \
+						{"sgn", "abs", "mod"}
+					}, window, "operator" \
+				} \
+			}, "other functions");
+			addTab(new TabQWidget{ \
+				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
 					std::vector<std::vector<const char *>>{
 						{"0x", "0b", "0t"}
-					}, window \
-				) \
-			), "number system");
-			addTab(new TabQWidget( \
-				new Grid::GridCalculateKeyboard( \
-					std::vector<std::vector<const char *>>{
-						{"%", "mod", ".", "|"}
-					}, window \
-				) \
-			), "other");
+					}, window, "prefix" \
+				} \
+			}, "number system");
 		}
-
+		/*
 		void paintEvent( \
 			QPaintEvent *event \
 		) override {
 			_tabBar->createStyle();
 		}
+		*/
 	};
 
 
@@ -1626,12 +1746,14 @@ namespace TabWindow {
 				new Grid::GridReplacementCalc(window) \
 			), "Replacement");
 		}
-
+		/*
 		void paintEvent( \
 			QPaintEvent *event \
 		) override {
 			_tabBar->createStyle();
+			return;
 		}
+		*/
 	};
 }
 
@@ -1656,11 +1778,22 @@ public:
 		addWidget(new TabWindow::MainTabWidget{window});
 		addLayout(new Grid::GridCalculateCommon{window});
 		addWidget(new TabWindow::TabWidgetKeyboard{window});
+		puts("jk");
+		return;
+	}
+};
+class MainWidget : public QWidget {
+public:
+	explicit inline MainWidget( \
+		CalculateDragAndDrop *app, Window *window \
+	) noexcept : QWidget(window) {
+		setLayout(new MainLayout{app, window});
 	}
 };
 
 inline void Window::postInit() noexcept {
-    setLayout(new MainLayout{_app, this});
+    setCentralWidget(new MainWidget{_app, this});
+	return;
 }
 
 inline Window::~Window(void) {

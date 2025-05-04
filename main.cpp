@@ -7,6 +7,8 @@
 
 		
 int main(int argc, char *argv[]) {
+	qputenv("QT_MESSAGE_PATTERN", "%{file}:%{line} - %{message}");
+	qSetMessagePattern("%{function}(): %{message}");
 	CalculateDragAndDrop *app = new CalculateDragAndDrop(argc, argv);
 	app->exec();
 	delete app;
