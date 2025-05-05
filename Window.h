@@ -83,6 +83,7 @@ namespace TabWindow {
 	class MainTabWidget;
 }
 class MainLayout;
+class MainWidget;
 
 class CalculateDragAndDrop : public QApplication {
 
@@ -112,17 +113,32 @@ public:
 			#prefix {
 				background-color: rgb(94, 0, 0);
 			}
+			#function:hover,
+			#empty:hover,
+			#const:hover,
+			#operator:hover,
+			#number:hover,
+			#bracket:hover,
+			#prefix:hover {
+				background-color: #777;
+				border: 5px solid white;
+			}
+			#title {
+				padding: 5px 15px;
+			}
 			QLineEdit {
 				background: transparent;
-				border: 1px solid white;
 				text-align: center;
 				color: white;
+				margin: 0;
 			}
 			QPushButton {
 				color: white;
 				border-radius: 10px;
-				border: 1px solid white;
+				padding: 4px;
+				border: 1px solid rgba(255, 255, 255, 0.5);
 				font-size: 20px;
+				text-align: start;
 			}
 			QGridLayout {
 				background: transparent;
@@ -152,11 +168,13 @@ public:
 				padding: 0;
 			}
 			
+			QTabBar::tab, QLineEdit, #basic {
+				border: 1px solid white;
+				border-radius: 10px;
+			}
 			QTabBar::tab {
 				padding: 8px 12px;
 				margin: 5px;
-				border: 1px solid white;
-				border-radius: 10px;
 				color: white;
 				background-color: rgb(107, 110, 195);
 				min-width: 80px;
@@ -227,26 +245,6 @@ public:
 		show();
 		return;
 	}
-	/*
-	inline void paintEvent(QPaintEvent *event) noexcept override {
-        // Создаём QPainter для рисования
-        QPainter painter = QPainter(this);
-        painter.setRenderHint(QPainter::RenderHint::Antialiasing);
-
-        // Применяем градиент как кисть и заполняем окно
-        painter.fillRect( \
-			rect(), \
-            QBrush(CreateGradient( \
-                static_cast<QWidget *>(this), nullptr, \
-                std::vector<std::tuple<float, QColor>>{
-					{0.0f, QColor(100, 0, 0)},
-					{0.5f, QColor(0, 0, 0)},
-					{1.0f, QColor(0, 0, 100)}
-				}
-            )) \
-        );
-	}
-	*/
 
 	inline void postInit() noexcept;
 	
@@ -276,6 +274,7 @@ public:
 	}
 
 	inline CreateHistori::HistoriVBox* getAddGlobalHistori( \
+		void \
 	) const noexcept {
 		return _addGlobalHistori;
 	}
@@ -296,16 +295,9 @@ public:
 		return _localHistori[_inputtin[0]];
 	}
 	inline void setLocalHistori( \
-		CreateHistori::HistoriScroll* newLocalHistori, \
-		byte index \
+		CreateHistori::HistoriScroll* newLocalHistori, byte tab \
 	) noexcept {
-		_localHistori[index] = newLocalHistori;
-		return;
-	}	
-	inline void setLocalHistori( \
-		CreateHistori::HistoriScroll* newLocalHistori \
-	) noexcept {
-		_localHistori[_inputtin[0]] = newLocalHistori;
+		_localHistori[tab] = newLocalHistori;
 		return;
 	}	
 	inline CreateHistori::HistoriWidget* getResizeLocalHistori( \
@@ -334,6 +326,7 @@ public:
 	inline CreateHistori::HistoriVBox* getAddLocalHistori( \
 		void \
 	) const noexcept {
+		std::cout << _inputtin[0] << std::endl;
 		return _addLocalHistori[_inputtin[0]];
 	}
 	inline void setAddLocalHistori( \
@@ -354,6 +347,7 @@ public:
 	inline void setLineEdit( \
 		LineEdit* newLineEdit, byte tab, byte index \
 	) noexcept {
+		std::cout << *_inputtin << _inputtin[1] << std::endl;
 		_lineEdit[tab][index] = newLineEdit;
 		return;
 	}
@@ -432,8 +426,9 @@ namespace Button {
 		explicit ButtonBase( \
 			const char *label, Window *window, \
 			std::function<void(QPushButton *)> *callback = nullptr, \
-			const char *cssName = "keybord", QMenu *menu = nullptr \
+			const char *cssName = "basic", QMenu *menu = nullptr \
 		) : _window(window), QPushButton(label) {
+			setAttribute(Qt::WA_Hover, true);
 			setContentsMargins(0, 0, 0, 0);
 			if (callback) 
 				connect(this, &QPushButton::clicked, [this, callback](bool) {
@@ -457,30 +452,44 @@ namespace Button {
 		explicit ButtonDrag( \
 			const char *label, Window *window, \
 			std::function<void(QPushButton *)> *callback = nullptr, \
-			const char *cssName = "keyboard", QMenu *menu = nullptr \
+			const char *cssName = nullptr, QMenu *menu = nullptr \
 		) : ButtonBase(
 			label, window, callback, cssName, menu
 		) {}
 		void mousePressEvent( \
 				QMouseEvent *event \
 		) override {
+			QPushButton::mousePressEvent(event);
 			_start_pos = event->pos();
-			ButtonBase::mousePressEvent(event);
 		}
-		void mouseMoveEvent( \
-				QMouseEvent *event \
-		) override {
-			if ( \
-					(event->pos() - _start_pos).manhattanLength() \
-					> QApplication::startDragDistance() \
-			) {
-				QDrag *drag = new QDrag(this);
-				QMimeData *mime_data = new QMimeData();
-				mime_data->setText(this->text());
-				drag->setMimeData(mime_data);
-				drag->exec(Qt::DropAction::MoveAction);
-			} else 
-				ButtonBase::mouseMoveEvent(event);
+		void mouseMoveEvent(QMouseEvent *event) override {
+			// 1. Сначала всегда вызываем базовую обработку (для hover)
+			QPushButton::mouseMoveEvent(event);
+
+			// 2. Проверяем, что зажата именно левая кнопка мыши
+			if (!(event->buttons() & Qt::LeftButton))
+				return;
+
+			// 3. Увеличиваем порог активации DnD (в 2-3 раза)
+			const int dragThreshold = QApplication::startDragDistance() * 2;
+			
+			// 4. Проверяем расстояние от точки нажатия
+			if ((event->pos() - _start_pos).manhattanLength() > dragThreshold) {
+				// 5. Создаем DnD операцию
+				QDrag* drag = new QDrag(this);
+				QMimeData* mimeData = new QMimeData();
+				mimeData->setText(text());
+				drag->setMimeData(mimeData);
+				
+				// 6. Запускаем DnD и сохраняем результат
+				Qt::DropAction result = drag->exec(Qt::MoveAction);
+				
+				// 7. После DnD принудительно обновляем состояние кнопки
+				if (result != Qt::IgnoreAction) {
+					setDown(false);  // Снимаем "нажатое" состояние
+					update();        // Перерисовываем кнопку
+				}
+			}
 		}
 	};
 
@@ -489,28 +498,32 @@ namespace Button {
 		explicit ButtonDragAndDrop( \
 			const char *label, Window *window, \
 			std::function<void(QPushButton *)> *callback = nullptr, \
-			const char *cssName = "keyboard", QMenu *menu = nullptr \
+			const char *cssName = nullptr, QMenu *menu = nullptr \
 		) : ButtonDrag ( \
 			label, window, callback, cssName, menu \
-		) {}
+		) {setAcceptDrops(true);}
 		void dragEnterEvent( \
 				QDragEnterEvent *event \
 		) override {
+			QPushButton::dragEnterEvent(event);
 			if (event->mimeData()->hasText())
 				event->acceptProposedAction();
+			return;
 		}
 		void dropEvent( \
 				QDropEvent *event \
 		) override {
+			QPushButton::dropEvent(event);
 			setText(event->mimeData()->text());
 			event->acceptProposedAction();
+			return;
 		}
 	};
 }
 class  LineEdit : public QLineEdit {
 private:
 	Window *_window;
-	byte tab {0}, index {0};
+	byte _tab {0}, _index {0};
 	void onLineEditChanged( \
 		const QString& text \
 	) const noexcept;
@@ -518,11 +531,12 @@ public:
 	explicit LineEdit ( \
 		Window *window, byte tab, byte index, \
 		const char *text = "" \
-	) : _window(window), QLineEdit() {
+	) : _window{window}, QLineEdit{}, \
+	_tab{tab}, _index{index} {
+		std::cout << _window << std::endl;
 		setText(QString::fromUtf8(text));
 		QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 		setSizePolicy(sizePolicy);
-		setObjectName("keybord");
 		connect( \
 			this, &QLineEdit::textChanged, this, \
 			&LineEdit::onLineEditChanged \
@@ -537,8 +551,8 @@ public:
 	void focusInEvent( \
 			QFocusEvent *event \
 	) override {
-		if (event->reason())
-			_window->setInputtin(tab, index);
+		std::cout << (short)_tab << (short)_index << std::endl;
+		_window->setInputtin(_tab, _index);
 		QLineEdit::focusInEvent(event);
 	}
 };
@@ -651,17 +665,18 @@ namespace NewHistoriElement {
 	public:
 		explicit inline CustomBoxHistoriElement( \
 			const char * const expression, \
-			Window * const  window, \
-			byte tab, const char * const  nameOperation, \
+			Window * const  window, byte tab, \
 			const char * const label1, \
 			const char * const text1, \
 			const char * const label2, \
-			const char * const text2 \
+			const char * const text2, \
+			const char * const  nameOperation = nullptr \
 		) noexcept : QVBoxLayout() {
 			setSpacing(0);
 			setContentsMargins(0, 0, 0, 0);
-			addWidget(new LabelHistori{ \
-				nameOperation, "keyboard", window});
+			if (nameOperation)
+				addWidget(new LabelHistori{ \
+					nameOperation, "keyboard", window});
 			addLayout(new SubCustomBoxHistoriElement{ \
 				window, label1, text1, \
 				label2, text2});
@@ -676,10 +691,14 @@ namespace NewHistoriElement {
 namespace CreateHistori {
 	class HistoriVBox : public QVBoxLayout {
 	public:
-		explicit HistoriVBox() : QVBoxLayout() {
+		explicit HistoriVBox( \
+			const char * label, Window *window \
+		) : QVBoxLayout{} {
 			setSpacing(0);
 			setContentsMargins(0, 0, 0, 0);
 			setObjectName("histori");
+			addWidget(new NewHistoriElement::LabelHistori{ \
+				label, "basic", window});
 		}
 	};
 
@@ -687,9 +706,11 @@ namespace CreateHistori {
 	private:
 		HistoriVBox *_addHistori = nullptr;
 	public:
-		explicit HistoriWidget() : QWidget() {
+		explicit HistoriWidget( \
+			const char * label, Window * window \
+		) : QWidget() {
 			setObjectName("histori");
-			setLayout(_addHistori = new HistoriVBox());
+			setLayout(_addHistori = new HistoriVBox{label, window});
 			setContentsMargins(0, 0, 0, 0);
 		}
 		HistoriVBox *getAddHistori() {
@@ -701,14 +722,16 @@ namespace CreateHistori {
 	private:
 		HistoriWidget *_resizeHistori = nullptr;
 	public:
-		explicit HistoriScroll() : QScrollArea() {
+		explicit HistoriScroll( \
+			const char * label, Window * window \
+		) : QScrollArea() {
 			setHorizontalScrollBarPolicy( \
 					Qt::ScrollBarPolicy::ScrollBarAlwaysOff \
 			);
 			setObjectName("histori");
 			setWidgetResizable(true);
-			setMinimumHeight(100);
-			setWidget(_resizeHistori = new HistoriWidget());
+			setWidget(_resizeHistori = \
+				new HistoriWidget{label, window});
 		}
 		HistoriWidget *getResizeHistori() {
 			return _resizeHistori;
@@ -778,7 +801,7 @@ public:
 
 	void button_RES() {
 
-
+		std::cout << _window << std::endl;
         const char *result = _window->getResult();
 		char *pos = strstr(_lineEditText, "_RES");
 		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
@@ -790,30 +813,43 @@ public:
 		}
         QLineEdit *line_edit {_window->getLineEdit()};
         line_edit->setText(result);
-        line_edit->setCursorPosition(strlen(result)-1);
+        line_edit->setCursorPosition(strlen(result));
 	}
 
 	void addHistori() {
 
-		QLayout *element{nullptr};
-		short tab = _window->getInputtin()[0];
+		QLayout *elementGlobal {nullptr}, \
+			*elementLocal {nullptr};
+		byte tab = _window->getInputtin()[0];
 
 		switch (tab) {
 			case 1:
-				element = new NewHistoriElement:: \
+				elementGlobal = new NewHistoriElement:: \
 					CustomBoxHistoriElement{ \
-					_lineEditText, _window, \
-					1, "Integral", \
+					_lineEditText, _window, 1, \
+					"a", _window->getResult(1, 0), \
+					"b", _window->getResult(1, 1), \
+					"Integral"
+				};
+				elementLocal = new NewHistoriElement:: \
+					CustomBoxHistoriElement{ \
+					_lineEditText, _window, 1, \
 					"a", _window->getResult(1, 0), \
 					"b", _window->getResult(1, 1) \
 				};
 				break;
 
 			case 4:
-				element = new NewHistoriElement:: \
+				elementGlobal = new NewHistoriElement:: \
 					CustomBoxHistoriElement{ \
-					_lineEditText, _window, \
-					4, "Replacement", \
+					_lineEditText, _window, 4, \
+					"with", _window->getResult(3, 0), \
+					"on", _window->getResult(4, 1), \
+					"Replacement" \
+				};
+				elementLocal = new NewHistoriElement:: \
+					CustomBoxHistoriElement{ \
+					_lineEditText, _window, 4, \
 					"with", _window->getResult(3, 0), \
 					"on", _window->getResult(4, 1) \
 				};
@@ -824,27 +860,34 @@ public:
 					std::map<short, const char*> lstTabs = {
 						{0, "Basic"}, {2, "Derivate"}, {3, "Integrate"}
 					};
-					element = new NewHistoriElement:: \
+					elementGlobal = new NewHistoriElement:: \
 						BasicBoxHistoriElement{ \
 						_lineEditText, _window, \
 						_window->getResult(), lstTabs[tab] \
 					};
+					elementLocal = new NewHistoriElement:: \
+						BaseBoxHistoriElement{ \
+						_lineEditText, _window, \
+						_window->getResult() \
+					};
 				}
 				break;
 		}
-
+		std::cout << "Global" << elementGlobal << std::endl;
+		std::cout << "Local" << elementLocal << std::endl;
 
 		// Добавление элемента в глобальную историю
-		_window->getAddGlobalHistori()->addLayout(element);
+		_window->getAddGlobalHistori()->addLayout(elementGlobal);
 		_window->getResizeGlobalHistori()->adjustSize();
 		QScrollArea *globalHistori \
 			{_window->getGlobalHistori()};
 		globalHistori->verticalScrollBar()->setValue(
 			globalHistori->verticalScrollBar()->maximum()
 		);
+		std::cout << "ok" << std::endl;
 
 		// Добавление элемента в локальную историю
-		_window->getAddLocalHistori()->addLayout(element);
+		_window->getAddLocalHistori(tab)->addLayout(elementLocal);
 		_window->getResizeLocalHistori()->adjustSize();
 		QScrollArea *localHistori \
 			{_window->getLocalHistori()};
@@ -906,7 +949,7 @@ public:
 	static void inputtinLineEdit( \
 		QPushButton *button, Window *window \
 	) {
-		const char *label = strdup(button->text().toUtf8().data());
+		const char *label = strdup(button->text().toUtf8().constData());
 		QLineEdit *lineEdit \
 			{window->getLineEdit()};
 		const char *text {lineEdit->text().toUtf8().data()};
@@ -932,7 +975,7 @@ void LineEdit::onLineEditChanged( \
 	QByteArray byteArray = text.toUtf8();
 
 	// Копируем данные QByteArray в char[]
-	char textCh[byteArray.size() + 1]; // +1 для нулевого завершающего символа
+	char *textCh {new char[byteArray.size() + 1UL]{""}}; // +1 для нулевого завершающего символа
 	strcpy(textCh, byteArray.constData());
 	LogicCalculate *logicCalculate \
 		{new LogicCalculate(textCh, _window)};
@@ -940,13 +983,16 @@ void LineEdit::onLineEditChanged( \
 		logicCalculate->button_ALL();
 	else if (strstr(textCh, "_O") != nullptr)
 		logicCalculate->button_O();
-	else if (strstr(textCh, "_RES") != nullptr)
+	else if (strstr(textCh, "_RES") != nullptr) {
 		logicCalculate->button_RES();
+		std::cout << _window << std::endl;
+	}
 	else
 		logicCalculate->buttonOther();
 }
 
 namespace Title {
+	/*
 	class Action : public QWidgetAction {
 	public:
 		explicit Action(QMenu *parent, Button::ButtonBase *button)
@@ -979,6 +1025,7 @@ namespace Title {
 				);
 		}
 	};
+	*/
 
 
 	class TitleLayout : public QHBoxLayout {
@@ -995,34 +1042,34 @@ namespace Title {
 		explicit TitleLayout( \
 				CalculateDragAndDrop *app, Window *window \
 		) noexcept : _window(window), QHBoxLayout() {
-			setContentsMargins(0, 0, 0, 0);
-        	setSpacing(0);
+			setContentsMargins(10, 10, 10, 10);
+        	setSpacing(10);
 			puts("op");
 
 			addWidget( \
 				new Button::ButtonBase{ \
-					"Settings", window \
+					"Settings", window, nullptr, "basic" \
 				}
 			);
 			addWidget( \
 				_buttonChangeHistori = new Button::ButtonBase{ \
-					"Global Histori", window, \
+					"Global histori", window, \
 					new std::function<void(QPushButton *)> { \
 						std::bind(
 							&TitleLayout::changeHistoriVisible, \
 							this, std::placeholders::_1 \
 						) \
-					} \
+					}, "basic"\
 				} \
 			);
 			addWidget( \
 				new Button::ButtonBase{ \
-					"+ Add", window, \
-					new std::function<void(QPushButton *)>( \
+					"+ New", window, \
+					new std::function<void(QPushButton *)> { \
 						std::bind( \
 							&CalculateDragAndDrop::createWindow, app, std::placeholders::_1 \
 						) \
-					) \
+					}, "basic"\
 				} \
 			);
 			return;
@@ -1035,14 +1082,14 @@ namespace Title {
 			_localHistoriDerivative  = window->getLocalHistori(2);
 			_localHistoriIntegrate   = window->getLocalHistori(3);
 			_localHistoriReplacement = window->getLocalHistori(4);
-			std::cout << _globalHistori << std::endl << _localHistoriBasic << std::endl << \
+			//std::cout << _globalHistori << std::endl << _localHistoriBasic << std::endl << \
 				_localHistoriIntegral << std::endl << _localHistoriDerivative << std::endl << \
 				_localHistoriIntegrate << std::endl << _localHistoriReplacement << std::endl;
 			return;
 		}
 		void changeHistoriVisible(QPushButton *button) const {
 			if (_globalHistori->isVisible()) {
-				_buttonChangeHistori->setText("Local Histori");
+				_buttonChangeHistori->setText("Global Histori");
 				_globalHistori->setVisible(false);
 				_localHistoriBasic->setVisible(true);
 				_localHistoriIntegral->setVisible(true);
@@ -1050,7 +1097,7 @@ namespace Title {
 				_localHistoriIntegrate->setVisible(true);
 				_localHistoriReplacement->setVisible(true);
 			} else {
-				_buttonChangeHistori->setText("Global Histori");
+				_buttonChangeHistori->setText("Local Histori");
 				_globalHistori->setVisible(true);
 				_localHistoriBasic->setVisible(false);
 				_localHistoriIntegral->setVisible(false);
@@ -1068,7 +1115,6 @@ namespace Title {
 		explicit TitleBar( \
 			CalculateDragAndDrop *app, Window *window \
 		) noexcept : QWidget() {
-			setFixedHeight(35);
 			setLayout( \
 				_child = new TitleLayout(app, window) \
 			);
@@ -1091,7 +1137,7 @@ namespace Grid {
 			byte row = byte(0), byte columnStart = byte(0), \
 			const char * cssName = "opertor" \
 		) noexcept {
-			static std::function<void(QPushButton *)> * func { \
+			std::function<void(QPushButton *)> * func { \
 				new std::function<void(QPushButton*)>{
 					[window](QPushButton* btn) {
 						LogicCalculate::inputtinLineEdit(btn, window);
@@ -1142,13 +1188,13 @@ namespace Grid {
 
 	class GridCalculateCommon : public QGridLayout {
 	private:
-		Window *_window {nullptr};
 	public:
 		explicit GridCalculateCommon( \
 			Window *window \
-		) : _window{window} {
+		) : QGridLayout{} {
 			setSpacing(10);
 			setContentsMargins(10, 10, 10, 10);
+			std::cout << "po" << window << std::endl;
 
 			BuildingGridKeyboard<Button::ButtonDrag>{
 				std::vector<std::vector<const char *>> {
@@ -1177,19 +1223,19 @@ namespace Grid {
 					{"*", ":"},
 					{"+", "-"},
 					{"^", "!"},
-				}, this, window, byte(1), byte(3), "operator"\
+				}, this, window, byte(1), byte(3), "operator" \
 			};
 
 			BuildingGridKeyboard<Button::ButtonDragAndDrop>{
 				std::vector<std::vector<const char *>> {
 					{"_PI", "_E"}
-				}, this, window, byte(5), byte(3), "const"\
+				}, this, window, byte(5), byte(3), "const" \
 			};
 
 			BuildingGridKeyboard<Button::ButtonDragAndDrop>{
 				std::vector<std::vector<const char *>> {
 					{"", "", "", "", ""}
-				}, this, window, byte(6), byte(0), "empty"\
+				}, this, window, byte(6), byte(0), "empty" \
 			};
 
 			puts("hj");
@@ -1210,12 +1256,13 @@ namespace Grid {
 			Window *window, byte tab \
 		) : QGridLayout() {
 			setSpacing(12);
-			setContentsMargins(0, 0, 0, 0);
+			setContentsMargins(10, 0, 10, 0);
 			CreateHistori::HistoriScroll *localHistori \
-				{new CreateHistori::HistoriScroll{}};
+				{new CreateHistori::HistoriScroll{ \
+					"Local histori", window}};
 			window->setLocalHistori(localHistori, tab);
 			CreateHistori::HistoriWidget *resizeLocalHistori \
-				{new CreateHistori::HistoriWidget{}};
+				{localHistori->getResizeHistori()};
 			window->setResizeLocalHistori(resizeLocalHistori, tab);
 			window->setAddLocalHistori(resizeLocalHistori->getAddHistori(), tab);
 			addWidget(localHistori, 0, 0, 1, 6);
@@ -1242,8 +1289,7 @@ namespace Grid {
 		) : GridBaseCalc(window, byte(1)) {
 			addWidget( \
 				new Button::ButtonBase{ \
-					"a = ", window, \
-					nullptr, "calculate" \
+					"a = ", window, nullptr \
 				}, 1, 0, 1, 1 \
 			);
 			LineEdit *aLineEdit \
@@ -1252,8 +1298,7 @@ namespace Grid {
 			addWidget(aLineEdit, 1, 1, 1, 2);
 			addWidget( \
 				new Button::ButtonBase{ \
-					"b = ", window, \
-					nullptr, "calculate" \
+					"b = ", window, nullptr \
 				}, 1, 3, 1, 1 \
 			);
 			LineEdit *bLineEdit \
@@ -1286,7 +1331,7 @@ namespace Grid {
 			addWidget( \
 				new Button::ButtonBase{ \
 					"with =", window, \
-					nullptr, "calculate" \
+					nullptr \
 				}, 1, 0, 1, 1 \
 			);
 			LineEdit *withLineEdit = \
@@ -1296,7 +1341,7 @@ namespace Grid {
 			addWidget( \
 				new Button::ButtonBase( \
 					"on =", window, \
-					nullptr, "calculate" \
+					nullptr \
 				), 1, 3, 1, 1 \
 			);
 			LineEdit *onLineEdit \
@@ -1428,13 +1473,15 @@ public:
 	explicit MainLayout( \
 		CalculateDragAndDrop *app, Window *window \
 	) : QVBoxLayout() {
+		std::cout << window << std::endl;
 		setContentsMargins(0, 0, 0, 0);
 		setSpacing(0);
 		Title::TitleBar * const titleBar \
 			{new Title::TitleBar{app, window}};
 		addWidget(titleBar);
 		CreateHistori::HistoriScroll *globalHistori \
-			{new CreateHistori::HistoriScroll{}};
+			{new CreateHistori::HistoriScroll{ \
+				"Gloabl histori", window}};
 		globalHistori->setVisible(false);
 		window->setGlobalHistori(globalHistori);
 		CreateHistori::HistoriWidget *resizeGlobalHistori \
@@ -1448,10 +1495,11 @@ public:
 		addWidget(new TabWindow::TabWidgetKeyboard{window});
 		titleBar->getChild()->buttonInit();
 		puts("jk");
-		setStretch(0, 5);
-		setStretch(1, 30);
-		setStretch(2, 50);
-		setStretch(3, 15);
+		setStretch(0, 1);
+		setStretch(1, 20);
+		setStretch(2, 20);
+		setStretch(3, 50);
+		setStretch(4, 1);
 		return;
 	}
 };
