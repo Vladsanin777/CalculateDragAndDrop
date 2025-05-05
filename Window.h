@@ -31,6 +31,7 @@
 #include <QTabBar>
 #include <QTabWidget>
 #include <QLabel>
+#include <QStyle>
 
 #define BYTE_MAX 255
 #define COUNT_LOCAL_HISTORI 5
@@ -99,10 +100,10 @@ public:
 				background-color: rgb(107, 110, 195);
 			}
 			#const {
-				background-color: rgb(118, 176, 48);
+				background-color: rgb(94, 142, 35);
 			}
 			#operator {
-				background-color: rgb(187, 180, 52);
+				background-color: rgb(150, 145, 37);
 			}
 			#number {
 				background-color: rgb(34, 71, 171);
@@ -113,13 +114,18 @@ public:
 			#prefix {
 				background-color: rgb(94, 0, 0);
 			}
+			#expression {
+				background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
+					stop: 0 rgb(34, 71, 171), stop: 0.75 rgb(106, 35, 169));
+			}
 			#function:hover,
 			#empty:hover,
 			#const:hover,
 			#operator:hover,
 			#number:hover,
 			#bracket:hover,
-			#prefix:hover {
+			#prefix:hover,
+			#expression:hover {
 				background-color: #777;
 				border: 5px solid white;
 			}
@@ -456,6 +462,7 @@ namespace Button {
 		) : ButtonBase(
 			label, window, callback, cssName, menu
 		) {}
+	protected:
 		void mousePressEvent( \
 				QMouseEvent *event \
 		) override {
@@ -495,14 +502,106 @@ namespace Button {
 
 	class ButtonDragAndDrop : public ButtonDrag {
 	public:
-		explicit ButtonDragAndDrop( \
+		explicit inline ButtonDragAndDrop( \
 			const char *label, Window *window, \
 			std::function<void(QPushButton *)> *callback = nullptr, \
 			const char *cssName = nullptr, QMenu *menu = nullptr \
 		) : ButtonDrag ( \
 			label, window, callback, cssName, menu \
 		) {setAcceptDrops(true);}
-		void dragEnterEvent( \
+		
+		inline bool isEmpty(const char * &text) {
+			return strlen(text) == 0UL;
+		}
+		inline bool isNumber(const char * &text) {
+			size_t len {strlen(text)};
+			if (!(isdigit(*text) || ('-' == *text \
+				&& len > 1UL)))
+				return false;
+			if (text[len-1UL] == '%') len--;
+			for (const char * ptr {text+1}; --len ; ptr++)
+				if (!isdigit(*ptr) && \
+					*ptr != '.' && *ptr != ',')
+					return false;
+			return true;
+		}
+		inline bool isPrefix(const char * &text) {
+			size_t len {strlen(text)};
+			if (len < 2) return false;
+			if (*text != '0') return false;
+			const char second {text[1]};
+			if (second != 'b' && \
+				second != 'x' && second != 'o')
+				return false;
+			if (len == 2) return true;
+			const char *textlvalue {text+2UL};
+			return isNumber(textlvalue);
+		}
+		inline bool isConst(const char * &text) {
+			return strcmp(text, "_E") == 0 || \
+				strcmp(text, "_PI") == 0;
+		}
+		inline bool isBracket(const char * &text) {
+			return strcmp(text, "(") == 0 || \
+				strcmp(text, ")") == 0 || \
+				strcmp(text, "()") == 0;
+		}
+		inline bool isFunction(const char * &text) {
+			return strcmp(text, "_ALL") == 0 || \
+				strcmp(text, "_DO") == 0 || \
+				strcmp(text, "_RES")  == 0 || \
+				strcmp(text, "_POS") == 0 || \
+				strcmp(text, "_O") == 0;
+		}
+		inline bool isOperator(const char * &text) {
+			return strcmp(text, "+") == 0 || \
+				strcmp(text, "-") == 0 || \
+				strcmp(text, ":") == 0 || \
+				strcmp(text, "*") == 0 || \
+				strcmp(text, "^") == 0 || \
+				strcmp(text, "!") == 0 || \
+				strcmp(text, "sqrt") == 0 || \
+				strcmp(text, "sqrt(") == 0 || \
+				strcmp(text, "ln") == 0 || \
+				strcmp(text, "ln(") == 0 || \
+				strcmp(text, "log") == 0 || \
+				strcmp(text, "log(") == 0 || \
+				strcmp(text, "lg") == 0 || \
+				strcmp(text, "lg(") == 0 || \
+				strcmp(text, "sin") == 0 || \
+				strcmp(text, "sin(") == 0 || \
+				strcmp(text, "cos") == 0 || \
+				strcmp(text, "cos(") == 0 || \
+				strcmp(text, "tan") == 0 || \
+				strcmp(text, "tan(") == 0 || \
+				strcmp(text, "sec") == 0 || \
+				strcmp(text, "sec(") == 0 || \
+				strcmp(text, "csc") == 0 || \
+				strcmp(text, "csc(") == 0 || \
+				strcmp(text, "cot") == 0 || \
+				strcmp(text, "cot(") == 0 || \
+				strcmp(text, "asin") == 0 || \
+				strcmp(text, "asin(") == 0 || \
+				strcmp(text, "acos") == 0 || \
+				strcmp(text, "acos(") == 0 || \
+				strcmp(text, "atan") == 0 || \
+				strcmp(text, "atan(") == 0 || \
+				strcmp(text, "asec") == 0 || \
+				strcmp(text, "asec(") == 0 || \
+				strcmp(text, "acsc") == 0 || \
+				strcmp(text, "acsc(") == 0 || \
+				strcmp(text, "acot") == 0 || \
+				strcmp(text, "acot(") == 0 || \
+				strcmp(text, "sgn") == 0 || \
+				strcmp(text, "sgn(") == 0 || \
+				strcmp(text, "abs") == 0 || \
+				strcmp(text, "abs(") == 0 || \
+				strcmp(text, "exp") == 0 || \
+				strcmp(text, "exp(") == 0 || \
+				strcmp(text, "mod") == 0;
+		}
+	protected:
+		inline void dragEnterEvent( \
 				QDragEnterEvent *event \
 		) override {
 			QPushButton::dragEnterEvent(event);
@@ -510,11 +609,36 @@ namespace Button {
 				event->acceptProposedAction();
 			return;
 		}
-		void dropEvent( \
+		inline void dropEvent( \
 				QDropEvent *event \
 		) override {
 			QPushButton::dropEvent(event);
-			setText(event->mimeData()->text());
+			const char * text { \
+				event->mimeData()->text().toUtf8().constData()}, \
+				* cssName {nullptr};
+			setText(text);
+			if (isEmpty(text))
+				cssName = "empty";
+			else if (isNumber(text))
+				cssName = "number";
+			else if (isPrefix(text))
+				cssName = "prefix";
+			else if (isBracket(text))
+				cssName = "bracket";
+			else if (isConst(text))
+				cssName = "const";
+			else if (isFunction(text))
+				cssName = "function";
+			else if (isOperator(text))
+				cssName = "operator";
+			else
+				cssName = "expression";
+			puts(cssName);
+			setStyleSheet("");
+			setObjectName(cssName);
+			style()->unpolish(this);
+			style()->polish(this);
+			update();
 			event->acceptProposedAction();
 			return;
 		}
@@ -533,6 +657,7 @@ public:
 		const char *text = "" \
 	) : _window{window}, QLineEdit{}, \
 	_tab{tab}, _index{index} {
+		setDragEnabled(true);
 		std::cout << _window << std::endl;
 		setText(QString::fromUtf8(text));
 		QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -1219,7 +1344,7 @@ namespace Grid {
 
 			BuildingGridKeyboard<Button::ButtonDragAndDrop>{
 				std::vector<std::vector<const char *>> {
-					{"mod", "sqrt"},
+					{"mod", "sqrt("},
 					{"*", ":"},
 					{"+", "-"},
 					{"^", "!"},
@@ -1394,7 +1519,7 @@ namespace TabWindow {
 				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
 					std::vector<std::vector<const char *>>{
 						{"+", "-", ":", "*", "^"},
-						{"!", "sqrt", "ln", "log", "lg"}
+						{"!", "sqrt(", "ln(", "log(", "lg("}
 					}, window, "operator" \
 				} \
 			}, "operators");
@@ -1415,22 +1540,22 @@ namespace TabWindow {
 			addTab(new TabQWidget{ \
 				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
 					std::vector<std::vector<const char *>>{
-						{"sin", "cos", "tan"},
-						{"sec", "csc", "cot"}
+						{"sin(", "cos(", "tan("},
+						{"sec(", "csc(", "cot("}
 					}, window, "operator" \
 				} \
 			}, "trigonometric functions");
 			addTab(new TabQWidget{ \
 				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
 					std::vector<std::vector<const char *>>{
-						{"sgn", "abs", "mod"}
+						{"sgn(", "abs(", "mod", "exp("}
 					}, window, "operator" \
 				} \
 			}, "other functions");
 			addTab(new TabQWidget{ \
 				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
 					std::vector<std::vector<const char *>>{
-						{"0x", "0b", "0t"}
+						{"0x", "0b", "0o"}
 					}, window, "prefix" \
 				} \
 			}, "number system");
