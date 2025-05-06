@@ -63,13 +63,13 @@ void mpfr_acot(mpfr_t& result, const mpfr_t x, mpfr_rnd_t rnd) {
     mpfr_clear(temp);
 }
 enum ArifmeticAction { \
-	none, addition, subtraction, \
-	remainderFromDivision, power, \
-	multiplication, division, \
-	log, sin, cos, tan, cot, sec, csc, \
-	asin, acos, atan, acot, asec, acsc, \
-	sqrt, sqr, cbrt, unaryMinus, _abs, \
-	sgn, lg, ln, exp\
+	OpNone, OpAddition, OpSubtraction, \
+	OpRemainderFromDivision, OpPower, \
+	OpMultiplication, OpDivision, \
+	OpLog, OpSin, OpCos, OpTan, OpCot, OpSec, OpCsc, \
+	OpAsin, OpAcos, OpAtan, OpAcot, OpAsec, OpAcsc, \
+	OpSqrt, OpSqr, OpCbrt, OpUnaryMinus, OpAbs, \
+	OpSgn, OpLg, OpLn, OpExp \
 };
 static const char *ARIFMETIC_STR_ACTION[] { \
 	"none", "+", "-", "mod", "^", "*", "/", "log", \
@@ -121,7 +121,7 @@ static inline const char * _shearchNotPriorityOperator( \
 	const char * const expression, unsigned char &lenOperator, \
 	ArifmeticAction &action \
 ) {
-	action = none, lenOperator = 0;
+	action = OpNone, lenOperator = 0;
 	size_t len{strlen(expression)};
 	puts(expression);
 
@@ -134,57 +134,58 @@ static inline const char * _shearchNotPriorityOperator( \
 		_replaceOnX(copyExpression, levelBrakets);
 		//puts(copyExpression);
 		if (ptr = strrstr(copyExpression, "+")) {
-			lenOperator = 1, action = addition; break;
+			lenOperator = 1, action = OpAddition; break;
 		}
 		if (ptr = strrstr(copyExpression, "-")) {
 			lenOperator = 1;
-			if (_isOperatorSub(ptr, expression)) action = subtraction;
-			else action = unaryMinus;
+			if (_isOperatorSub(ptr, expression)) 
+				action = OpSubtraction;
+			else action = OpUnaryMinus;
 			break;
 		}
 		if (ptr = strrstr(copyExpression, "*")) {
-			lenOperator = 1, action = multiplication; break;
+			lenOperator = 1, action = OpMultiplication; break;
 		}
 		if (ptr = strrstr(copyExpression, "/")) {
-			lenOperator = 1, action = division; break;
+			lenOperator = 1, action = OpDivision; break;
 		}
 		if (ptr = strrstr(copyExpression, "mod")) {
-			lenOperator = 3, action = remainderFromDivision; break;
+			lenOperator = 3, action = OpRemainderFromDivision; break;
 		}
 		if ((temp = strrstr(copyExpression, "sin")) < ptr != !ptr)
-			lenOperator = 3, action = sin, ptr = temp; 
+			lenOperator = 3, action = OpSin, ptr = temp; 
 		if ((temp = strrstr(copyExpression, "cos")) < ptr != !ptr)
-			lenOperator = 3, action = cos, ptr = temp; 
+			lenOperator = 3, action = OpCos, ptr = temp; 
 		if ((temp = strrstr(copyExpression, "tan")) < ptr && !ptr)
-			lenOperator = 3, action = tan, ptr = temp; 
+			lenOperator = 3, action = OpTan, ptr = temp; 
 		if ((temp = strrstr(copyExpression, "cot")) < ptr && !ptr)
-			lenOperator = 3, action = cot, ptr = temp; 
+			lenOperator = 3, action = OpCot, ptr = temp; 
 		if ((temp = strrstr(copyExpression, "sec")) < ptr && !ptr)
-			lenOperator = 3, action = sec, ptr = temp; 
+			lenOperator = 3, action = OpSec, ptr = temp; 
 		if ((temp = strrstr(copyExpression, "csc")) < ptr && !ptr)
-			lenOperator = 3, action = csc, ptr = temp; 
+			lenOperator = 3, action = OpCsc, ptr = temp; 
 		if ((temp = strrstr(copyExpression, "asin")) < ptr && !ptr)
-			lenOperator = 4, action = asin, ptr = temp; 
+			lenOperator = 4, action = OpAsin, ptr = temp; 
 		if ((temp = strrstr(copyExpression, "acos")) < ptr && !ptr)
-			lenOperator = 4, action = acos, ptr = temp; 
+			lenOperator = 4, action = OpAcos, ptr = temp; 
 		if ((temp = strrstr(copyExpression, "atan")) < ptr && !ptr)
-			lenOperator = 4, action = atan, ptr = temp; 
+			lenOperator = 4, action = OpAtan, ptr = temp; 
 		if ((temp = strrstr(copyExpression, "acot")) < ptr && !ptr)
-			lenOperator = 4, action = acot, ptr = temp; 
+			lenOperator = 4, action = OpAcot, ptr = temp; 
 		if ((temp = strrstr(copyExpression, "asec")) < ptr && !ptr)
-			lenOperator = 4, action = asec, ptr = temp; 
+			lenOperator = 4, action = OpAsec, ptr = temp; 
 		if ((temp = strrstr(copyExpression, "acsc")) < ptr && !ptr)
-			lenOperator = 4, action = acsc, ptr = temp;
+			lenOperator = 4, action = OpAcsc, ptr = temp;
 		if ((temp = strrstr(copyExpression, "lg")) < ptr && !ptr)
-			lenOperator = 2, action = lg, ptr = temp;
+			lenOperator = 2, action = OpLg, ptr = temp;
 		if ((temp = strrstr(copyExpression, "ln")) < ptr && !ptr)
-			lenOperator = 2, action = ln, ptr = temp;
+			lenOperator = 2, action = OpLn, ptr = temp;
 		if ((temp = strrstr(copyExpression, "abs")) < ptr && !ptr)
-			lenOperator = 3, action = _abs, ptr = temp;
+			lenOperator = 3, action = OpAbs, ptr = temp;
 		if ((temp = strrstr(copyExpression, "sgn")) < ptr && !ptr)
-			lenOperator = 3, action = sgn, ptr = temp;
+			lenOperator = 3, action = OpSgn, ptr = temp;
 		if ((temp = strrstr(copyExpression, "log")) < ptr && !ptr)
-			lenOperator = 3, action = log, ptr = temp;
+			lenOperator = 3, action = OpLog, ptr = temp;
 		//puts("rfjvkfkml");
 	}
 	//std::cout << ptr << std::endl;
@@ -278,82 +279,81 @@ private:
 			operand2 = _operand2->calculate();
 		puts(ARIFMETIC_STR_ACTION[arifmeticAction]);
 		switch (arifmeticAction) {
-			case addition:
+			case OpAddition:
 				mpfr_add(*result, *operand1, *operand2, MPFR_RNDN);
 				break;
-			case subtraction:
+			case OpSubtraction:
 				mpfr_sub(*result, *operand1, *operand2, MPFR_RNDN);
 				break;
-			case remainderFromDivision:
+			case OpRemainderFromDivision:
 				mpfr_fmod(*result, *operand1, *operand2, MPFR_RNDN);
 				break;
-			case multiplication:
+			case OpMultiplication:
 				mpfr_mul(*result, *operand1, *operand2, MPFR_RNDN);
 				break;
-			case division:
+			case OpDivision:
 				mpfr_div(*result, *operand1, *operand2, MPFR_RNDN);
 				break;
-			case unaryMinus:
+			case OpUnaryMinus:
 				mpfr_sub(*result, ZERO->_data.number, *operand1, MPFR_RNDN);
 				break;
-			case sin:
+			case OpSin:
 				mpfr_sin(*result, *operand1, MPFR_RNDN);
 				break;
-			case cos:
+			case OpCos:
 				mpfr_cos(*result, *operand1, MPFR_RNDN);
 				break;
-			case tan:
+			case OpTan:
 				mpfr_tan(*result, *operand1, MPFR_RNDN);
 				break;
-			case sec:
+			case OpSec:
 				mpfr_sec(*result, *operand1, MPFR_RNDN);
 				break;
-			case csc:
+			case OpCsc:
 				mpfr_csc(*result, *operand1, MPFR_RNDN);
 				break;
-			case cot:
+			case OpCot:
 				mpfr_cot(*result, *operand1, MPFR_RNDN);
 				break;
-			case asin:
+			case OpAsin:
 				mpfr_asin(*result, *operand1, MPFR_RNDN);
 				break;
-			case acos:
+			case OpAcos:
 				mpfr_acos(*result, *operand1, MPFR_RNDN);
 				break;
-			case atan:
+			case OpAtan:
 				mpfr_atan(*result, *operand1, MPFR_RNDN);
 				break;
-			case asec:
+			case OpAsec:
 				mpfr_asec(*result, *operand1, MPFR_RNDN);
 				break;
-			case acsc:
+			case OpAcsc:
 				mpfr_acsc(*result, *operand1, MPFR_RNDN);
 				break;
-			case acot:
+			case OpAcot:
 				mpfr_acot(*result, *operand1, MPFR_RNDN);
 				break;
-			case sqr:
+			case OpSqr:
 				mpfr_sqr(*result, *operand1, MPFR_RNDN);
 				break;
-			case sqrt:
+			case OpSqrt:
 				mpfr_sqrt(*result, *operand1, MPFR_RNDN);
 				break;
-			
-			case cbrt:
+			case OpCbrt:
 				mpfr_cbrt(*result, *operand1, MPFR_RNDN);
 				break;
-			case exp:
+			case OpExp:
 				mpfr_exp(*result, *operand1, MPFR_RNDN);
 				break;
-			case log:
+			case OpLog:
 				mpfr_log(*operand1, *operand1, MPFR_RNDN);
 				mpfr_log(*operand2, *operand2, MPFR_RNDN);
 				mpfr_div(*result, *operand1, *operand2, MPFR_RNDN);
 				break;
-			case ln:
+			case OpLn:
 				mpfr_log(*result, *operand1, MPFR_RNDN);
 				break;
-			case lg:
+			case OpLg:
 				mpfr_log10(*result, *operand1, MPFR_RNDN);
 				break;
 			//case sgn:
@@ -395,7 +395,7 @@ public:
 		if (!VAR_X) VAR_X = new Expression{"x", nullptr, false};
 	}
 	inline bool isTwoOperand(void) const {
-		return _data.action < sin;
+		return _data.action < OpSin;
 	}
 	static Expression *buildExpressionTree( \
 		const char *expression, \
@@ -429,7 +429,7 @@ public:
 		//puts("nm");
 		Expression * result = new Expression{action, parent};
 		//puts("nm");
-		if (action < sin) {
+		if (action < OpSin) {
 			puts("two operator");
 			puts(ARIFMETIC_STR_ACTION[action]);
 			std::cout << action << std::endl;
@@ -589,7 +589,7 @@ public:
 				//puts("variableDi");
 				return ONE->copy(parent);
 		}
-		Expression * result {new Expression{none, parent}};
+		Expression * result {new Expression{OpNone, parent}};
 		Diff operand1Di {_operand1->heandlerDifferentiate()}, operand2Di;
 		if (_operand2) operand2Di = _operand2->heandlerDifferentiate();
 		const ArifmeticAction &action {_data.action};
@@ -601,8 +601,8 @@ public:
 			* resOperand2Operand2, \
 			* resOperand2Operand1;
         switch (action) {
-			case addition:
-			case subtraction:
+			case OpAddition:
+			case OpSubtraction:
 				//puts("subAdd");
 				if (operand1Di == numberDi) {
 					//puts("asd");
@@ -620,9 +620,9 @@ public:
 					resOperand2 = _operand2->differentiate(result);
 				}
 				return result;
-			case multiplication:
-				std::cout << operand1Di << ' ' << operand2Di << std::endl;
-				puts("sfjkvjk");
+			case OpMultiplication:
+				//std::cout << operand1Di << ' ' << operand2Di << std::endl;
+				//puts("sfjkvjk");
 				if (operand1Di == numberDi || operand2Di == numberDi) {
 					delete result;
 					result = ZERO->copy(parent);
@@ -634,22 +634,22 @@ public:
 					delete result;
 					result = _operand1->differentiate(parent);
 				} else {
-					resAction = addition;
-					resOperand1 = new Expression{multiplication, result};
+					resAction = OpAddition;
+					resOperand1 = new Expression{OpMultiplication, result};
 					resOperand1->_operand1 = _operand1->differentiate(resOperand1);
 					resOperand1->_operand2 = _operand2->copy(resOperand1);
-					resOperand2 = new Expression{multiplication, result};
+					resOperand2 = new Expression{OpMultiplication, result};
 					resOperand2->_operand1 = _operand1->copy(resOperand2);
 					resOperand2->_operand2 = _operand2->differentiate(resOperand2);
 				}
 				return result;
-			case division:
-				resAction = division;
-				resOperand1 = new Expression{addition, result};
+			case OpDivision:
+				resAction = OpDivision;
+				resOperand1 = new Expression{OpAddition, result};
 				resOperand1Operand1 = \
-					new Expression {multiplication, resOperand1}, \
+					new Expression {OpMultiplication, resOperand1}, \
 				resOperand1Operand2 = \
-					new Expression {multiplication, resOperand1};
+					new Expression {OpMultiplication, resOperand1};
 				resOperand1Operand1->_operand1 = \
 					_operand1->differentiate(resOperand1Operand1);
 				resOperand1Operand1->_operand2 = \
@@ -660,217 +660,217 @@ public:
 				resOperand1Operand2->_operand2 = 
 					_operand2->differentiate(resOperand1Operand2);
 				resOperand1->_operand2 = resOperand1Operand2;
-				resOperand2 = new Expression{sqr, result};
+				resOperand2 = new Expression{OpSqr, result};
 				resOperand2->_operand1 = _operand2->copy(resOperand2);
 				return result;
-			case power:
-				resAction = multiplication;
+			case OpPower:
+				resAction = OpMultiplication;
 				resOperand1 = _operand2->copy(resOperand1);
-				resOperand2 = new Expression{power, result};
+				resOperand2 = new Expression{OpPower, result};
 				resOperand2->_operand1 = \
 					_operand1->copy(resOperand2);
 				resOperand2Operand2 = \
-					new Expression{subtraction, resOperand2};
+					new Expression{OpSubtraction, resOperand2};
 				resOperand2Operand2->_operand1 = \
 					_operand2->copy(resOperand2Operand2);
 				resOperand2Operand2->_operand2 = \
 					ONE->copy(resOperand2Operand2);
 				break;
-			case log:
-				resAction = division;
+			case OpLog:
+				resAction = OpDivision;
 				resOperand1 = ONE->copy(result);
-				resOperand2 = new Expression{multiplication, result};
+				resOperand2 = new Expression{OpMultiplication, result};
 				resOperand2->_operand1 = _operand1->copy(resOperand2);
-				resOperand2Operand2 = new Expression{ln, resOperand2};
+				resOperand2Operand2 = new Expression{OpLn, resOperand2};
 				resOperand2->_operand2 = resOperand2Operand2;
 				resOperand2Operand2->_operand1 = \
 					_operand2->copy(resOperand2Operand2);
 				break;
-			case ln:
-				resAction = division;
+			case OpLn:
+				resAction = OpDivision;
 				resOperand1 = ONE->copy(result);
 				resOperand2 = _operand1->copy(result);
 				break;
-			case lg:
-				resAction = division;
+			case OpLg:
+				resAction = OpDivision;
 				resOperand1 = ONE->copy(result);
-				resOperand2 = new Expression{multiplication, result};
+				resOperand2 = new Expression{OpMultiplication, result};
 				resOperand2->_operand1 = _operand1->copy(resOperand2);
-				resOperand2Operand2 = new Expression{ln, resOperand2};
+				resOperand2Operand2 = new Expression{OpLn, resOperand2};
 				resOperand2->_operand2 = resOperand2Operand2;
 				resOperand2Operand2->_operand1 = \
 					TEN->copy(resOperand2Operand2);
 				break;
-			case exp:
-				resAction = exp;
+			case OpExp:
+				resAction = OpExp;
 				resOperand1 = _operand1->copy();
 				break;
-			case sin:
-				resAction = cos;
+			case OpSin:
+				resAction = OpCos;
 				resOperand1 = _operand1->copy();
 				if (operand1Di == variableDi) return result;
 				break;
-			case cos:
-				resAction = unaryMinus;
-				resOperand1 = new Expression{sin, result};
+			case OpCos:
+				resAction = OpUnaryMinus;
+				resOperand1 = new Expression{OpSin, result};
 				resOperand1->_operand1 = _operand1->copy();
 				if (operand1Di == variableDi) return result;
 				break;
-			case tan:
-				resAction = power;
-				resOperand1 = new Expression{sec, result};
+			case OpTan:
+				resAction = OpPower;
+				resOperand1 = new Expression{OpSec, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
 				if (operand1Di == variableDi) return result;
 				break;
-			case cot:
-				resAction = power;
-				resOperand1 = new Expression{unaryMinus, result};
-				resOperand1Operand1 = new Expression{csc, resOperand1};
+			case OpCot:
+				resAction = OpPower;
+				resOperand1 = new Expression{OpUnaryMinus, result};
+				resOperand1Operand1 = new Expression{OpCsc, resOperand1};
 				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
 				resOperand1->_operand1 = resOperand1Operand1;
 				if (operand1Di == variableDi) return result;
 				break;
-			case sec:
-				resAction = multiplication;
-				resOperand1 = new Expression{sec, result};
+			case OpSec:
+				resAction = OpMultiplication;
+				resOperand1 = new Expression{OpSec, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand2 = new Expression{tan, result};
+				resOperand2 = new Expression{OpTan, result};
 				resOperand2->_operand1 = _operand1->copy(resOperand2);
 				if (operand1Di == variableDi) return result;
 				break;
-			case csc:
-				resAction = multiplication;
-				resOperand1 = new Expression{unaryMinus, result};
-				resOperand1Operand1 = new Expression{csc, resOperand1};
+			case OpCsc:
+				resAction = OpMultiplication;
+				resOperand1 = new Expression{OpUnaryMinus, result};
+				resOperand1Operand1 = new Expression{OpCsc, resOperand1};
 				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
-				resOperand2 = new Expression{cot, result};
+				resOperand2 = new Expression{OpCot, result};
 				resOperand2->_operand1 = _operand1->copy(resOperand2);
 				if (operand1Di == variableDi) return result;
 				break;
-			case _abs:
-				resAction = sgn;
+			case OpAbs:
+				resAction = OpSgn;
 				resOperand1 = _operand1->copy();
 				if (operand1Di == variableDi) return result;
 				break;
-			case unaryMinus:
-				resAction = unaryMinus;
+			case OpUnaryMinus:
+				resAction = OpUnaryMinus;
 				resOperand1 = _operand1->differentiate();
 				return result;
-			case asin:
-				resAction = division;
+			case OpAsin:
+				resAction = OpDivision;
 				resOperand1 = ONE->copy();
-				resOperand2 = new Expression{sqrt, result};
+				resOperand2 = new Expression{OpSqrt, result};
 				resOperand2Operand1 = \
-					new Expression{subtraction, resOperand2};
+					new Expression{OpSubtraction, resOperand2};
 				resOperand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
 				resOperand1Operand2 = \
-					new Expression{sqr, resOperand2Operand1};
+					new Expression{OpSqr, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				if (operand1Di == variableDi) return result;
 				break;
-			case acos:
-				resAction = unaryMinus;
-				resOperand1 = new Expression{division, result};
+			case OpAcos:
+				resAction = OpUnaryMinus;
+				resOperand1 = new Expression{OpDivision, result};
 				resOperand1->_operand1 = ONE->copy(resOperand1);
-				resOperand1Operand2 = new Expression{sqrt, resOperand1};
+				resOperand1Operand2 = new Expression{OpSqrt, resOperand1};
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand2Operand1 = \
-					new Expression{subtraction, resOperand1Operand2};
+					new Expression{OpSubtraction, resOperand1Operand2};
 				resOperand1Operand2->_operand1 = \
 					resOperand2Operand1;
 				resOperand2Operand1->_operand1 = \
 					ONE->copy(resOperand2Operand1);
 				resOperand1Operand2 = \
-					new Expression{sqr, resOperand2Operand1};
+					new Expression{OpSqr, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = \
 					resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
 				if (operand1Di == variableDi) return result;
 				break;
-			case atan:
-				resAction = division;
+			case OpAtan:
+				resAction = OpDivision;
 				resOperand1 = ONE->copy();
-				resOperand2 = new Expression{sqrt, result};
+				resOperand2 = new Expression{OpSqrt, result};
 				resOperand2Operand1 = \
-					new Expression{addition, resOperand2};
+					new Expression{OpAddition, resOperand2};
 				resOperand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
 				resOperand1Operand2 = \
-					new Expression{sqr, resOperand2Operand1};
+					new Expression{OpSqr, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				if (operand1Di == variableDi) return result;
 				break;
 				
-			case acot:
-				resAction = unaryMinus;
-				resOperand1 = new Expression{division, result};
+			case OpAcot:
+				resAction = OpUnaryMinus;
+				resOperand1 = new Expression{OpDivision, result};
 				resOperand1->_operand1 = ONE->copy(resOperand1);
-				resOperand1Operand2 = new Expression{sqrt, resOperand1};
+				resOperand1Operand2 = new Expression{OpSqrt, resOperand1};
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand2Operand1 = \
-					new Expression{addition, resOperand1Operand2};
+					new Expression{OpAddition, resOperand1Operand2};
 				resOperand1Operand2->_operand1 = \
 					resOperand2Operand1;
 				resOperand2Operand1->_operand1 = \
 					ONE->copy(resOperand2Operand1);
 				resOperand1Operand2 = \
-					new Expression{sqr, resOperand2Operand1};
+					new Expression{OpSqr, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = \
 					resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
 				if (operand1Di == variableDi) return result;
 				break;
-			case asec:
-				resAction = division;
+			case OpAsec:
+				resAction = OpDivision;
 				resOperand1 = ONE->copy(result);
-				resOperand2 = new Expression{multiplication, result};
+				resOperand2 = new Expression{OpMultiplication, result};
 				resOperand2Operand1 = \
-					new Expression{_abs, resOperand2};
+					new Expression{OpAbs, resOperand2};
 				resOperand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = \
 					_operand1->copy(resOperand2Operand1);
 				resOperand2Operand2 = \
-					new Expression{sqrt, resOperand2};
+					new Expression{OpSqrt, resOperand2};
 				resOperand2->_operand2 = resOperand2Operand2;
 				resOperand2Operand1 = \
-					new Expression{subtraction, resOperand2Operand2};
+					new Expression{OpSubtraction, resOperand2Operand2};
 				resOperand2Operand2->_operand1 = \
 					resOperand2Operand1;
 				resOperand2Operand1->_operand1 = \
 					ONE->copy(resOperand2Operand1);
 				resOperand1Operand2 = \
-					new Expression{sqr, resOperand2Operand1};
+					new Expression{OpSqr, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = \
 					resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
 				if (operand1Di == variableDi) return result;
 				break;
-			case acsc:
-				resAction = unaryMinus;
-				resOperand1 = new Expression{division, result};
+			case OpAcsc:
+				resAction = OpUnaryMinus;
+				resOperand1 = new Expression{OpDivision, result};
 				resOperand1->_operand1 = ONE->copy(result);
-				resOperand1Operand2 = new Expression{multiplication, result};
-				resOperand2Operand1 = new Expression{_abs, resOperand2};
+				resOperand1Operand2 = new Expression{OpMultiplication, result};
+				resOperand2Operand1 = new Expression{OpAbs, resOperand2};
 				resOperand1Operand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = \
 					_operand1->copy(resOperand2Operand1);
 				resOperand2Operand2 = \
-					new Expression{sqrt, resOperand1Operand2};
+					new Expression{OpSqrt, resOperand1Operand2};
 				resOperand1Operand2->_operand2 = resOperand2Operand2;
 				resOperand2Operand1 = \
-					new Expression{subtraction, resOperand2Operand2};
+					new Expression{OpSubtraction, resOperand2Operand2};
 				resOperand2Operand2->_operand1 = \
 					resOperand2Operand1;
 				resOperand2Operand1->_operand1 = \
 					ONE->copy(resOperand2Operand1);
 				resOperand1Operand2 = \
-					new Expression{sqr, resOperand2Operand1};
+					new Expression{OpSqr, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = \
 					resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
@@ -878,26 +878,26 @@ public:
 				if (operand1Di == variableDi) return result;
 				break;
     
-			case sgn:
+			case OpSgn:
 				result->_typeData = numberTD;
 				result = ZERO->copy(parent);
 				return result;
 		}
-		Expression *mulOnDiffResult {new Expression {multiplication, parent}};
+		Expression *mulOnDiffResult {new Expression {OpMultiplication, parent}};
 		mulOnDiffResult->_operand1 = result;
 		result->_parent = mulOnDiffResult;
 		mulOnDiffResult->_operand2 = _operand1->differentiate(mulOnDiffResult);
 		return mulOnDiffResult;
 	}
 	inline Expression *integrate(Expression * parent = 0L) const {
-		Expression *result {new Expression{none, parent}};
+		Expression *result {new Expression{OpNone, parent}};
 		const ArifmeticAction &action {_data.action};
 		ArifmeticAction &resAction{result->_data.action};
 		Expression * &resOperand1 {result->_operand1}, \
 			* &resOperand2 {result->_operand2};
 		switch (heandlerDifferentiate()) {
 			case numberDi:
-				resAction = multiplication;
+				resAction = OpMultiplication;
 				resOperand1 = this->copy(result);
 				resOperand2 = VAR_X;
 				return result;
@@ -909,14 +909,14 @@ public:
 			* resOperand2Operand2, \
 			* resOperand2Operand1;
 		switch (action) {
-			case addition:
-			case subtraction:
+			case OpAddition:
+			case OpSubtraction:
 				resAction = action;
 				resOperand1 = _operand1->integrate(result);
 				resOperand2 = _operand2->integrate(result);
 				return result;
-			case multiplication:
-				resAction = multiplication;
+			case OpMultiplication:
+				resAction = OpMultiplication;
 				// Попробовать упростить (если один из операндов — константа)
 				if (operand1Di == numberDi) {
 					resOperand1 = _operand1->copy(result);  // Константа выносится за знак интеграла
@@ -928,11 +928,11 @@ public:
 				}
 				// Иначе применить интегрирование по частям: ∫u dv = uv - ∫v du
 				else {
-					resAction = subtraction;
-					resOperand1 = new Expression{multiplication, result};
+					resAction = OpSubtraction;
+					resOperand1 = new Expression{OpMultiplication, result};
 					resOperand1->_operand1 = _operand1->copy(resOperand1);
 					resOperand1->_operand2 = _operand2->integrate(resOperand1);
-					resOperand2 = new Expression{multiplication, result};
+					resOperand2 = new Expression{OpMultiplication, result};
 					resOperand2->_operand1 = _operand2->integrate(resOperand2);
 					resOperand2->_operand2 = _operand1->differentiate(resOperand2);
 					resOperand2Operand2 = resOperand2->integrate(result);  // Вторая часть: ∫v du
@@ -943,8 +943,8 @@ public:
 				return result;
 
 			
-			case division:  // Деление: ∫(u / v) dx → зависит от формы u и v
-				resAction = division;
+			case OpDivision:  // Деление: ∫(u / v) dx → зависит от формы u и v
+				resAction = OpDivision;
 				// Если знаменатель — константа
 				if (operand2Di == numberDi) {
 					resOperand1 = _operand1->integrate(result);
@@ -955,7 +955,7 @@ public:
 				{
 					Expression *operand2Diff = _operand2->differentiate();
 					if (_operand1->operator==(_operand2->differentiate(result))) {
-						resAction = ln;  // ln(f)
+						resAction = OpLn;  // ln(f)
 						resOperand1 = _operand2->copy(result);   // аргумент логарифма
 						delete operand2Diff;
 						return result;
@@ -1002,242 +1002,242 @@ public:
 					return result;
 				}
 				*/
-			case power:
+			case OpPower:
 				if (_operand2->heandlerDifferentiate() != numberDi)
 					throw "Not Constant Two Operand Power Integrate";
 				if (_operand2->operator==(MINUS_ONE)) {
-					resAction = ln;
+					resAction = OpLn;
 					resOperand1 = _operand1->copy();
 					return result;
 				}
-				resAction = division;
-				resOperand2 = new Expression{addition, result};
+				resAction = OpDivision;
+				resOperand2 = new Expression{OpAddition, result};
 				resOperand2->_operand1 = _operand2->copy(resOperand2);
 				resOperand2->_operand2 = ONE->copy(resOperand2);
-				resOperand1 = new Expression{power, result};
+				resOperand1 = new Expression{OpPower, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
 				resOperand1->_operand2 = _operand2->copy(resOperand2);
 				return result;
-			case _abs:
-				resAction = division;
+			case OpAbs:
+				resAction = OpDivision;
 				resOperand2 = TWO->copy(result);
-				resOperand1 = new Expression{multiplication, result};
+				resOperand1 = new Expression{OpMultiplication, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{_abs, resOperand1};
+				resOperand1Operand2 = new Expression{OpAbs, resOperand1};
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
 				return result;
-			case log:
-				resAction = subtraction;
-				resOperand1 = new Expression{multiplication, result};
+			case OpLog:
+				resAction = OpSubtraction;
+				resOperand1 = new Expression{OpMultiplication, result};
 				resOperand1->_operand1 = _operand2->copy(resOperand1);
-				resOperand1Operand2 = new Expression{log, result};
+				resOperand1Operand2 = new Expression{OpLog, result};
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
 				resOperand1Operand2->_operand2 = \
 					_operand2->copy(resOperand1Operand2);
-				resOperand2 = new Expression{division, result};
+				resOperand2 = new Expression{OpDivision, result};
 				resOperand2->_operand1 = _operand2->copy(resOperand2);
-				resOperand2Operand2 = new Expression{ln, resOperand2};
+				resOperand2Operand2 = new Expression{OpLn, resOperand2};
 				resOperand2->_operand2 = resOperand2Operand2;
 				resOperand2Operand2->_operand1 = \
 					_operand1->copy(resOperand2Operand2);
 				return result;
-			case ln:
-				resAction = subtraction;
+			case OpLn:
+				resAction = OpSubtraction;
 				resOperand2 = _operand1->copy(result);
-				resOperand1 = new Expression{multiplication, result};
+				resOperand1 = new Expression{OpMultiplication, result};
 				resOperand1->_operand1 = _operand1->copy(result);
-				resOperand1Operand2 = new Expression{ln, resOperand1};
+				resOperand1Operand2 = new Expression{OpLn, resOperand1};
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = \
 					_operand1->copy(resOperand1Operand2);
 				return result;
-			case lg:
-				resAction = subtraction;
-				resOperand1 = new Expression{multiplication, result};
+			case OpLg:
+				resAction = OpSubtraction;
+				resOperand1 = new Expression{OpMultiplication, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{lg, resOperand1};
+				resOperand1Operand2 = new Expression{OpLg, resOperand1};
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{division, result};
+				resOperand2 = new Expression{OpDivision, result};
 				resOperand2->_operand1 = _operand1->copy(resOperand2);
-				resOperand2Operand2 = new Expression{lg, resOperand2};
+				resOperand2Operand2 = new Expression{OpLg, resOperand2};
 				resOperand2->_operand2 = resOperand2Operand2;
 				resOperand2Operand2->_operand1 = _operand1->copy(resOperand2Operand2);
 				return result;
-			case unaryMinus:
-				resAction = unaryMinus;
+			case OpUnaryMinus:
+				resAction = OpUnaryMinus;
 				resOperand1 = _operand1->integrate();
 				return result;
-			case exp:
+			case OpExp:
 				throw std::runtime_error("exp integrate");
 				return result;
-			case sin:
-				resAction = unaryMinus;
-				resOperand1 = new Expression{cos, result};
+			case OpSin:
+				resAction = OpUnaryMinus;
+				resOperand1 = new Expression{OpCos, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
 				return result;
-			case cos:
-				resAction = sin;
+			case OpCos:
+				resAction = OpSin;
 				resOperand1 = _operand1->copy(result);
 				return result;
-			case tan:
-				resAction = ln;
-				resOperand1 = new Expression{_abs, result};
-				resOperand1Operand1 = new Expression{sec, resOperand1};
+			case OpTan:
+				resAction = OpLn;
+				resOperand1 = new Expression{OpAbs, result};
+				resOperand1Operand1 = new Expression{OpSec, resOperand1};
 				resOperand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
 				return result;
-			case cot:
-				resAction = ln;
-				resOperand1 = new Expression{_abs, result};
-				resOperand1Operand1 = new Expression{sin, resOperand1};
+			case OpCot:
+				resAction = OpLn;
+				resOperand1 = new Expression{OpAbs, result};
+				resOperand1Operand1 = new Expression{OpSin, resOperand1};
 				resOperand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
 				return result;
-			case sec:
-				resAction = ln;
-				resOperand1 = new Expression{_abs, result};
-				resOperand1Operand1 = new Expression{addition, resOperand1};
+			case OpSec:
+				resAction = OpLn;
+				resOperand1 = new Expression{OpAbs, result};
+				resOperand1Operand1 = new Expression{OpAddition, resOperand1};
 				resOperand1->_operand1 = resOperand1Operand1;
-				resOperand2Operand1 = new Expression{sec, resOperand1Operand1};
+				resOperand2Operand1 = new Expression{OpSec, resOperand1Operand1};
 				resOperand1Operand1->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
-				resOperand1Operand2 = new Expression{tan, resOperand1Operand1};
+				resOperand1Operand2 = new Expression{OpTan, resOperand1Operand1};
 				resOperand1Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				return result;
-			case csc:
-				resAction = ln;
-				resOperand1 = new Expression{_abs, result};
-				resOperand1Operand1 = new Expression{tan, resOperand1};
+			case OpCsc:
+				resAction = OpLn;
+				resOperand1 = new Expression{OpAbs, result};
+				resOperand1Operand1 = new Expression{OpTan, resOperand1};
 				resOperand1->_operand1 = resOperand1Operand1;
-				resOperand2Operand1 = new Expression{division, resOperand1Operand1};
+				resOperand2Operand1 = new Expression{OpDivision, resOperand1Operand1};
 				resOperand1Operand1->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
 				resOperand2Operand1->_operand2 = TWO->copy(resOperand2Operand1);
 				return result;
-			case asin:
-				resAction = addition;
-				resOperand1 = new Expression{multiplication, result};
+			case OpAsin:
+				resAction = OpAddition;
+				resOperand1 = new Expression{OpMultiplication, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{asin, resOperand1};
+				resOperand1Operand2 = new Expression{OpAsin, resOperand1};
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{sqrt, result};
-				resOperand2Operand1 = new Expression{subtraction, resOperand2};
+				resOperand2 = new Expression{OpSqrt, result};
+				resOperand2Operand1 = new Expression{OpSubtraction, resOperand2};
 				resOperand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
-				resOperand1Operand2 = new Expression{sqr};
+				resOperand1Operand2 = new Expression{OpSqr};
 				resOperand2Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				return result;
-			case acos:
-				resAction = subtraction;
-				resOperand1 = new Expression{multiplication, result};
+			case OpAcos:
+				resAction = OpSubtraction;
+				resOperand1 = new Expression{OpMultiplication, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{acos, resOperand1};
+				resOperand1Operand2 = new Expression{OpAcos, resOperand1};
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{sqrt, result};
-				resOperand2Operand1 = new Expression{subtraction, resOperand2};
+				resOperand2 = new Expression{OpSqrt, result};
+				resOperand2Operand1 = new Expression{OpSubtraction, resOperand2};
 				resOperand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
-				resOperand1Operand2 = new Expression{sqr};
+				resOperand1Operand2 = new Expression{OpSqr};
 				resOperand2Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				return result;
-			case atan:
-				resAction = subtraction;
-				resOperand1 = new Expression{multiplication, result};
+			case OpAtan:
+				resAction = OpSubtraction;
+				resOperand1 = new Expression{OpMultiplication, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{atan, resOperand1};
+				resOperand1Operand2 = new Expression{OpAtan, resOperand1};
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{division, result};
+				resOperand2 = new Expression{OpDivision, result};
 				resOperand2->_operand2 = TWO->copy(resOperand2);
-				resOperand2Operand1 = new Expression{ln, resOperand2};
+				resOperand2Operand1 = new Expression{OpLn, resOperand2};
 				resOperand2->_operand1 = resOperand2Operand1;
-				resOperand1Operand1 = new Expression{addition, resOperand2Operand1};
+				resOperand1Operand1 = new Expression{OpAddition, resOperand2Operand1};
 				resOperand2Operand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand1->_operand1 = ONE->copy(resOperand1Operand1);
-				resOperand1Operand2 = new Expression{sqr, resOperand1Operand1};
+				resOperand1Operand2 = new Expression{OpSqr, resOperand1Operand1};
 				resOperand1Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				return result;
-			case acot:
-				resAction = addition;
-				resOperand1 = new Expression{multiplication, result};
+			case OpAcot:
+				resAction = OpAddition;
+				resOperand1 = new Expression{OpMultiplication, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{acot, resOperand1};
+				resOperand1Operand2 = new Expression{OpAcot, resOperand1};
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{division, result};
+				resOperand2 = new Expression{OpDivision, result};
 				resOperand2->_operand2 = TWO->copy(resOperand2);
-				resOperand2Operand1 = new Expression{ln, resOperand2};
+				resOperand2Operand1 = new Expression{OpLn, resOperand2};
 				resOperand2->_operand1 = resOperand2Operand1;
-				resOperand1Operand1 = new Expression{addition, resOperand2Operand1};
+				resOperand1Operand1 = new Expression{OpAddition, resOperand2Operand1};
 				resOperand2Operand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand1->_operand1 = ONE->copy(resOperand1Operand1);
-				resOperand1Operand2 = new Expression{sqr, resOperand1Operand1};
+				resOperand1Operand2 = new Expression{OpSqr, resOperand1Operand1};
 				resOperand1Operand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
 				return result;			
-			case asec:
-				resAction = subtraction;
-				resOperand1 = new Expression{multiplication, result};
+			case OpAsec:
+				resAction = OpSubtraction;
+				resOperand1 = new Expression{OpMultiplication, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{asec, resOperand1};
+				resOperand1Operand2 = new Expression{OpAsec, resOperand1};
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{multiplication, result};
-				resOperand2Operand1 = new Expression{sgn, resOperand2};
+				resOperand2 = new Expression{OpMultiplication, result};
+				resOperand2Operand1 = new Expression{OpSgn, resOperand2};
 				resOperand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
-				resOperand2Operand2 = new Expression{ln, resOperand2};
+				resOperand2Operand2 = new Expression{OpLn, resOperand2};
 				resOperand2->_operand2 = resOperand2Operand2;
-				resOperand2Operand1 = new Expression{addition, resOperand2Operand2};
+				resOperand2Operand1 = new Expression{OpAddition, resOperand2Operand2};
 				resOperand2Operand2->_operand1 = resOperand2Operand1;
-				resOperand1Operand1 = new Expression{_abs, resOperand2Operand1};
+				resOperand1Operand1 = new Expression{OpAbs, resOperand2Operand1};
 				resOperand2Operand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
-				resOperand1Operand2 = new Expression{sqrt, resOperand2Operand1};
+				resOperand1Operand2 = new Expression{OpSqrt, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = resOperand1Operand2;
-				resOperand2Operand1 = new Expression{subtraction, resOperand1Operand2};
+				resOperand2Operand1 = new Expression{OpSubtraction, resOperand1Operand2};
 				resOperand1Operand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand2 = ONE->copy(resOperand2Operand1);
-				resOperand1Operand1 = new Expression{sqr, resOperand2Operand1};
+				resOperand1Operand1 = new Expression{OpSqr, resOperand2Operand1};
 				resOperand2Operand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
 				return result;
 
-			case acsc:
-				resAction = addition;
-				resOperand1 = new Expression{multiplication, result};
+			case OpAcsc:
+				resAction = OpAddition;
+				resOperand1 = new Expression{OpMultiplication, result};
 				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{asec, resOperand1};
+				resOperand1Operand2 = new Expression{OpAsec, resOperand1};
 				resOperand1->_operand2 = resOperand1Operand2;
 				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{multiplication, result};
-				resOperand2Operand1 = new Expression{sgn, resOperand2};
+				resOperand2 = new Expression{OpMultiplication, result};
+				resOperand2Operand1 = new Expression{OpSgn, resOperand2};
 				resOperand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
-				resOperand2Operand2 = new Expression{ln, resOperand2};
+				resOperand2Operand2 = new Expression{OpLn, resOperand2};
 				resOperand2->_operand2 = resOperand2Operand2;
-				resOperand2Operand1 = new Expression{addition, resOperand2Operand2};
+				resOperand2Operand1 = new Expression{OpAddition, resOperand2Operand2};
 				resOperand2Operand2->_operand1 = resOperand2Operand1;
-				resOperand1Operand1 = new Expression{_abs, resOperand2Operand1};
+				resOperand1Operand1 = new Expression{OpAbs, resOperand2Operand1};
 				resOperand2Operand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
-				resOperand1Operand2 = new Expression{sqrt, resOperand2Operand1};
+				resOperand1Operand2 = new Expression{OpSqrt, resOperand2Operand1};
 				resOperand2Operand1->_operand2 = resOperand1Operand2;
-				resOperand2Operand1 = new Expression{subtraction, resOperand1Operand2};
+				resOperand2Operand1 = new Expression{OpSubtraction, resOperand1Operand2};
 				resOperand1Operand2->_operand1 = resOperand2Operand1;
 				resOperand2Operand1->_operand2 = ONE->copy(resOperand2Operand1);
-				resOperand1Operand1 = new Expression{sqr, resOperand2Operand1};
+				resOperand1Operand1 = new Expression{OpSqr, resOperand2Operand1};
 				resOperand2Operand1->_operand1 = resOperand1Operand1;
 				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
 				return result;

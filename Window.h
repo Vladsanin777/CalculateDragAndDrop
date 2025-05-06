@@ -32,6 +32,7 @@
 #include <QTabWidget>
 #include <QLabel>
 #include <QStyle>
+#include "Calculate.h"
 
 #define BYTE_MAX 255
 #define COUNT_LOCAL_HISTORI 5
@@ -389,6 +390,7 @@ public:
 		const char * & res {_result[tab][index]};
 		delete[] res;
 		res = newResult;
+		updataResultButton();
 		return;
 	}
 	inline void setResult( \
@@ -397,6 +399,7 @@ public:
 		const char * & res {_result[*_inputtin][_inputtin[1]]};
 		delete [] res;
 		res = newResult;
+		updataResultButton();
 		return;
 	}
 	template<typename TDel>
@@ -412,6 +415,7 @@ public:
 		delete ptr[4][2];
 		return;
 	}
+	void updataResultButton(void) const noexcept;
 	inline ~Window(void);
 };
 
@@ -644,6 +648,10 @@ namespace Button {
 		}
 	};
 }
+void Window::updataResultButton(void) const noexcept {
+	_resultButton->setText(_result[*_inputtin][_inputtin[1]]);
+}
+
 class  LineEdit : public QLineEdit {
 private:
 	Window *_window;
@@ -876,10 +884,7 @@ public:
 	_window(window) {}
 
 	void button_ALL() {
-		char* pos;
-
-		// Удаляем "_ALL" из строки
-		pos = strstr(_lineEditText, "_ALL");
+		char* pos = {strstr(_lineEditText, "_ALL")};
 		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
 
 		if (strlen(_lineEditText) > 0) {
@@ -895,33 +900,23 @@ public:
 	}
 
 	void button_DO() {
-		char* pos;
-		pos = strstr(_lineEditText, "_DO");
-		memmove(pos, pos + 3, strlen(pos + 3) + 1);
+		char* pos {strstr(_lineEditText, "_DO")};
+		memmove(pos, pos + 3, strlen(pos + 3) + 1UL);
 
-		if (strlen(_lineEditText) > 0) {
-			// _window->setResult(_lineEditText);
-			buttonOther();
-			*pos = '\0';
-			addHistori();
-		}
+		if (strlen(_lineEditText) > 0)
+			buttonOther(), addHistori();
+		memmove(_lineEditText, pos, strlen(pos) + 1UL);
 		_window->getLineEdit()->setText(_lineEditText);
 	}
 
 	void button_POS() {
-		char* pos;
-		// Удаляем "_POS" из строки
-		pos = strstr(_lineEditText, "_POS");
+		char* pos {strstr(_lineEditText, "_POS")};
 		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
 
-		if (strlen(_lineEditText) > 0) {
-			// _window->setResult(_lineEditText);
-			buttonOther();
-			pos += strlen("_POS");
-			memmove(_lineEditText, pos, strlen(pos) + 1);
-			addHistori();
-		}
-		_window->getLineEdit()->setText(pos);
+		if (strlen(_lineEditText) > 0)
+			buttonOther(), addHistori();
+		*pos = '\0';
+		_window->getLineEdit()->setText(_lineEditText);
 	}
 
 	void button_RES() {
@@ -1023,13 +1018,14 @@ public:
 
     void button_O() {
 		char *pos = strstr(_lineEditText, "_O");
-		memmove(pos-1, pos + 3, strlen(pos + 3) + 1);
-
+		if (pos == _lineEditText) *_lineEditText = '\0';
+		else memmove(pos-1, pos + 2, strlen(pos + 2) + 1);
 		_window->getLineEdit()->setText(_lineEditText);
 	}
 
 	
 	void buttonOther() {
+		/*
 		auto integral = [_window = this->_window]() {
 			char* equation = strdup( \
 				_window->getLineEdit(1, 2)->text().toUtf8().data() \
@@ -1040,31 +1036,18 @@ public:
 		auto otherTab = [_window = this->_window]() {
 			// _window->setResult(_window->getLineEdit(), 0, 0);
 		};
+		*/
+		puts("buttonOther");
+		Expression * expression {nullptr};
 		const byte * inputtin {_window->getInputtin()};
-		switch (*inputtin * 10 + inputtin[1]) {
-			case 10:
-			case 11:
-				otherTab();
-			case 12:
-				integral();
+		switch (*inputtin) {
+			case 0:
+				expression = Expression:: \
+					buildExpressionTree(_lineEditText, nullptr, false);
+				_window->setResult(expression->calc());
+				delete expression;
 				break;
-			case 20:
-				//_window->setResult({0, 0}, window.line_edit_text); // Пример для Derivative
-				break;
-			case 30:
-				// _window.setResult({0, 0}, window.line_edit_text); // Пример для Derivative с true
-				break;
-			case 40:
-			case 41:
-				// _window.setResult({0, 0}, window.line_edit_text);
-				break;
-			case 42: {
-				// char* modified_text = replaceAll(window.line_edit_text, window.getResult(4, 0), window.getResult(4, 1));
-				// _window.setResult({0, 0}, modified_text);
-				break;
-			}
 			default:
-				otherTab();
 				break;
 		}
 
@@ -1108,12 +1091,15 @@ void LineEdit::onLineEditChanged( \
 		logicCalculate->button_ALL();
 	else if (strstr(textCh, "_O") != nullptr)
 		logicCalculate->button_O();
-	else if (strstr(textCh, "_RES") != nullptr) {
+	else if (strstr(textCh, "_RES") != nullptr)
 		logicCalculate->button_RES();
-		std::cout << _window << std::endl;
-	}
+	else if (strstr(textCh, "_DO"))
+		logicCalculate->button_DO();
+	else if (strstr(textCh, "_POS"))
+		logicCalculate->button_POS();
 	else
 		logicCalculate->buttonOther();
+	delete [] textCh;
 }
 
 namespace Title {
