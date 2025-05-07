@@ -361,7 +361,6 @@ private:
 				//puts("sgn");
 				//mpfr_printf("Результат: %.50Rf\n", result);
 		}
-		mpfr_printf("1 %Rf\nr %Rf\n", *operand1, *result);
 		mpfr_clear(*operand1);
 		delete [] operand1;
 		if (isTwoOperandBool) {
@@ -378,7 +377,11 @@ public:
 		mpfr_sprintf(resStr, "%.77Rf", *result);
 		mpfr_clear(*result);
 		delete [] result;
-		std::cout << resStr << std::endl;
+		char * ptr{resStr + strlen(resStr) - 1UL};
+		for (; ptr != resStr; ptr--)
+			if (*ptr != '0') break;
+		if (*ptr == '.') *ptr = '\0';
+		else if (strchr(resStr, '.')) *++ptr = '\0';
 		return (const char *)resStr;
 	}
 	static void init(void) {
@@ -402,63 +405,67 @@ public:
 		Expression * parent = 0L, \
 		bool isDelete = true \
 	) {
-		//puts(expression);
-		unsigned char lenOperator;
-		bool isTwoOperand;
-		ArifmeticAction action;
-		const char * ptrOperator = \
-			_shearchNotPriorityOperator(expression, \
-				lenOperator, action);
-		puts(ARIFMETIC_STR_ACTION[action]);
-		//std::cout << action << std::endl;
-		//if (ptrOperator)
-			//putchar(*ptrOperator);
-		//puts("dfsfgv");
-		if (!ptrOperator) {
-			//puts("kl");
-			//if (isDelete) delete [] expression;
-			//puts("kl");
-
-			const char * const number = normalize(expression, isDelete);
-			//std::cout << (number == expression) << std::endl;
-			//puts("dfkfkdl");
-			return new Expression{number, parent};
-		}
-		putchar(*ptrOperator);
-		putchar('\n');
-		//puts("nm");
-		Expression * result = new Expression{action, parent};
-		//puts("nm");
-		if (action < OpSin) {
-			puts("two operator");
+		try {
+			//puts(expression);
+			unsigned char lenOperator;
+			bool isTwoOperand;
+			ArifmeticAction action;
+			const char * ptrOperator = \
+				_shearchNotPriorityOperator(expression, \
+					lenOperator, action);
 			puts(ARIFMETIC_STR_ACTION[action]);
-			std::cout << action << std::endl;
+			//std::cout << action << std::endl;
+			//if (ptrOperator)
+				//putchar(*ptrOperator);
+			//puts("dfsfgv");
+			if (!ptrOperator) {
+				//puts("kl");
+				//if (isDelete) delete [] expression;
+				//puts("kl");
 
-			size_t lenExpression{(size_t)(ptrOperator - expression)};
-			char * newExpression = new char[lenExpression+1]();
-			strncpy(newExpression, expression, lenExpression);
-			//puts("firstOperandStart");
-			result->setFirstOperand(buildExpressionTree(newExpression, result));
-			//puts("firstOperandEnd");
-			//puts("klkdd");
-			lenExpression = strlen(expression) - (ptrOperator - expression) - lenOperator;
-			//std::cout << "lenTwoOperand " << lenExpression << std::endl;
-			newExpression = new char[lenExpression+1]();
-			//std:: cout << strlen(newExpression) << std::endl;
-			strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
-			//puts("twoOperand");
-			//puts(newExpression);
-			result->setSecondOperand(buildExpressionTree(newExpression, result));
-		} else {
-			puts("one operator");
-			size_t lenExpression{ptrOperator - expression + strlen(expression) + lenOperator + 1UL};
-			char * const newExpression = new char[lenExpression + 1]();
-			strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
-			result->setFirstOperand(buildExpressionTree(newExpression, result));
-			//puts("dj");
+				const char * const number = normalize(expression, isDelete);
+				//std::cout << (number == expression) << std::endl;
+				//puts("dfkfkdl");
+				return new Expression{number, parent};
+			}
+			putchar(*ptrOperator);
+			putchar('\n');
+			//puts("nm");
+			Expression * result = new Expression{action, parent};
+			//puts("nm");
+			if (action < OpSin) {
+				puts("two operator");
+				puts(ARIFMETIC_STR_ACTION[action]);
+				std::cout << action << std::endl;
+
+				size_t lenExpression{(size_t)(ptrOperator - expression)};
+				char * newExpression = new char[lenExpression+1]();
+				strncpy(newExpression, expression, lenExpression);
+				//puts("firstOperandStart");
+				result->setFirstOperand(buildExpressionTree(newExpression, result));
+				//puts("firstOperandEnd");
+				//puts("klkdd");
+				lenExpression = strlen(expression) - (ptrOperator - expression) - lenOperator;
+				//std::cout << "lenTwoOperand " << lenExpression << std::endl;
+				newExpression = new char[lenExpression+1]();
+				//std:: cout << strlen(newExpression) << std::endl;
+				strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
+				//puts("twoOperand");
+				//puts(newExpression);
+				result->setSecondOperand(buildExpressionTree(newExpression, result));
+			} else {
+				puts("one operator");
+				size_t lenExpression{ptrOperator - expression + strlen(expression) + lenOperator + 1UL};
+				char * const newExpression = new char[lenExpression + 1]();
+				strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
+				result->setFirstOperand(buildExpressionTree(newExpression, result));
+				//puts("dj");
+			}
+			if (isDelete) delete [] expression;
+			return result;
+		} catch (...) {
+			return 0;
 		}
-		if (isDelete) delete [] expression;
-		return result;
 	}
 	inline bool operator==(const Expression * operand2) const {
 		if (_typeData != operand2->_typeData) return false;
