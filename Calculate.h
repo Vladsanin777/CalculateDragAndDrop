@@ -1,4 +1,4 @@
-#include <vector>
+#include <stack>
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
@@ -399,6 +399,41 @@ public:
 	}
 	inline bool isTwoOperand(void) const {
 		return _data.action < OpSin;
+	}
+	static const char *isValid(const char * const expression) {
+		std::stack<const char> balanceBrackets{};
+		for (const char * ptr {expression}, \
+			* const ptrEnd; ptr != ptrEnd; ptr++) {
+			const char symbol {*ptr};
+			switch (symbol)
+			{
+				case '(':
+				case '[':
+				case '{':
+					balanceBrackets.push(symbol)
+					continue;
+				case ')':
+					if (balanceBrackets.empty()) {
+						char * exstraBracket {new char[100]{'\0'}};
+						size_t index {ptr - expression};
+						sprintf(exstraBracket, \
+							"%lu|Exstra Bracket", index);
+					}
+					if (balanceBrackets.top() == '(')
+						balanceBrackets.pop();
+					continue;
+				case ']':
+					if (balanceBrackets.top() == '[')
+						balanceBrackets.pop();
+					continue;
+				case '}':
+					if (balanceBrackets.top() == '{')
+						balanceBrackets.pop();
+					continue;
+				default:
+					continue;
+			}
+		}
 	}
 	static Expression *buildExpressionTree( \
 		const char *expression, \
