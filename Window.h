@@ -7,27 +7,16 @@
 #include <QWidget>
 #include <QPointF>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QScrollArea>
 #include <QScrollBar>
-#include <QMenu>
-#include <QPen>
-#include <QPainterPath>
-#include <QPaintEvent>
-#include <QPainter>
-#include <QColor>
 #include <QLineEdit>
 #include <QString>
-#include <QCursor>
 #include <QFocusEvent>
-#include <QRect>
 #include <QDrag>
 #include <QMimeData>
-#include <QWidgetAction>
 #include <QTabBar>
 #include <QTabWidget>
 #include <QLabel>
-#include <QStyle>
 #include "Calculate.h"
 
 #define COUNT_LOCAL_HISTORI 5
@@ -243,6 +232,9 @@ public:
 				color: white;
 				margin: 0;
 			}
+			#hide {
+				margin: 0 10px 10px 10px;
+			}
 			QPushButton {
 				color: white;
 				border-radius: 10px;
@@ -279,7 +271,7 @@ public:
 				padding: 0;
 			}
 			
-			QTabBar::tab, QLineEdit, #basic {
+			QTabBar::tab, QLineEdit, #basic, #hide {
 				border: 1px solid white;
 				border-radius: 10px;
 			}
@@ -540,7 +532,7 @@ namespace Button {
 		explicit ButtonBase( \
 			const char *label, Window *window, \
 			std::function<void(QPushButton *)> *callback = nullptr, \
-			const char *cssName = "basic", QMenu *menu = nullptr \
+			const char *cssName = "basic" \
 		) : _window(window), QPushButton(label) {
 			setAttribute(Qt::WA_Hover, true);
 			setContentsMargins(0, 0, 0, 0);
@@ -550,8 +542,6 @@ namespace Button {
 						(*callback)(this);
 					}
 				});
-			if (menu)
-				setMenu(menu);
 			if (cssName)
 				setObjectName(cssName);
 			setMinimumWidth(70);
@@ -566,9 +556,9 @@ namespace Button {
 		explicit ButtonDrag( \
 			const char *label, Window *window, \
 			std::function<void(QPushButton *)> *callback = nullptr, \
-			const char *cssName = nullptr, QMenu *menu = nullptr \
-		) : ButtonBase(
-			label, window, callback, cssName, menu
+			const char *cssName = nullptr \
+		) : ButtonBase( \
+			label, window, callback, cssName \
 		) {}
 	protected:
 		void mousePressEvent( \
@@ -613,9 +603,9 @@ namespace Button {
 		explicit inline ButtonDragAndDrop( \
 			const char *label, Window *window, \
 			std::function<void(QPushButton *)> *callback = nullptr, \
-			const char *cssName = nullptr, QMenu *menu = nullptr \
+			const char *cssName = nullptr \
 		) : ButtonDrag ( \
-			label, window, callback, cssName, menu \
+			label, window, callback, cssName \
 		) {setAcceptDrops(true);}
 		
 		inline bool isEmpty(const char * &text) {
@@ -707,7 +697,10 @@ namespace Button {
 				memcmp(text, "abs", 3UL) == 0 || \
 				memcmp(text, "exp", 3UL) == 0 || \
 				memcmp(text, "sqr", 3UL) == 0 \
-			) return isBracket(text+=3UL);
+			) {
+				const char *textlvalue {text+3UL};
+			 	return isBracket(textlvalue);
+			}
 			return false;
 		}
 		inline bool is4Operator(const char * text) {
@@ -719,7 +712,10 @@ namespace Button {
 				memcmp(text, "acsc", 4UL) == 0 || \
 				memcmp(text, "acot", 4UL) == 0 || \
 				memcmp(text, "cbrt", 4UL) == 0 \
-			) return isBracket(text+=4UL);
+			) {
+				const char *textlvalue {text+4UL};
+				return isBracket(text);
+			}
 			return false;
 		}
 		inline bool isOperator(const char * &text) {
@@ -765,9 +761,11 @@ namespace Button {
 			puts(cssName);
 			setStyleSheet("");
 			setObjectName(cssName);
+			/*
 			style()->unpolish(this);
 			style()->polish(this);
 			update();
+			*/
 			event->acceptProposedAction();
 			return;
 		}
@@ -1674,14 +1672,30 @@ public:
 		addWidget(globalHistori);
 		addWidget(new TabWindow::MainTabWidget{window});
 		addLayout(new Grid::GridCalculateCommon{window});
-		addWidget(new TabWindow::TabWidgetKeyboard{window});
+		TabWindow::TabWidgetKeyboard * keyboard { \
+			new TabWindow::TabWidgetKeyboard{window}
+		};
+		addWidget(keyboard);
+		std::function<void(QPushButton*)> * func { \
+			new std::function<void(QPushButton *)> { \
+				[keyboard](QPushButton * button) -> void {
+					bool isHide {keyboard->isVisible()};
+					if (isHide)
+						button->setText("open");
+					else button->setText("close");
+					keyboard->setVisible(!isHide);
+				}
+			}
+		};
+		addWidget(new Button::ButtonBase{ \
+			"close", window, func, "hide"});
 		titleBar->getChild()->buttonInit();
-		puts("jk");
 		setStretch(0, 1);
 		setStretch(1, 20);
 		setStretch(2, 20);
 		setStretch(3, 50);
 		setStretch(4, 1);
+		setStretch(5, 1);
 		return;
 	}
 };
