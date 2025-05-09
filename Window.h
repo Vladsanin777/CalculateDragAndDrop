@@ -1,10 +1,6 @@
-#include <vector>
-#include <tuple>
 #include <functional>
 #include <cstring>
-#include <cstdint>
 #include <iostream>
-#include <memory>
 #include <QPushButton>
 #include <QApplication>
 #include <QMainWindow>
@@ -34,7 +30,6 @@
 #include <QStyle>
 #include "Calculate.h"
 
-#define BYTE_MAX 255
 #define COUNT_LOCAL_HISTORI 5
 
 using byte = unsigned char;
@@ -66,9 +61,15 @@ namespace Title {
 	class TitleBar;
 }
 namespace Grid {
-	template<class TButton>
-	class BuildingGridKeyboard;
-	template<class TButton>
+	template<class TButton, byte rowEnd, byte columnEnd>
+	void buildingGridKeyboard( \
+		const char * const (&buttons)[rowEnd][columnEnd], \
+		QGridLayout *grid, Window *window, \
+		const byte rowStart = byte(0), \
+		const byte columnStart = byte(0), \
+		const char * cssName = "opertor" \
+	) noexcept;
+	template<class TButton, byte rowEnd, byte columnEnd>
 	class GridCalculateKeyboard;
 	class GridCalculateCommon;
 	class GridBaseCalc;
@@ -148,9 +149,48 @@ const byte rowPrefixes {byte(1)}, \
 const char * const prefixes[rowPrefixes][columnPrefixes] {
 	{"0b", "0o", "0x"} \
 };
-
-
-
+const byte rowFunctions{byte(1)}, \
+	columnFunctions{byte(5)};
+const char * const functions[rowFunctions] \
+	[columnFunctions] {
+	{"_ALL", "_DO", "_RES", "_POS", "_O"} \
+};
+const byte rowBracketsMain{byte(1)}, \
+	columnBracketsMain{byte(3)};
+const char * const bracketsMain[rowBracketsMain] \
+	[columnBracketsMain] {
+	{"()", "(", ")"} \
+};
+const byte rowNumbersMain{byte(4)}, \
+	columnNumbersMain{byte(3)};
+const char * const numbersMain[rowNumbersMain] \
+	[columnNumbersMain] {
+	{"7", "8", "9"}, \
+	{"4", "5", "6"}, \
+	{"1", "2", "3"}, \
+	{"0", ".", "%"} \
+};
+const byte rowOperatorsMain{byte(4)}, \
+	columnOperatorsMain{byte(2)};
+const char * const operatorsMain[rowOperatorsMain] \
+	[columnOperatorsMain] {
+	{"mod", "sqrt("}, \
+	{"*", ":"}, \
+	{"+", "-"}, \
+	{"^", "!"} \
+};
+const byte rowConstsMain{byte(1)}, \
+	columnConstsMain{byte(2)};
+const char * const constsMain[rowConstsMain] \
+	[columnConstsMain] {
+	{"_PI", "_E"} \
+};
+const byte rowEmptyMain{byte(1)}, \
+	columnEmptyMain{byte(5)};
+const char * const emptyMain[rowEmptyMain] \
+	[columnEmptyMain] {
+	{"", "", "", "", ""} \
+};
 
 class CalculateDragAndDrop : public QApplication {
 public:
@@ -609,10 +649,23 @@ namespace Button {
 			return strcmp(text, "_E") == 0 || \
 				strcmp(text, "_PI") == 0;
 		}
-		inline bool isBracket(const char * &text) {
-			return strcmp(text, "(") == 0 || \
-				strcmp(text, ")") == 0 || \
-				strcmp(text, "()") == 0;
+		inline bool isBracket(const char * const &text) {
+			for (const char * ptr {text}, \
+				* const ptrEnd {text+strlen(text)}; \
+				ptr != ptrEnd; ptr++) {
+				switch (*ptr) {
+					case '(':
+					case ')':
+					case '[':
+					case ']':
+					case '{':
+					case '}':
+						continue;
+					default:
+						return false;
+				}
+			}
+			return true;
 		}
 		inline bool isFunction(const char * &text) {
 			return strcmp(text, "_ALL") == 0 || \
@@ -621,52 +674,60 @@ namespace Button {
 				strcmp(text, "_POS") == 0 || \
 				strcmp(text, "_O") == 0;
 		}
+		inline bool is1Operator(const char * text) {
+			if (strlen(text) != 1) return false;
+			char fristSymbol {*text};
+			switch (fristSymbol) {
+				case '+':
+				case '-':
+				case ':':
+				case '*':
+				case '^':
+				case '!':
+					return true;
+				default:
+					return false;
+			}
+		}
+		inline bool is2Operator(const char * text) {
+			return *text == 'l' && \
+				(*++text == 'n' || *text == 'g') && \
+				(*++text == '\0' || isBracket(text));
+		}
+		inline bool is3Operator(const char * text) {
+			if (strcmp(text, "mod") == 0) return true;
+			if (memcmp(text, "log", 3UL) == 0 || \
+				memcmp(text, "sin", 3UL) == 0 || \
+				memcmp(text, "cos", 3UL) == 0 || \
+				memcmp(text, "tan", 3UL) == 0 || \
+				memcmp(text, "sec", 3UL) == 0 || \
+				memcmp(text, "csc", 3UL) == 0 || \
+				memcmp(text, "cot", 3UL) == 0 || \
+				memcmp(text, "sgn", 3UL) == 0 || \
+				memcmp(text, "abs", 3UL) == 0 || \
+				memcmp(text, "exp", 3UL) == 0 || \
+				memcmp(text, "sqr", 3UL) == 0 \
+			) return isBracket(text+=3UL);
+			return false;
+		}
+		inline bool is4Operator(const char * text) {
+			if (memcmp(text, "sqrt", 4UL) == 0 || \
+				memcmp(text, "asin", 4UL) == 0 || \
+				memcmp(text, "acos", 4UL) == 0 || \
+				memcmp(text, "atan", 4UL) == 0 || \
+				memcmp(text, "asec", 4UL) == 0 || \
+				memcmp(text, "acsc", 4UL) == 0 || \
+				memcmp(text, "acot", 4UL) == 0 || \
+				memcmp(text, "cbrt", 4UL) == 0 \
+			) return isBracket(text+=4UL);
+			return false;
+		}
 		inline bool isOperator(const char * &text) {
-			return strcmp(text, "+") == 0 || \
-				strcmp(text, "-") == 0 || \
-				strcmp(text, ":") == 0 || \
-				strcmp(text, "*") == 0 || \
-				strcmp(text, "^") == 0 || \
-				strcmp(text, "!") == 0 || \
-				strcmp(text, "sqrt") == 0 || \
-				strcmp(text, "sqrt(") == 0 || \
-				strcmp(text, "ln") == 0 || \
-				strcmp(text, "ln(") == 0 || \
-				strcmp(text, "log") == 0 || \
-				strcmp(text, "log(") == 0 || \
-				strcmp(text, "lg") == 0 || \
-				strcmp(text, "lg(") == 0 || \
-				strcmp(text, "sin") == 0 || \
-				strcmp(text, "sin(") == 0 || \
-				strcmp(text, "cos") == 0 || \
-				strcmp(text, "cos(") == 0 || \
-				strcmp(text, "tan") == 0 || \
-				strcmp(text, "tan(") == 0 || \
-				strcmp(text, "sec") == 0 || \
-				strcmp(text, "sec(") == 0 || \
-				strcmp(text, "csc") == 0 || \
-				strcmp(text, "csc(") == 0 || \
-				strcmp(text, "cot") == 0 || \
-				strcmp(text, "cot(") == 0 || \
-				strcmp(text, "asin") == 0 || \
-				strcmp(text, "asin(") == 0 || \
-				strcmp(text, "acos") == 0 || \
-				strcmp(text, "acos(") == 0 || \
-				strcmp(text, "atan") == 0 || \
-				strcmp(text, "atan(") == 0 || \
-				strcmp(text, "asec") == 0 || \
-				strcmp(text, "asec(") == 0 || \
-				strcmp(text, "acsc") == 0 || \
-				strcmp(text, "acsc(") == 0 || \
-				strcmp(text, "acot") == 0 || \
-				strcmp(text, "acot(") == 0 || \
-				strcmp(text, "sgn") == 0 || \
-				strcmp(text, "sgn(") == 0 || \
-				strcmp(text, "abs") == 0 || \
-				strcmp(text, "abs(") == 0 || \
-				strcmp(text, "exp") == 0 || \
-				strcmp(text, "exp(") == 0 || \
-				strcmp(text, "mod") == 0;
+			if (is1Operator(text)) return true;
+			if (is2Operator(text)) return true;
+			if (is3Operator(text)) return true;
+			if (is4Operator(text)) return true;
+			return false;
 		}
 	protected:
 		inline void dragEnterEvent( \
@@ -1261,62 +1322,51 @@ namespace Title {
 
 
 namespace Grid {
-	template<class TButton, class TLabel>
-	class BuildingGridKeyboard {
-	public:
-		explicit inline BuildingGridKeyboard( \
-			TLabel buttons, \
-			byte rowEnd, byte columnEnd, \
-			QGridLayout *grid, Window *window, \
-			byte row = byte(0), byte columnStart = byte(0), \
-			const char * cssName = "opertor" \
-		) noexcept {
-			std::function<void(QPushButton *)> * func { \
-				new std::function<void(QPushButton*)>{
-					[window](QPushButton* btn) {
-						LogicCalculate::inputtinLineEdit(btn, window);
-						return;
-					} \
-				}
-			};
+	template<class TButton, byte rowSize, byte columnSize>
+	void buildingGridKeyboard( \
+		const char * const (&buttons)[rowSize][columnSize], \
+		QGridLayout *grid, Window *window, \
+		const byte rowStart, const byte columnStart, \
+		const char * cssName \
+	) noexcept {
+		std::function<void(QPushButton *)> * func { \
+			new std::function<void(QPushButton*)>{
+				[window](QPushButton* btn) {
+					LogicCalculate::inputtinLineEdit(btn, window);
+					return;
+				} \
+			}
+		};
 
-			const std::vector<std::vector<const char *>>::const_iterator \
-				itRowEnd {buttons.cend()};
-			std::vector<const char *>::const_iterator itColumnEnd {}, \
-				itColumn {};
-			byte column {byte(0)};
-			for ( \
-				std::vector<std::vector<const char *>>::const_iterator \
-				itRow {buttons.cbegin()}; itRow != itRowEnd; \
-				itRow++, row++ \
+		byte rowEnd {(byte)(rowSize + rowStart)}, \
+			columnEnd {(byte)(columnSize + columnStart)};
+		byte row {rowStart};
+		for (const char * const * ptr { \
+			reinterpret_cast<const char * const *>( \
+			buttons)}; row != rowEnd; row++ \
+		) {
+			for (byte column{columnStart}; \
+				column != columnEnd; column++, ptr++ \
 			) {
-				itColumnEnd = itRow->cend();
-				for ( \
-					itColumn = itRow->cbegin(), column = columnStart; \
-					itColumn != itColumnEnd; itColumn++, column++ \
-				) {
-					const char * const labelButton = *itColumn;
-					grid->addWidget(new TButton { \
-						labelButton, window, func, cssName\
-					}, row, column, 1, 1);
-				}
+				grid->addWidget(new TButton { \
+					*ptr, window, func, cssName\
+				}, row, column, 1, 1);
 			}
 		}
-	};
-	template<class TButton, class TLabel>
+	}
+	template<class TButton, byte rowSize, byte columnSize>
 	class GridCalculateKeyboard : public QGridLayout {
 	public:
 		explicit GridCalculateKeyboard( \
-			TLabel buttons, \
-			byte row, byte column, \
+			const char * const (&buttons)[rowSize][columnSize], \
 			Window *window, const char * cssName \
 		) noexcept : QGridLayout() {
 			setContentsMargins(10, 10, 10, 10);
 			setSpacing(10);
-			BuildingGridKeyboard<TButton>{ \
-				buttons, row, column, this, window, byte(0), \
+			buildingGridKeyboard<TButton, rowSize, columnSize>( \
+				buttons, this, window, byte(0), \
 				byte(0), cssName \
-			};
+			);
 		}
 	};
 
@@ -1331,49 +1381,42 @@ namespace Grid {
 			setContentsMargins(10, 10, 10, 10);
 			std::cout << "po" << window << std::endl;
 
-			BuildingGridKeyboard<Button::ButtonDrag>{
-				std::vector<std::vector<const char *>> {
-					{"_ALL", "_DO", "_RES", "_POS", "_O"}
-				}, this, window, byte(0), byte(0), "function" \
-			};
+			buildingGridKeyboard<Button::ButtonDrag, \
+				rowFunctions, columnFunctions>(
+				functions, this, window, \
+				byte(0), byte(0), "function" \
+			);
 
-			BuildingGridKeyboard<Button::ButtonDragAndDrop>{
-				std::vector<std::vector<const char *>> {
-					{"()", "(", ")"},
-				}, this, window, byte(1), byte(0), "bracket" \
-			};
+			buildingGridKeyboard<Button::ButtonDragAndDrop, \
+				rowBracketsMain, columnBracketsMain>(
+				bracketsMain, this, window, \
+				byte(1), byte(0), "bracket" \
+			);
 
-			BuildingGridKeyboard<Button::ButtonDragAndDrop>{ \
-				std::vector<std::vector<const char *>> {
-					{"7", "8", "9"},
-					{"4", "5", "6"},
-					{"1", "2", "3"},
-					{"0", ".", "%"},
-				}, this, window, byte(2), byte(0), "number" \
-			};
+			buildingGridKeyboard<Button::ButtonDragAndDrop, \
+				rowNumbersMain, columnNumbersMain>( \
+				numbersMain, this, window, \
+				byte(2), byte(0), "number" \
+			);
 
-			BuildingGridKeyboard<Button::ButtonDragAndDrop>{
-				std::vector<std::vector<const char *>> {
-					{"mod", "sqrt("},
-					{"*", ":"},
-					{"+", "-"},
-					{"^", "!"},
-				}, this, window, byte(1), byte(3), "operator" \
-			};
+			buildingGridKeyboard<Button::ButtonDragAndDrop, \
+				rowOperatorsMain, columnOperatorsMain>(
+				operatorsMain, this, window, \
+				byte(1), byte(3), "operator" \
+			);
 
-			BuildingGridKeyboard<Button::ButtonDragAndDrop>{
-				std::vector<std::vector<const char *>> {
-					{"_PI", "_E"}
-				}, this, window, byte(5), byte(3), "const" \
-			};
+			buildingGridKeyboard<Button::ButtonDragAndDrop, \
+				rowConstsMain, columnConstsMain>(
+				constsMain, this, window, \
+				byte(5), byte(3), "const" \
+			);
 
-			BuildingGridKeyboard<Button::ButtonDragAndDrop>{
-				std::vector<std::vector<const char *>> {
-					{"", "", "", "", ""}
-				}, this, window, byte(6), byte(0), "empty" \
-			};
+			buildingGridKeyboard<Button::ButtonDragAndDrop, \
+				rowEmptyMain, columnEmptyMain>(
+				emptyMain, this, window, \
+				byte(6), byte(0), "empty" \
+			);
 
-			puts("hj");
 			Button::ButtonDrag *resultButton {\
 				new Button::ButtonDrag { \
 					window->getResult(0, 0), \
@@ -1496,61 +1539,81 @@ namespace TabWindow {
 		) : QTabWidget() {
 			addTab(new TabQWidget{ \
 				new Grid::GridCalculateKeyboard< \
-					Button::ButtonDrag, const char * &[][]>{ \
-					digits10, rowDigits10, columnDigits10, \
-					window, "number" \
+					Button::ButtonDrag, rowDigits10, \
+					columnDigits10>{ \
+					digits10, window, "number" \
 				} \
 			}, "digits 10");
 			addTab(new TabQWidget{ \
-				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
-					digits16, rowDigits16, columnDigits16, \
-					window, "number" \
+				new Grid::GridCalculateKeyboard< \
+					Button::ButtonDrag, rowDigits16, \
+					columnDigits16>{ \
+					digits16, window, "number" \
 				} \
 			}, "digits 16");
 			addTab(new TabQWidget{ \
-				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
-					operators1, rowOperators1, columnOperators1, \
-					window, "operator" \
+				new Grid::GridCalculateKeyboard< \
+					Button::ButtonDrag, rowOperators1, \
+					columnOperators1>{ \
+					operators1, window, "operator" \
 				} \
 			}, "operators 1");
 			addTab(new TabQWidget{ \
-				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
-					operators2, rowOperators2, columnOperators2, \
-					window, "operator" \
+				new Grid::GridCalculateKeyboard< \
+					Button::ButtonDrag, rowOperators2, \
+					columnOperators2>{ \
+					operators2, window, "operator" \
 				} \
 			}, "operators 2");
 			addTab(new TabQWidget{ \
-				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
-					brackets, rowBrackets, columnBrackets, \
-					window, "bracket" \
+				new Grid::GridCalculateKeyboard< \
+					Button::ButtonDrag, rowBrackets, \
+					columnBrackets>{ \
+					brackets, window, "bracket" \
 				} \
 			}, "brackets");
 			addTab(new TabQWidget{ \
-				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
-					braces, rowBraces, columnBraces, \
-					window, "bracket" \
+				new Grid::GridCalculateKeyboard< \
+					Button::ButtonDrag, rowBraces, columnBraces>{ \
+					braces, window, "bracket" \
+				} \
+			}, "braces");
+			addTab(new TabQWidget{ \
+				new Grid::GridCalculateKeyboard< \
+					Button::ButtonDrag, rowConsts, columnConsts>{ \
+					consts, window, "const" \
 				} \
 			}, "consts");
 			addTab(new TabQWidget{ \
-				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
-					trigonometricFuncs, rowTrigonometricFuncs, \
-					columnTrigonometricFuncs, window, "operator" \
+				new Grid::GridCalculateKeyboard< \
+					Button::ButtonDrag, rowTrigonometricFuncs, \
+					columnTrigonometricFuncs>{ \
+					trigonometricFuncs, window, "operator" \
 				} \
 			}, "trigonometric functions");
 			addTab(new TabQWidget{ \
-				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
-					inverseTrigonometricFuncs, \
+				new Grid::GridCalculateKeyboard< \
+					Button::ButtonDrag, \
 					rowInverseTrigonometricFuncs, \
-					columnInverseTrigonometricFuncs, \
+					columnInverseTrigonometricFuncs>{
+					inverseTrigonometricFuncs, \
 					window, "operator" \
 				} \
 			}, "inverse trigonometric functions");
 			addTab(new TabQWidget{ \
-				new Grid::GridCalculateKeyboard<Button::ButtonDrag>{ \
-					prefixes, rowPrefixes, columnPrefixes, \
-					window, "prefix" \
+				new Grid::GridCalculateKeyboard< \
+					Button::ButtonDrag, rowPrefixes, \
+					columnPrefixes>{ \
+					prefixes, window, "prefix" \
 				} \
 			}, "prefix");
+			addTab(new TabQWidget{ \
+				new Grid::GridCalculateKeyboard< \
+					Button::ButtonDrag, rowFunctions, \
+					columnFunctions>{ \
+					functions, window, "function" \
+				} \
+			}, "functions");
 			tabBar()->setElideMode(Qt::ElideNone);
 		}
 	};
@@ -1622,6 +1685,7 @@ public:
 		return;
 	}
 };
+
 class MainWidget : public QWidget {
 public:
 	explicit inline MainWidget( \
