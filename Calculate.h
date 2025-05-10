@@ -4,6 +4,16 @@
 #include <cstring>
 #include <iostream>
 #include <mpfr.h>
+#include <unordered_map>
+
+using Error = std::pair<size_t, const char *>;
+
+static const std::unordered_map<char, char> \
+	bracketsIsValid {
+	{')', '('},
+	{'}', '{'},
+	{']', '['}
+};
 
 // Add this function definition
 const char* strrstr(const char* haystack, const char* needle) {
@@ -400,8 +410,8 @@ public:
 	inline bool isTwoOperand(void) const {
 		return _data.action < OpSin;
 	}
-	static const char *isValid(const char * const expression) {
-		std::stack<char> balanceBrackets{};
+	static Error *isValid(const char * const expression) {
+		std::stack<std::pair<char, const char *>> balanceBrackets;
 		for (const char * ptr {expression}, \
 			* const ptrEnd {expression + strlen(expression)}; \
 			ptr != ptrEnd; ptr++) {
@@ -410,54 +420,30 @@ public:
 				case '(':
 				case '[':
 				case '{':
-					balanceBrackets.push(symbol);
+					balanceBrackets.push({symbol, ptr});
 					continue;
 				case ')':
-					if (balanceBrackets.empty()) {
-						char * exstraBracket {new char[30]{'\0'}};
-						sprintf(exstraBracket, \
-							"%lu Exstra Bracket ')'", ptr - expression);
-						return exstraBracket;
-					}
-					if (balanceBrackets.top() == '(')
-						balanceBrackets.pop();
-					continue;
 				case ']':
-					if (balanceBrackets.empty()) {
-						char * exstraBracket {new char[30]{'\0'}};
-						sprintf(exstraBracket, \
-							"%lu Exstra Bracket ']'", ptr - expression);
-						return exstraBracket;
-					}
-					if (balanceBrackets.top() == '[')
-						balanceBrackets.pop();
-					continue;
 				case '}':
-					if (balanceBrackets.empty()) {
+					if (balanceBrackets.empty() || \
+						balanceBrackets.top().first != \
+						bracketsIsValid.at(symbol)) {
 						char * exstraBracket {new char[30]{'\0'}};
+						size_t index {(size_t)(ptr - expression)};
 						sprintf(exstraBracket, \
-							"%lu Exstra Bracket ']'", ptr - expression);
-						return exstraBracket;
-					}
-					if (balanceBrackets.top() == '{')
+							"%lu Exstra Bracket '%c'", index, symbol);
+						return new Error{index, exstraBracket};
+					} else {
 						balanceBrackets.pop();
-					continue;
-				default:
-					continue;
+					}
 			}
 		}
 		if (!balanceBrackets.empty()) {
-			char *exstraBracket {new char[30]{'\0'}}, \
-				* index {expression};
-			top
-			for (size_t elementEnd {balanceBracket.size()}; \
-				elementEnd--;){
-				strchar(index, )
-			}
-				
-				
+			char *exstraBracket {new char[30]{'\0'}};
+			size_t index {(size_t)(balanceBrackets.top().second - expression)};
 			sprintf(exstraBracket, "%lu Exstra Bracket '%c'", \
-				expression, balanceBracket.top());
+				index, balanceBrackets.top().first);
+			return new Error{index, exstraBracket};
 		}
 		return nullptr;
 	}
