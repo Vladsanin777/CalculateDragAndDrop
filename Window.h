@@ -74,6 +74,9 @@ namespace TabWindow {
 class MainLayout;
 class MainWidget;
 
+const char * const windowTitle \
+	{"CalculateDragAndDrop"};
+
 const char * const lstTabs[5] {
 	"Basic", "Derivate", "Integrate", \
 	"Intergal", "Replacement" \
@@ -341,8 +344,8 @@ private:
 public:
 	explicit inline Window( \
 			CalculateDragAndDrop *app = nullptr \
-	) : QMainWindow(), _app{app} {
-		setWindowTitle("CalculateDragAndDrop");
+	) : QMainWindow{}, _app{app} {
+		setWindowTitle(::windowTitle);
 		resize(400, 800);
 		setObjectName("Window");
 		show();
@@ -1148,25 +1151,35 @@ public:
 	void buttonOther() {
 		puts("buttonOther");
 		const byte * const inputtin {_window->getInputtin()};
+		const char * error {Expression::isValid( \
+			_lineEditText)};
+		if (error) {
+			_window->setWindowTitle(error);
+			delete [] error;
+			return;
+		}
+		const char * result {nullptr};
 		Expression * const expression {Expression:: \
 			buildExpressionTree(_lineEditText, nullptr, false) \
 		};
 		if (!expression) return;
 		switch (*inputtin) {
 			case 0:
-				_window->setResult(expression->calc());
+				result = expression->calc();
 				break;
 			case 1:
-				_window->setResult(expression-> \
-					differentiate()->print());
+				result = expression-> \
+					differentiate()->print();
 				break;
 			case 2:
-				_window->setResult(expression-> \
-					integrate()->print());
+				result = expression-> \
+					integrate()->print();
 				break;
 			default:
 				break;
 		}
+		_window->setResult(result);
+		_window->setWindowTitle(windowTitle);
 		delete expression;
 		//_window->setForResult(window->result);
 	}

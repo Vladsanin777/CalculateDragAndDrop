@@ -401,32 +401,44 @@ public:
 		return _data.action < OpSin;
 	}
 	static const char *isValid(const char * const expression) {
-		std::stack<const char> balanceBrackets{};
+		std::stack<char> balanceBrackets{};
 		for (const char * ptr {expression}, \
-			* const ptrEnd; ptr != ptrEnd; ptr++) {
+			* const ptrEnd {expression + strlen(expression)}; \
+			ptr != ptrEnd; ptr++) {
 			const char symbol {*ptr};
-			switch (symbol)
-			{
+			switch (symbol) {
 				case '(':
 				case '[':
 				case '{':
-					balanceBrackets.push(symbol)
+					balanceBrackets.push(symbol);
 					continue;
 				case ')':
 					if (balanceBrackets.empty()) {
-						char * exstraBracket {new char[100]{'\0'}};
-						size_t index {ptr - expression};
+						char * exstraBracket {new char[30]{'\0'}};
 						sprintf(exstraBracket, \
-							"%lu|Exstra Bracket", index);
+							"%lu Exstra Bracket ')'", ptr - expression);
+						return exstraBracket;
 					}
 					if (balanceBrackets.top() == '(')
 						balanceBrackets.pop();
 					continue;
 				case ']':
+					if (balanceBrackets.empty()) {
+						char * exstraBracket {new char[30]{'\0'}};
+						sprintf(exstraBracket, \
+							"%lu Exstra Bracket ']'", ptr - expression);
+						return exstraBracket;
+					}
 					if (balanceBrackets.top() == '[')
 						balanceBrackets.pop();
 					continue;
 				case '}':
+					if (balanceBrackets.empty()) {
+						char * exstraBracket {new char[30]{'\0'}};
+						sprintf(exstraBracket, \
+							"%lu Exstra Bracket ']'", ptr - expression);
+						return exstraBracket;
+					}
 					if (balanceBrackets.top() == '{')
 						balanceBrackets.pop();
 					continue;
@@ -434,6 +446,20 @@ public:
 					continue;
 			}
 		}
+		if (!balanceBrackets.empty()) {
+			char *exstraBracket {new char[30]{'\0'}}, \
+				* index {expression};
+			top
+			for (size_t elementEnd {balanceBracket.size()}; \
+				elementEnd--;){
+				strchar(index, )
+			}
+				
+				
+			sprintf(exstraBracket, "%lu Exstra Bracket '%c'", \
+				expression, balanceBracket.top());
+		}
+		return nullptr;
 	}
 	static Expression *buildExpressionTree( \
 		const char *expression, \
