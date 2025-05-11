@@ -1151,11 +1151,13 @@ public:
 	void buttonOther() {
 		puts("buttonOther");
 		const byte * const inputtin {_window->getInputtin()};
-		Expression::deleteSpace(_lineEditText);
-		Error * error {Expression::isValid( \
-			_lineEditText)};
+		Check::Error * error {Check:: \
+			validateExpression(_lineEditText)};
 		if (error) {
-			const char *errStr {error->second};
+			char *errStr{new char[30]{'\0'}};
+			sprintf(errStr, "%lu %s '%c'", \
+				error->errorPos, error->message, \
+				error->errorChar);
 			_window->setWindowTitle(errStr);
 			delete [] errStr;
 			delete error;
