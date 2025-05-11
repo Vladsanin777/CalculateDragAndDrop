@@ -1,12 +1,330 @@
-#include <stack>
 #include <cctype>
-#include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <mpfr.h>
-#include <unordered_map>
+#include <stack>
 
-using Error = std::pair<size_t, const char *>;
+struct Error {
+    size_t errorPos;
+    char* message;
+    char errorChar;
+};
+struct Op {
+	const char * op;
+	size_t length;
+};
+const size_t countRightUnaryOps {20};
+const Op rightUnaryOps[countRightUnaryOps] {
+	{"sqrt", 4}, {"cbrt", 4}, {"asin", 4}, {"acos", 4}, \
+	{"atan", 4}, {"acot", 4}, {"asec", 4}, {"acsc", 4}, \
+	{"sgn", 3}, {"abs", 3}, {"sin", 3}, {"cos", 3}, \
+	{"tan", 3}, {"cot", 3}, {"sec", 3}, {"csc", 3}, \
+	{"ln", 2}, {"lg", 2}, {"sqr", 3}, {"exp", 3} \
+};
+const size_t countLeftUnaryOps {2};
+const Op leftUnaryOps[countLeftUnaryOps] {
+	{"!", 1}, {"%", 1} \
+};
+const size_t countBinaryUnaryOps {8};
+const Op binaryUnaryOps[countBinaryUnaryOps] {
+	{"mod", 3}, {"log", 3}, {"+", 1}, {"-", 1}, \
+	{"*", 1}, {"/", 1}, {"^", 1}, {":", 1} \
+};
+static const std::unordered_map<char, char> \
+	bracketsMap {
+	{')', '('},
+	{'}', '{'},
+	{']', '['}
+};
+bool isBinaryDigit(char ch) {
+	switch (ch) {
+		case '0':
+		case '1':
+			return true;
+		default:
+			return false;
+	}
+}
+bool isOctalDigit(char ch) { 
+	switch (ch) {
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+			return true;
+		default:
+			return false;
+	}
+}
+bool isHexDigit(char ch) { 
+	switch (toupper(ch)) {
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+			return true;
+		default:
+			return false;
+	}
+}
+bool isOpenBrackets(char ch) {
+	switch (ch) {
+		case '(':
+		case '[':
+		case '{':
+			return true;
+		default:
+			return false;
+	}
+}
+bool isCloseBrackets(char ch) {
+	switch (ch) {
+		case ')':
+		case ']':
+		case '}':
+			return true;
+		default:
+			return false;
+	}
+}
+size_t checkUnaryOps(const char* const str, const Op *oper, \
+	const size_t &countOps) {
+	bool match {false};
+	const char *strPtr {nullptr}, \
+		*operPtr {nullptr}, *operPtrEnd {nullptr};
+	size_t lenOper {0UL};
+    for (const Op *operEnd{oper+countOps}; \
+		oper < operEnd; oper++) {
+        const Op& op = *oper;
+        match = true;
+		lenOper = op.length;
+        for (strPtr = str, operPtr = op.op, \
+			operPtrEnd = str + lenOper; \
+			operPtr < operPtrEnd; strPtr++ , \
+			operPtr++) {
+            if (*strPtr != *operPtr) {
+                match = false;
+                break;
+            }
+        }
+        if (match) return lenOper;
+    }
+    return 0UL;
+}
+
+size_t parseNumber(const char* ptr, Error* &error, const char* exprStart) {
+    const char* start {ptr};
+	char firstSymbol {*ptr};
+	bool hasPoint {false};
+    if (firstSymbol) {
+		switch (ptr[1]) {
+			case 'b':
+			case 'B':
+				ptr += 2;
+				if (!isBinaryDigit(*ptr)) {
+					error = new Error{(size_t)(ptr - exprStart), "Invalid binary digit", *ptr};
+					return 0;
+				}
+				while (isBinaryDigit(*ptr)) ptr++;
+				break;
+			case 'o':
+			case 'O':
+				ptr += 2;
+				if (!isOctalDigit(*ptr)) {
+					error = new Error{(size_t)(ptr - exprStart), "Invalid octal digit", *ptr};
+					return 0;
+				}
+				while (isOctalDigit(*ptr)) ptr++;
+				break;
+			case 'x':
+			case 'X':
+				ptr += 2;
+				if (!isHexDigit(*ptr)) {
+					error = new Error{(size_t)(ptr - exprStart), "Invalid hex digit", *ptr};
+					return 0;
+				}
+				while (isHexDigit(*ptr)) ptr++;
+				break;
+			default:
+				ptr++;
+				while (isdigit(*ptr)) ptr++;
+        }
+    } else if (isdigit(firstSymbol)) {
+        while (isdigit(*ptr)) ptr++;
+    } else {
+        return 0;
+    }
+    return ptr - start;
+}
+Error* isBalancedParentheses(const char* const expression) {
+    std::stack<std::pair<char, const char*>> balanceBrackets;
+	char symbol {'\0'};
+    for (const char* ptr = expression; *ptr; ++ptr) {
+        switch (symbol = *ptr) {
+			case '(':
+			case '[':
+			case '{':
+				balanceBrackets.push({c, ptr});
+				continue;
+			case ')':
+			case ']':
+			case '}':
+				if (balanceBrackets.empty() || \
+					balanceBrackets.top().first != bracketsMap[c])
+					return new Error{(size_t)(ptr - expression), \
+						"Extra closing bracket", c};
+				balanceBrackets.pop();
+        }
+    }
+
+    if (!balanceBrackets.empty()) {
+        std::pair<char, const char *>& top = balanceBrackets.top();
+        return new Error{(size_t)(top.second - expression), \
+			"Unclosed opening bracket", top.first};
+    }
+    return nullptr;
+}
+Error* validateExpression(const char * const expression) {
+    Error* error {isBalancedParentheses(expression)};
+    if (error) return error;
+
+    bool expectOperand {true};
+    const char* ptr {expression};
+	char symbol {'\0'};
+	size_t len {0UL};
+
+    while (symbol = *ptr) {
+        if (expectOperand) {
+            // Check for number
+            size_t numLen = parseNumber(ptr, error, expression);
+            if (error) return error;
+            if (numLen > 0) {
+                ptr += numLen;
+                expectOperand = false;
+                continue;
+            }
+
+            // Check for right unary
+            size_t ruLen = checkUnaryOps(ptr, \
+				rightUnaryOps, countRightUnaryOps);
+            if (ruLen > 0) {
+                ptr += ruLen;
+                continue;
+            }
+
+            // Check for opening bracket
+			switch (symbol) {
+				case '(':
+				case '[':
+				case '{':
+					ptr++;
+					continue;
+			}
+            return new Error{(size_t)(ptr - expression), "Expected operand", *ptr};
+        } else {
+            // Check for binary operator
+            len = checkUnaryOp(ptr, \
+				binaryUnaryOps, countBinaryUnaryOps);
+            if (len > 0) {
+                ptr += len;
+                expectOperand = true;
+                continue;
+            }
+
+            // Check for left unary
+            len = checkUnaryOp(ptr, \
+				leftUnaryOps, countLeftUnaryOps);
+            if (len > 0) {
+                ptr += len;
+                expectOperand = true;
+                continue;
+            }
+
+            // Check for closing bracket
+            if (*ptr == ')' || *ptr == ']' || *ptr == '}') {
+                ptr++;
+                expectOperand = false;
+                continue;
+            }
+
+            return new Error{(size_t)(ptr - expression), "Expected operator", *ptr};
+        }
+    }
+
+    if (expectOperand) {
+        return new Error{(size_t)(ptr - expression), "Unexpected end of expression", '\0'};
+    }
+
+    return nullptr;
+}
+/*
+в C++ проверить строку являетсяли она математическим выражением
+Напиши поддержку операторов c двумя опеоандами + ^ / : * mod log
+с левым операндом ! %
+с правым операндом sqr sqrt ln lg sgn abs exp cbrt asin acos atan asec acsc sin cos tan asec acsc
+У лево сторонних операндов может и не быть скобок и поэтому это "sqrt25" валидно
+При этом числа могут быть двоичные 0b101010 восьмеричные 0o173 шестнадцатиричные 0xA8F1 и дестичные 789823
+Сделай так чтобы код обределял в каком символе от начала строки ошибка Так же говорил в чём конкретно ошибка и символ из за которого происходит ошибка
+Не используй библиотеки string за место неё используй char * также избавься от unordered_set в пользу обычного массива с константой для хранения длинны
+добавь поддержку скобок () [] {}
+вот структура для возврата ошибки
+struct Error {
+    size_t errorPos;
+    char* message;
+    char errorChar;
+};
+на до всегда возращать указатель на эту структуру
+и если ошибки нет возращать nullptr
+пример с функцией для проверки баланса скобок тебе её писать не надо а посто сделать так чтобы она органично вписалась в твой код
+Error *isBalancedParentheses(const char * const expression) {
+	std::stack<std::pair<char, const char *>> balanceBrackets;
+	char symbol {'\0'};
+	for (const char * ptr {expression}, \
+		* const ptrEnd {expression + strlen(expression)}; \
+		ptr != ptrEnd; ptr++) {
+		switch (symbol = *ptr) {
+			case '(':
+			case '[':
+			case '{':
+				balanceBrackets.push({symbol, ptr});
+				continue;
+			case ')':
+			case ']':
+			case '}':
+				if (balanceBrackets.empty() || \
+					balanceBrackets.top().first != \
+					bracketsIsValid.at(symbol))
+					return new Error{(size_t)(ptr - expression), "Exstra Bracket", symbol};
+				else
+					balanceBrackets.pop();
+		}
+	}
+	if (!balanceBrackets.empty()) {
+		char *exstraBracket {new char[30]{'\0'}};
+		size_t index {};
+		sprintf(exstraBracket, "%lu  '%c'", \
+			index, balanceBrackets.top().first);
+		return new Error{(size_t)(balanceBrackets.top().second - expression), "Exstra Bracket", symbol};
+	}
+	return nullptr;
+}
+*/
 
 static const std::unordered_map<char, char> \
 	bracketsIsValid {
@@ -14,6 +332,284 @@ static const std::unordered_map<char, char> \
 	{'}', '{'},
 	{']', '['}
 };
+inline void deleteSpace (char * str) {
+	for (str = strchr(str, ' '); \
+		str; str = strchr(str+1UL, ' '))
+		memmove(str, str+1UL, strlen(str+1UL));
+}
+inline void toPointAndTolover(char * str) {
+	char symbol {'\0'};
+	for (const char * strEnd {str+strlen(str)}; \
+		str < strEnd; str++) {
+		switch (symbol = *str) {
+			case ',': *str = '.'; continue;
+			default: *str = tolower(symbol);
+		}
+	}
+	return;
+}
+
+Error *hasValidOperatorOperands(const char * const \
+	expression) {
+	static const size_t countOperatorsTwoOperand {6UL};
+	static const char * const \
+		operatorsTwoOperand[countOperatorsTwoOperand] {
+		"+", ":", "/", "*", "^", "mod" \
+	};
+	static const size_t countOperatorsLeftOperand {2UL};
+	static const char * const \
+		operatorsLeftOperand[countOperatorsLeftOperand] {
+		"!", "%" \
+	};
+	static const size_t countOperatorsRightOperand {2UL};
+	static const char * const \
+		operatorsRightOperand[countOperatorsRightOperand] {
+		"sqrt", "ln", "log", "lg", "sgn", "abs", \
+		"exp", "cbrt", "asin", "acos", "atan", \
+		"asec", "acsc" \
+	};
+	static const const *sqrRight
+	return nullptr;
+}
+Error *hasValidBinaryNumber(const char * const expression) {
+	bool hasDecimal {false}, notEndNumber {false};
+	const char * const error {new char[30]{'\0'}}, \
+		symbol{'\0'};
+	size_t index {0UL};
+	for (const char * ptr {strstr(expression, "0b")+2UL}, \
+		* const ptrEnd {expression + strlen(expression)}, \
+		* ptrStart {ptr}; ptr; ptr = strstr(ptr, "0b") + 2UL, \
+		ptrStart = ptr) {
+		if (ptr == ptrEnd) {
+			index = ptr - expression - 1UL;
+			sprintf(error, "%lu no number after '0b'", \
+				symbol);
+			return new Error{index, error};
+		}
+		hasDecimal = true;
+		notEndNumber = true;
+		for (; ptr < ptrEnd && notEndNumber; ptr++) {
+			switch (symbol = *ptr) {
+				case '0':
+				case '1':
+					continue;
+				case '.':
+				case ',':
+					if (hasDecimal) {
+						index = ptr - expression;
+						sprintf(error, "%lu double point '%c'", \
+							index, symbol);
+						return new Error{index, error};
+					} else hasDecimal = true;
+					continue;
+				default:
+					
+					if (isOperatorTwoOperand(ptr)) {
+						notEndNumber = false;
+						if (ptrStart == ptr) {
+							index = ptr - expression - 1UL;
+							sprintf(error, "%lu no number after '0b'", \
+								symbol);
+							return new Error{index, error};
+						}
+					} else {
+						index = ptr - expression;
+						sprintf(error , "%lu invalid operator", \
+							index);
+						return new Error{index, error};
+						// A binary number must be followed by an operator with two operands
+					}
+			}
+		}
+	}
+	delete [] error;
+	return nullptr;
+}
+Error *hasValidNumber(const char * const expression) {
+	bool hasDecimal {false}, \
+		needsDigit {false};
+	char symbol {'\0'}, * strErr {new char[30]{'\0'}};
+	for (const char * ptr {expression}, \
+		* const expressionEnd { \
+			expression + strlen(expression) \
+		}; ptr < expressionEnd; ptr++) {
+		symbol = *expression;
+		switch (symbol) {
+			case '.':
+			case ',':
+				size_t index {ptr - expression};
+				if (index == 0UL)
+					sprintf(strErr, "0 point with out number '%c'", \
+						symbol);
+				if (hasDecimal)
+					sprintf(strErr, "%lu two point in number '%c'", \
+						index, symbol);
+				if (!isdigit(*expression))
+		}
+		if (*expression == '.') {
+			if (hasDecimal) return {(size_t)(ptr - expression), \
+				"double point in one number"}; // Две точки в одном числе
+			if (i == 0 || !isdigit(*(expression-1UL))) {
+				if (i == expr.length()-1 || !isdigit(expr[i+1])) {
+					return false; // Точка без цифр вокруг
+				}
+			}
+			hasDecimal = true;
+			needsDigit = true;
+		} 
+		else if (needsDigit && isdigit(expr[i])) {
+			needsDigit = false;
+		}
+	}
+	
+	if (needsDigit) return false; // Ожидалась цифра после точки
+	
+	return true;
+}
+Error *isValid(const char* expression) {
+	if (strlen(expression) == 0) return nullptr;
+	Error * error {nullptr};
+	// Проверка баланса скобок
+	if (error = isBalancedParentheses(expression))
+		return error;
+	// Проверка операторов и операндов
+	if (error = hasValidOperatorOperands(expression))
+		return error;
+	// Проверка корректности чисел
+	if (error = hasValidNumbers(expression))
+		return error;
+	return nullptr;
+}
+struct ValidationResult {
+    bool isValid = true;
+    size_t errorPos = string::npos;
+    string message;
+    
+    operator bool() const { return isValid; }
+};
+
+struct Token {
+    const char* const value;
+    size_t start;
+    size_t end;
+};
+
+const unordered_set<string> BINARY_OPS = {"+", "-", "*", "/", "^", "mod"};
+const unordered_set<string> LEFT_UNARY_OPS = {"!", "%"};
+const unordered_set<string> RIGHT_UNARY_OPS = {"sqrt", "sin", "cos", "exp", "log"};
+
+// Удаление пробелов с сохранением позиций
+pair<string, vector<size_t>> preprocess(const string& expr) {
+    string cleaned;
+    vector<size_t> positions;
+    for(size_t i = 0; i < expr.size(); ++i) {
+        if(!isspace(expr[i])) {
+            cleaned += expr[i];
+            positions.push_back(i);
+        }
+    }
+    return {cleaned, positions};
+}
+
+vector<Token> tokenize(const string& cleaned, const vector<size_t>& pos) {
+    vector<Token> tokens;
+    size_t i = 0;
+    while(i < cleaned.size()) {
+        // Числа
+        if(isdigit(cleaned[i]) || cleaned[i] == '.' || 
+          (cleaned[i] == '0' && i+1 < cleaned.size() && 
+          (cleaned[i+1] == 'b' || cleaned[i+1] == 'o' || cleaned[i+1] == 'x'))) {
+            
+            size_t start = i;
+            while(i < cleaned.size() && (isdigit(cleaned[i]) || cleaned[i] == '.' || 
+                  cleaned[i] == 'b' || cleaned[i] == 'o' || cleaned[i] == 'x' || 
+                  tolower(cleaned[i]) == 'e')) i++;
+            tokens.push_back({cleaned.substr(start, i-start), pos[start], pos[i-1]});
+            continue;
+        }
+        
+        // Операторы и функции
+        if(isalpha(cleaned[i])) {
+            size_t start = i;
+            while(i < cleaned.size() && isalpha(cleaned[i])) i++;
+            tokens.push_back({cleaned.substr(start, i-start), pos[start], pos[i-1]});
+            continue;
+        }
+        
+        // Одиночные символы
+        tokens.push_back({string(1, cleaned[i]), pos[i], pos[i]});
+        i++;
+    }
+    return tokens;
+}
+
+ValidationResult validateExpression(const string& expr) {
+    auto [cleaned, positions] = preprocess(expr);
+    if(cleaned.empty()) return {false, 0, "Empty expression"};
+
+    auto tokens = tokenize(cleaned, positions);
+    stack<size_t> parenStack;
+    
+    // Проверка чисел
+    regex num_re(R"(^0[box][0-9a-f]+$|^[0-9]+(\.[0-9]*)?([eE][+-]?[0-9]+)?$)", regex::icase);
+    for(const auto& tok : tokens) {
+        if(isdigit(tok.value[0]) || tok.value[0] == '.') {
+            if(!regex_match(tok.value, num_re)) {
+                return {false, tok.start, "Invalid number format: " + tok.value};
+            }
+        }
+    }
+
+    // Проверка скобок
+    for(const auto& tok : tokens) {
+        if(tok.value == "(") {
+            parenStack.push(tok.start);
+        } else if(tok.value == ")") {
+            if(parenStack.empty()) {
+                return {false, tok.start, "Unmatched closing parenthesis"};
+            }
+            parenStack.pop();
+        }
+    }
+    if(!parenStack.empty()) {
+        return {false, parenStack.top(), "Unmatched opening parenthesis"};
+    }
+
+    // Проверка операторов
+    for(size_t i = 0; i < tokens.size(); ++i) {
+        const auto& tok = tokens[i];
+        
+        if(BINARY_OPS.count(tok.value)) {
+            if(i == 0 || i == tokens.size()-1) {
+                return {false, tok.start, "Binary operator at invalid position"};
+            }
+            
+            const auto& prev = tokens[i-1];
+            const auto& next = tokens[i+1];
+            if(prev.value == "(" || next.value == ")") {
+                return {false, tok.start, "Operator near parenthesis without operands"};
+            }
+        }
+        
+        if(LEFT_UNARY_OPS.count(tok.value)) {
+            if(i == tokens.size()-1) {
+                return {false, tok.start, "Unary operator without operand"};
+            }
+        }
+        
+        if(RIGHT_UNARY_OPS.count(tok.value)) {
+            if(i == tokens.size()-1) {
+                return {false, tok.start, "Function without arguments"};
+            }
+            if(tokens[i+1].value != "(" && !isdigit(tokens[i+1].value[0])) {
+                return {false, tok.start, "Invalid function argument"};
+            }
+        }
+    }
+
+    return {true, string::npos, ""};
+}
+
 
 // Add this function definition
 const char* strrstr(const char* haystack, const char* needle) {
@@ -410,190 +1006,7 @@ public:
 	inline bool isTwoOperand(void) const {
 		return _data.action < OpSin;
 	}
-	static void deleteSpace (char * str) {
-		for (str = strchr(str, ' '); \
-			str; str = strchr(str+1UL, ' '))
-			memmove(str, str+1UL, strlen(str+1UL));
-	}
-	static void toPointAndTolover(char * str) {
-		char symbol {'\0'};
-		for (const char * strEnd {str+strlen(str)}; \
-			str < strEnd; str++) {
-			switch (symbol = *str) {
-				case ',': *str = '.'; continue;
-				default: *str = tolower(symbol);
-			}
-		}
-		return;
-	}
-	static Error *isBalancedParentheses(const char * const expression) {
-		std::stack<std::pair<char, const char *>> balanceBrackets;
-		char symbol {'\0'};
-		for (const char * ptr {expression}, \
-			* const ptrEnd {expression + strlen(expression)}; \
-			ptr != ptrEnd; ptr++) {
-			switch (symbol = *ptr) {
-				case '(':
-				case '[':
-				case '{':
-					balanceBrackets.push({symbol, ptr});
-					continue;
-				case ')':
-				case ']':
-				case '}':
-					if (balanceBrackets.empty() || \
-						balanceBrackets.top().first != \
-						bracketsIsValid.at(symbol)) {
-						char * exstraBracket {new char[30]{'\0'}};
-						size_t index {(size_t)(ptr - expression)};
-						sprintf(exstraBracket, \
-							"%lu Exstra Bracket '%c'", index, symbol);
-						return new Error{index, exstraBracket};
-					} else {
-						balanceBrackets.pop();
-					}
-			}
-		}
-		if (!balanceBrackets.empty()) {
-			char *exstraBracket {new char[30]{'\0'}};
-			size_t index {(size_t)(balanceBrackets.top().second - expression)};
-			sprintf(exstraBracket, "%lu Exstra Bracket '%c'", \
-				index, balanceBrackets.top().first);
-			return new Error{index, exstraBracket};
-		}
-		return nullptr;
-	}
-	static Error *hasValidOperatorOperands(const char * const \
-		expression) {
-		static const size_t countOperatorsTwoOperand {6UL};
-		static const char * const \
-			operatorsTwoOperand[countOperatorsTwoOperand] {
-			"+", ":", "/", "*", "^", "mod" \
-		};
-		static const size_t countOperatorsLeftOperand {2UL};
-		static const char * const \
-			operatorsLeftOperand[countOperatorsLeftOperand] {
-			"!", "%" \
-		};
-		static const size_t countOperatorsRightOperand {2UL};
-		static const char * const \
-			operatorsRightOperand[countOperatorsRightOperand] {
-			"sqrt", "ln", "log", "lg", "sgn", "abs", \
-			"exp", "cbrt", "asin", "acos", "atan", \
-			"asec", "acsc" \
-		};
-		sqr
-		return nullptr;
-	}
-	static Error *hasValidBinaryNumber(const char * const expression) {
-		bool hasDecimal {false}, notEndNumber {false};
-		const char * const error {new char[30]{'\0'}}, \
-			symbol{'\0'};
-		size_t index {0UL};
-		for (const char * ptr {strstr(expression, "0b")+2UL}, \
-			* const ptrEnd {expression + strlen(expression)}, \
-			* ptrStart {ptr}; ptr; ptr = strstr(ptr, "0b") + 2UL, \
-			ptrStart = ptr) {
-			if (ptr == ptrEnd) {
-				index = ptr - expression - 1UL;
-				sprintf(error, "%lu no number after '0b'", \
-					symbol);
-				return new Error{index, error};
-			}
-			hasDecimal = true;
-			notEndNumber = true;
-			for (; ptr < ptrEnd && notEndNumber; ptr++) {
-				switch (symbol = *ptr) {
-					case '0':
-					case '1':
-						continue;
-					case '.':
-					case ',':
-						if (hasDecimal) {
-							index = ptr - expression;
-							sprintf(error, "%lu double point '%c'", \
-								index, symbol);
-							return new Error{index, error};
-						} else hasDecimal = true;
-						continue;
-					default:
-						
-						if (isOperatorTwoOperand(ptr)) {
-							notEndNumber = false;
-							if (ptrStart == ptr) {
-								index = ptr - expression - 1UL;
-								sprintf(error, "%lu no number after '0b'", \
-									symbol);
-								return new Error{index, error};
-							}
-						} else {
-							index = ptr - expression;
-							sprintf(error , "%lu invalid operator", \
-								index);
-							return new Error{index, error};
-							// A binary number must be followed by an operator with two operands
-						}
-				}
-			}
-		}
-		delete [] error;
-		return nullptr;
-	}
-	static Error *hasValidNumber(const char * const expression) {
-		bool hasDecimal {false}, \
-			needsDigit {false};
-		char symbol {'\0'}, * strErr {new char[30]{'\0'}};
-		for (const char * ptr {expression}, \
-			* const expressionEnd { \
-				expression + strlen(expression) \
-			}; ptr < expressionEnd; ptr++) {
-			symbol = *expression;
-			switch (symbol) {
-				case '.':
-				case ',':
-					size_t index {ptr - expression};
-					if (index == 0UL)
-						sprintf(strErr, "0 point with out number '%c'", \
-							symbol);
-					if (hasDecimal)
-						sprintf(strErr, "%lu two point in number '%c'", \
-							index, symbol);
-					if (!isdigit(*expression))
-			}
-			if (*expression == '.') {
-				if (hasDecimal) return {(size_t)(ptr - expression), \
-					"double point in one number"}; // Две точки в одном числе
-				if (i == 0 || !isdigit(*(expression-1UL))) {
-					if (i == expr.length()-1 || !isdigit(expr[i+1])) {
-						return false; // Точка без цифр вокруг
-					}
-				}
-				hasDecimal = true;
-				needsDigit = true;
-			} 
-			else if (needsDigit && isdigit(expr[i])) {
-				needsDigit = false;
-			}
-		}
-		
-		if (needsDigit) return false; // Ожидалась цифра после точки
-		
-		return true;
-	}
-	static Error *isValid(const char* expression) {
-		if (strlen(expression) == 0) return nullptr;
-		Error * error {nullptr};
-		// Проверка баланса скобок
-		if (error = isBalancedParentheses(expression))
-			return error;
-		// Проверка операторов и операндов
-		if (error = hasValidOperatorOperands(expression))
-			return error;
-		// Проверка корректности чисел
-		if (error = hasValidNumbers(expression))
-			return error;
-		return nullptr;
-	}
+	
 	static Expression *buildExpressionTree( \
 		const char *expression, \
 		Expression * parent = 0L, \
