@@ -1151,6 +1151,7 @@ public:
 	void buttonOther() {
 		puts("buttonOther");
 		const byte * const inputtin {_window->getInputtin()};
+		Expression::deleteSpace(_lineEditText);
 		Error * error {Expression::isValid( \
 			_lineEditText)};
 		if (error) {

@@ -410,13 +410,29 @@ public:
 	inline bool isTwoOperand(void) const {
 		return _data.action < OpSin;
 	}
-	static Error *isValid(const char * const expression) {
+	static void deleteSpace (char * str) {
+		for (str = strchr(str, ' '); \
+			str; str = strchr(str+1UL, ' '))
+			memmove(str, str+1UL, strlen(str+1UL));
+	}
+	static void toPointAndTolover(char * str) {
+		char symbol {'\0'};
+		for (const char * strEnd {str+strlen(str)}; \
+			str < strEnd; str++) {
+			switch (symbol = *str) {
+				case ',': *str = '.'; continue;
+				default: *str = tolower(symbol);
+			}
+		}
+		return;
+	}
+	static Error *isBalancedParentheses(const char * const expression) {
 		std::stack<std::pair<char, const char *>> balanceBrackets;
+		char symbol {'\0'};
 		for (const char * ptr {expression}, \
 			* const ptrEnd {expression + strlen(expression)}; \
 			ptr != ptrEnd; ptr++) {
-			const char symbol {*ptr};
-			switch (symbol) {
+			switch (symbol = *ptr) {
 				case '(':
 				case '[':
 				case '{':
@@ -445,6 +461,137 @@ public:
 				index, balanceBrackets.top().first);
 			return new Error{index, exstraBracket};
 		}
+		return nullptr;
+	}
+	static Error *hasValidOperatorOperands(const char * const \
+		expression) {
+		static const size_t countOperatorsTwoOperand {6UL};
+		static const char * const \
+			operatorsTwoOperand[countOperatorsTwoOperand] {
+			"+", ":", "/", "*", "^", "mod" \
+		};
+		static const size_t countOperatorsLeftOperand {2UL};
+		static const char * const \
+			operatorsLeftOperand[countOperatorsLeftOperand] {
+			"!", "%" \
+		};
+		static const size_t countOperatorsRightOperand {2UL};
+		static const char * const \
+			operatorsRightOperand[countOperatorsRightOperand] {
+			"sqrt", "ln", "log", "lg", "sgn", "abs", \
+			"exp", "cbrt", "asin", "acos", "atan", \
+			"asec", "acsc" \
+		};
+		sqr
+		return nullptr;
+	}
+	static Error *hasValidBinaryNumber(const char * const expression) {
+		bool hasDecimal {false}, notEndNumber {false};
+		const char * const error {new char[30]{'\0'}}, \
+			symbol{'\0'};
+		size_t index {0UL};
+		for (const char * ptr {strstr(expression, "0b")+2UL}, \
+			* const ptrEnd {expression + strlen(expression)}, \
+			* ptrStart {ptr}; ptr; ptr = strstr(ptr, "0b") + 2UL, \
+			ptrStart = ptr) {
+			if (ptr == ptrEnd) {
+				index = ptr - expression - 1UL;
+				sprintf(error, "%lu no number after '0b'", \
+					symbol);
+				return new Error{index, error};
+			}
+			hasDecimal = true;
+			notEndNumber = true;
+			for (; ptr < ptrEnd && notEndNumber; ptr++) {
+				switch (symbol = *ptr) {
+					case '0':
+					case '1':
+						continue;
+					case '.':
+					case ',':
+						if (hasDecimal) {
+							index = ptr - expression;
+							sprintf(error, "%lu double point '%c'", \
+								index, symbol);
+							return new Error{index, error};
+						} else hasDecimal = true;
+						continue;
+					default:
+						
+						if (isOperatorTwoOperand(ptr)) {
+							notEndNumber = false;
+							if (ptrStart == ptr) {
+								index = ptr - expression - 1UL;
+								sprintf(error, "%lu no number after '0b'", \
+									symbol);
+								return new Error{index, error};
+							}
+						} else {
+							index = ptr - expression;
+							sprintf(error , "%lu invalid operator", \
+								index);
+							return new Error{index, error};
+							// A binary number must be followed by an operator with two operands
+						}
+				}
+			}
+		}
+		delete [] error;
+		return nullptr;
+	}
+	static Error *hasValidNumber(const char * const expression) {
+		bool hasDecimal {false}, \
+			needsDigit {false};
+		char symbol {'\0'}, * strErr {new char[30]{'\0'}};
+		for (const char * ptr {expression}, \
+			* const expressionEnd { \
+				expression + strlen(expression) \
+			}; ptr < expressionEnd; ptr++) {
+			symbol = *expression;
+			switch (symbol) {
+				case '.':
+				case ',':
+					size_t index {ptr - expression};
+					if (index == 0UL)
+						sprintf(strErr, "0 point with out number '%c'", \
+							symbol);
+					if (hasDecimal)
+						sprintf(strErr, "%lu two point in number '%c'", \
+							index, symbol);
+					if (!isdigit(*expression))
+			}
+			if (*expression == '.') {
+				if (hasDecimal) return {(size_t)(ptr - expression), \
+					"double point in one number"}; // Две точки в одном числе
+				if (i == 0 || !isdigit(*(expression-1UL))) {
+					if (i == expr.length()-1 || !isdigit(expr[i+1])) {
+						return false; // Точка без цифр вокруг
+					}
+				}
+				hasDecimal = true;
+				needsDigit = true;
+			} 
+			else if (needsDigit && isdigit(expr[i])) {
+				needsDigit = false;
+			}
+		}
+		
+		if (needsDigit) return false; // Ожидалась цифра после точки
+		
+		return true;
+	}
+	static Error *isValid(const char* expression) {
+		if (strlen(expression) == 0) return nullptr;
+		Error * error {nullptr};
+		// Проверка баланса скобок
+		if (error = isBalancedParentheses(expression))
+			return error;
+		// Проверка операторов и операндов
+		if (error = hasValidOperatorOperands(expression))
+			return error;
+		// Проверка корректности чисел
+		if (error = hasValidNumbers(expression))
+			return error;
 		return nullptr;
 	}
 	static Expression *buildExpressionTree( \
