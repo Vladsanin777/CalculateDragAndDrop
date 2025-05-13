@@ -17,6 +17,7 @@
 #include <QTabBar>
 #include <QTabWidget>
 #include <QLabel>
+#include <QStyle>
 #include "Calculate.h"
 
 #define COUNT_LOCAL_HISTORI 5
@@ -745,30 +746,20 @@ namespace Button {
 				event->mimeData()->text().toUtf8().constData()}, \
 				* cssName {nullptr};
 			setText(text);
-			if (isEmpty(text))
-				cssName = "empty";
-			else if (isNumber(text))
-				cssName = "number";
-			else if (isPrefix(text))
-				cssName = "prefix";
-			else if (isBracket(text))
-				cssName = "bracket";
-			else if (isConst(text))
-				cssName = "const";
-			else if (isFunction(text))
-				cssName = "function";
-			else if (isOperator(text))
-				cssName = "operator";
-			else
-				cssName = "expression";
+			if (isEmpty(text)) cssName = "empty";
+			else if (isNumber(text)) cssName = "number";
+			else if (isPrefix(text)) cssName = "prefix";
+			else if (isBracket(text)) cssName = "bracket";
+			else if (isConst(text)) cssName = "const";
+			else if (isFunction(text)) cssName = "function";
+			else if (isOperator(text)) cssName = "operator";
+			else cssName = "expression";
 			puts(cssName);
 			setStyleSheet("");
 			setObjectName(cssName);
-			/*
 			style()->unpolish(this);
 			style()->polish(this);
 			update();
-			*/
 			event->acceptProposedAction();
 			return;
 		}
@@ -1217,8 +1208,10 @@ void LineEdit::onLineEditChanged( \
 	// Преобразуем QString в QByteArray
 	QByteArray byteArray = text.toUtf8();
 
+	const qsizetype len { byteArray.size() };
+	if (!len) { _window->setResult(strdup("0")); return; }
 	// Копируем данные QByteArray в char[]
-	char *textCh {new char[byteArray.size() + 1UL]{""}}; // +1 для нулевого завершающего символа
+	char *textCh {new char[len + 1UL]{""}}; // +1 для нулевого завершающего символа
 	strcpy(textCh, byteArray.constData());
 	LogicCalculate *logicCalculate \
 		{new LogicCalculate(textCh, _window)};

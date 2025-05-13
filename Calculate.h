@@ -3,6 +3,7 @@
 #include <iostream>
 #include <mpfr.h>
 #include <stack>
+#include <unordered_map>
 
 namespace Check {
 	struct Error {
@@ -451,17 +452,7 @@ enum Diff { \
 static inline bool _isBrackets(char symbol) {
 	return symbol == '(' || symbol == ')';
 }
-/*
-static inline bool _isOperatorSub(const char * const symbol, const char * const start) {
-	if (start == symbol)
-		return false;
-	const char symbolBefore = *(symbol - 1UL);
-	if (symbolBefore == 'x' || isdigit(symbolBefore) || \
-		_isBrackets(symbolBefore))
-		return true;
-	return false;
-}
-*/
+
 static inline size_t _shearchMaxLevelBrackets(const char * expression) {
 	size_t maxLevelBrackets {0UL}, levelBrackets {0UL};
 	const char * const expressionEnd {expression + strlen(expression)};
@@ -482,7 +473,7 @@ static inline void _replaceOnX(char *expression, const size_t level = 0UL) {
 	{
 		temp = *expression;
 		if (temp == '(') levelBrackets++;
-		if (levelBrackets != level) *expression = 'x';
+		if (levelBrackets != level) *expression = '\\';
 		if (temp == ')') levelBrackets--;
 	}
 }
@@ -498,7 +489,8 @@ static inline const char * _shearchNotPriorityOperator( \
 	const size_t maxLevelBrackets {_shearchMaxLevelBrackets(expression)+1UL};
 	//std::cout << "maxLevelBrackets " << maxLevelBrackets << std::endl;
 	const char * ptr {0L}, *temp;
-	for (size_t levelBrakets{0UL}; ptr == 0L && levelBrakets < maxLevelBrackets; levelBrakets++) {
+	for (size_t levelBrakets{0UL}; ptr == nullptr && \
+		levelBrakets < maxLevelBrackets; levelBrakets++) {
 		strcpy(copyExpression, expression);
 		_replaceOnX(copyExpression, levelBrakets);
 		//puts(copyExpression);
@@ -508,8 +500,13 @@ static inline const char * _shearchNotPriorityOperator( \
 		if (ptr = strrstr(copyExpression, "-")) {
 			lenOperator = 1;
 			//if (_isOperatorSub(ptr, expression)) 
-			if (ptr == copyExpression)
-				action = OpUnaryMinus;
+			if (ptr == copyExpression || isalpha(*(ptr-1)) && \
+				*(ptr-1) != 'x' || *(ptr-1) == '(') {
+				action = OpUnaryMinus, ptr = nullptr;
+					puts("minus-unsryminus");
+					std::cout << action << ARIFMETIC_STR_ACTION[action] \
+						<< std::endl;
+			}
 			else {
 				action = OpSubtraction; break;
 			}
@@ -523,40 +520,52 @@ static inline const char * _shearchNotPriorityOperator( \
 		if (ptr = strrstr(copyExpression, "mod")) {
 			lenOperator = 3, action = OpRemainderFromDivision; break;
 		}
-		if ((temp = strrstr(copyExpression, "sin")) < ptr != !ptr)
+		if (((temp = strrstr(copyExpression, "sin")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpSin, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "cos")) < ptr != !ptr)
+		if (((temp = strrstr(copyExpression, "cos")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpCos, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "tan")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "tan")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpTan, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "cot")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "cot")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpCot, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "sec")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "sec")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpSec, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "csc")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "csc")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpCsc, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "asin")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "asin")) < ptr || !ptr) && temp)
 			lenOperator = 4, action = OpAsin, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "acos")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "acos")) < ptr || !ptr) && temp)
 			lenOperator = 4, action = OpAcos, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "atan")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "atan")) < ptr || !ptr) && temp)
 			lenOperator = 4, action = OpAtan, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "acot")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "acot")) < ptr || !ptr) && temp)
 			lenOperator = 4, action = OpAcot, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "asec")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "asec")) < ptr || !ptr) && temp)
 			lenOperator = 4, action = OpAsec, ptr = temp; 
-		if ((temp = strrstr(copyExpression, "acsc")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "acsc")) < ptr || !ptr) && temp)
 			lenOperator = 4, action = OpAcsc, ptr = temp;
-		if ((temp = strrstr(copyExpression, "lg")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "lg")) < ptr || !ptr) && temp)
 			lenOperator = 2, action = OpLg, ptr = temp;
-		if ((temp = strrstr(copyExpression, "ln")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "ln")) < ptr || !ptr) && temp)
 			lenOperator = 2, action = OpLn, ptr = temp;
-		if ((temp = strrstr(copyExpression, "abs")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "abs")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpAbs, ptr = temp;
-		if ((temp = strrstr(copyExpression, "sgn")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "sgn")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpSgn, ptr = temp;
-		if ((temp = strrstr(copyExpression, "log")) < ptr && !ptr)
+		if (((temp = strrstr(copyExpression, "log")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpLog, ptr = temp;
+		if (((temp = strstr(copyExpression, "sqr")) < ptr || !ptr) && temp)
+			lenOperator = 3, action = OpSqr, ptr = temp;
+		if (((temp = strstr(copyExpression, "exp")) < ptr || !ptr) && temp)
+			lenOperator = 3, action = OpExp, ptr = temp;
+		if (((temp = strchr(copyExpression, '^')) < ptr || !ptr) && temp)
+			lenOperator = 1, action = OpPower, ptr = temp;
+		if (action == OpUnaryMinus && !ptr) ptr = strchr(copyExpression, '-');
+		puts(copyExpression);
+		std::cout << (void*)ptr << "fj" << \
+			(action == OpUnaryMinus) << "gf" << action  << \
+			ARIFMETIC_STR_ACTION[action] << "io" << \
+			(void *)strstr(copyExpression, "sqr") << std::endl;
 		//puts("rfjvkfkml");
 	}
 	//std::cout << ptr << std::endl;
@@ -564,8 +573,10 @@ static inline const char * _shearchNotPriorityOperator( \
 	//putchar(*ptr);
 	delete [] copyExpression;
 	//puts("klsdsdsd");
-	if (ptr) return expression + (ptr - copyExpression);
-	return 0L;
+	if (ptr) ptr = expression + (ptr - copyExpression);
+	puts("klhj");
+	std::cout << (void*)ptr << std::endl;
+	return ptr;
 }
 
 static inline const char * normalize( \
@@ -704,6 +715,9 @@ private:
 			case OpAcot:
 				mpfr_acot(*result, *operand1, MPFR_RNDN);
 				break;
+			case OpPower:
+				mpfr_pow(*result, *operand1, *operand2, MPFR_RNDN);
+				break;
 			case OpSqr:
 				mpfr_sqr(*result, *operand1, MPFR_RNDN);
 				break;
@@ -727,8 +741,11 @@ private:
 			case OpLg:
 				mpfr_log10(*result, *operand1, MPFR_RNDN);
 				break;
-			//case sgn:
-				//result = mpfr_sgn(operand1);
+			case OpAbs:
+				mpfr_abs(*result, *operand1, MPFR_RNDN);
+				break;
+			case OpSgn:
+				mpfr_set_si(*result, mpfr_sgn(*operand1), MPFR_RNDN);
 				//puts("sgn");
 				//mpfr_printf("Результат: %.50Rf\n", result);
 		}
@@ -739,6 +756,7 @@ private:
 			delete [] operand2;
 		}
 		//puts("skddk");
+		mpfr_printf("%Rf\n", *result);
 		return result;
 	}
 public:
@@ -777,6 +795,7 @@ public:
 		Expression * parent = 0L, \
 		bool isDelete = true \
 	) {
+		puts("building start");
 		//puts(expression);
 		unsigned char lenOperator;
 		bool isTwoOperand;
@@ -784,23 +803,18 @@ public:
 		const char * ptrOperator = \
 			_shearchNotPriorityOperator(expression, \
 				lenOperator, action);
+		std::cout << (void *)ptrOperator << std::endl;
+		puts("building start");
 		puts(ARIFMETIC_STR_ACTION[action]);
 		//std::cout << action << std::endl;
 		//if (ptrOperator)
 			//putchar(*ptrOperator);
 		//puts("dfsfgv");
-		if (!ptrOperator) {
-			//puts("kl");
-			//if (isDelete) delete [] expression;
-			//puts("kl");
-
-			const char * const number = normalize(expression, isDelete);
-			//std::cout << (number == expression) << std::endl;
-			//puts("dfkfkdl");
-			return new Expression{number, parent};
-		}
+		if (!ptrOperator)
+			return new Expression{expression, parent, false};
 		putchar(*ptrOperator);
 		putchar('\n');
+		puts("building start");
 		//puts("nm");
 		Expression * result = new Expression{action, parent};
 		//puts("nm");
@@ -832,7 +846,9 @@ public:
 			result->setFirstOperand(buildExpressionTree(newExpression, result));
 			//puts("dj");
 		}
+		puts("building start");
 		if (isDelete) delete [] expression;
+		puts("build axcepted");
 		return result;
 	}
 	inline bool operator==(const Expression * operand2) const {
