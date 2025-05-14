@@ -240,6 +240,15 @@ namespace Check {
 			return isDecimalNumber(ptr, exprStart);
 		} else return nullptr;
 	}
+	inline Error* parseX(const char* &ptr, bool &expectOperand, \
+		const char * const &exprStart) {
+		switch (*ptr) {
+			case 'x':
+			case 'X':
+				expectOperand = false, ptr++;
+		}
+		return nullptr;
+	}
 	Error* isBalancedParentheses(const char* const expression) {
 		std::stack<std::pair<char, const char*>> balanceBrackets;
 		char symbol {'\0'};
@@ -262,7 +271,8 @@ namespace Check {
 		}
 		return nullptr;
 	}
-	Error* validateExpression(const char * const expression) {
+	Error* validateExpression(const char * const expression, \
+		const bool withX) {
 		Error* error {isBalancedParentheses(expression)};
 		if (error) return error;
 
@@ -276,6 +286,12 @@ namespace Check {
 				error = parseNumber(ptr, expectOperand, expression);
 				if (error) return error;
 				if (!expectOperand) continue;
+
+				if (withX) {
+					error = parseX(ptr, expectOperand, expression);
+					if (error) return error;
+					if (!expectOperand) continue;
+				}
 
 				// Check for right unary
 				checkUnaryOps(ptr, rightUnaryOps, \
@@ -447,7 +463,7 @@ static const char *ARIFMETIC_STR_ACTION[] { \
 	"lg", "ln", "exp" \
 };
 enum Diff { \
-	numberDi, variableDi, actionVaribleDi \
+	noneDi, numberDi, variableDi, actionVaribleDi \
 };
 static inline bool _isBrackets(char symbol) {
 	return symbol == '(' || symbol == ')';
@@ -800,11 +816,11 @@ public:
 		unsigned char lenOperator;
 		bool isTwoOperand;
 		ArifmeticAction action;
-		const char * ptrOperator = \
+		const char * ptrOperator { \
 			_shearchNotPriorityOperator(expression, \
-				lenOperator, action);
+				lenOperator, action) };
 		std::cout << (void *)ptrOperator << std::endl;
-		puts("building start");
+		//puts("building start");
 		puts(ARIFMETIC_STR_ACTION[action]);
 		//std::cout << action << std::endl;
 		//if (ptrOperator)
@@ -814,7 +830,7 @@ public:
 			return new Expression{expression, parent, false};
 		putchar(*ptrOperator);
 		putchar('\n');
-		puts("building start");
+		//puts("building start");
 		//puts("nm");
 		Expression * result = new Expression{action, parent};
 		//puts("nm");
@@ -846,9 +862,9 @@ public:
 			result->setFirstOperand(buildExpressionTree(newExpression, result));
 			//puts("dj");
 		}
-		puts("building start");
+		//puts("building start");
 		if (isDelete) delete [] expression;
-		puts("build axcepted");
+		//puts("build axcepted");
 		return result;
 	}
 	inline bool operator==(const Expression * operand2) const {
@@ -1014,16 +1030,18 @@ public:
 			case OpMultiplication:
 				//std::cout << operand1Di << ' ' << operand2Di << std::endl;
 				//puts("sfjkvjk");
-				if (operand1Di == numberDi || operand2Di == numberDi) {
+				if (operand1Di == numberDi && operand2Di == numberDi) {
 					delete result;
 					result = ZERO->copy(parent);
-				} else if (operand1Di == variableDi) {
+				} else if (operand1Di == variableDi && \
+					operand2Di == numberDi) {
 					delete result;
-					result = _operand2->differentiate(parent);
-				} else if (operand2Di == variableDi) {
+					result = _operand2->copy(parent);
+				} else if (operand2Di == variableDi && \
+					operand1Di == numberDi) {
 					//puts("operand2");
 					delete result;
-					result = _operand1->differentiate(parent);
+					result = _operand1->copy(parent);
 				} else {
 					resAction = OpAddition;
 					resOperand1 = new Expression{OpMultiplication, result};
@@ -1289,11 +1307,18 @@ public:
 		switch (heandlerDifferentiate()) {
 			case numberDi:
 				resAction = OpMultiplication;
-				resOperand1 = this->copy(result);
+				resOperand1 = copy(result);
 				resOperand2 = VAR_X;
 				return result;
+			case variableDi:
+				resAction = OpDivision;
+				resOperand1 = new Expression {OpSqr};
+				resOperand1->_operand1 = copy(resOperand1);
+				resOperand2 = TWO->copy(result);
+				return result;
 		}
-		Diff operand1Di {_operand1->heandlerDifferentiate()}, operand2Di;
+		Diff operand1Di {_operand1->heandlerDifferentiate()}, \
+			operand2Di {noneDi};
 		if (_operand2) operand2Di = _operand2->heandlerDifferentiate();
 		Expression * resOperand1Operand1, \
 			* resOperand1Operand2, \

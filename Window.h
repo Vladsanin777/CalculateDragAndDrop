@@ -303,6 +303,7 @@ public:
 				alignment: center;
 			}
 		)");
+		Expression::init();
 		createWindow(nullptr);
 	}
 	void createWindow(QPushButton *button);
@@ -1143,7 +1144,7 @@ public:
 		puts("buttonOther");
 		const byte * const inputtin {_window->getInputtin()};
 		Check::Error * error {Check:: \
-			validateExpression(_lineEditText)};
+			validateExpression(_lineEditText, *inputtin != 0)};
 		if (error) {
 			char *errStr{new char[30]{'\0'}};
 			sprintf(errStr, "%lu %s '%c'", \
