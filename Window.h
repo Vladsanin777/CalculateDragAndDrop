@@ -1156,28 +1156,24 @@ public:
 			return;
 		}
 		const char * result {nullptr};
-		Expression * const expression {Expression:: \
-			buildExpressionTree(_lineEditText, nullptr, false) \
-		};
+		Expr expression {Expression:: \
+			buildExpressionTree(_lineEditText)};
 		if (!expression) return;
 		switch (*inputtin) {
 			case 0:
 				result = expression->calc();
 				break;
 			case 1:
-				result = expression-> \
-					differentiate()->print();
+				result = expression->diff()->print();
 				break;
 			case 2:
-				result = expression-> \
-					integrate()->print();
+				result = expression->integrate()->print();
 				break;
 			default:
 				break;
 		}
 		_window->setResult(result);
 		_window->setWindowTitle(windowTitle);
-		delete expression;
 		//_window->setForResult(window->result);
 	}
             

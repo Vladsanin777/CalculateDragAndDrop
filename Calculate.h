@@ -4,7 +4,7 @@
 #include <mpfr.h>
 #include <stack>
 #include <unordered_map>
-#include <shared_ptr>
+#include <memory>
 
 namespace Check {
 	struct Error {
@@ -613,8 +613,10 @@ static inline const char * normalize( \
 	return number;
 }
 
+
+
 enum TypeData { \
-	numberTD, variableTD, actionTD \
+	nullTD, numberTD, variableTD, actionTD \
 };
 union Data { \
 	const char * variable; \
@@ -623,45 +625,69 @@ union Data { \
 };
 class Expression;
 using Expr = std::shared_ptr<Expression>;
+inline Expr operator+(Expr operand1, Expr operand2 \
+) noexcept;
+inline Expr operator-(Expr operand1, Expr operand2 \
+) noexcept;
+inline Expr operator*(Expr operand1, Expr operand2 \
+) noexcept;
+inline Expr operator/(Expr operand1, Expr operand2 \
+) noexcept;
 class Expression : public std::enable_shared_from_this<Expression> {
 private:
+
+	friend inline Expr operator+(Expr operand1, Expr operand2 \
+	) noexcept;
+	friend inline Expr operator-(Expr operand1, Expr operand2 \
+	) noexcept;
+	friend inline Expr operator*(Expr operand1, Expr operand2 \
+	) noexcept;
+	friend inline Expr operator/(Expr operand1, Expr operand2 \
+	) noexcept;
+
 	Expr _operand1 {nullptr}, _operand2 {nullptr};
 	Data _data;
 	TypeData _typeData;
 
+	
 	static size_t size;
 	static Expr ZERO, ONE, \
 		TWO, TEN, VAR_X, MINUS_ONE;
 	inline explicit Expression (
-		const char * const number, \
-	) : _operand1{nullptr}, _operand2{nullptr} {
-		//puts("jkk");
-		//puts(expression);
+		const char * const number \
+	) : _typeData{nullTD}, _operand1{nullptr}, \
+		_operand2{nullptr} {
 		if (isdigit(*number) || *number == '-') {
 			_typeData = numberTD;
 			mpfr_init2(_data.number, size);
 			mpfr_set_str(_data.number, number, 10, MPFR_RNDN);
-			puts("ndh");
-			puts(number);
 		} else {
-			puts("variableTD");
-			puts(number);
 			_typeData = variableTD;
-			char * variable = new char[strlen(number)+1UL];
-			strcpy(variable, number);
-			_data.variable = variable;
+			_data.variable = "x";
 		}
 	}
 	inline explicit Expression(ArifmeticAction action, \
 		Expr operand1 = nullptr, Expr operand2 = nullptr)
 		: _typeData{actionTD}, _data{.action = action}, \
 		_operand1{operand1}, _operand2{operand2} {}
-	inline explicit Expression(ArifmeticAction action, \
-		Expr operand1 = nullptr, Expr operand2 = nullptr)
-		: _typeData{actionTD}, _data{.action = action}, \
-		_operand1{operand1.shared_from_this}, _operand2{operand2} {}
-	inline explicit Expression(void) : _parent{nullptr}, \
-	_operand1{nullptr}, _operand2{nullptr} {}
+	
+
+	inline explicit Expression(void) noexcept : \
+		_operand1{nullptr}, _operand2{nullptr}, _typeData{nullTD} {}
+	
+
+	static std::shared_ptr<Expression> create(const char* str) {
+        return std::shared_ptr<Expression>{new Expression{str}};
+    }
+
+	static std::shared_ptr<Expression> create(void) {
+		return std::shared_ptr<Expression>{new Expression{}};
+	}
+
+    static std::shared_ptr<Expression> create( \
+		ArifmeticAction action, Expr a = nullptr, Expr b = nullptr) {
+        return std::shared_ptr<Expression>{new Expression{action, a, b}};
+    }
 	mpfr_t* calculate(void) {
 		mpfr_t* result {new mpfr_t[1]};
 		mpfr_init2(*result, size);
@@ -793,15 +819,15 @@ public:
 		return (const char *)resStr;
 	}
 	static void init(void) {
-		ZERO = std::make_shared<Expression>("0"), \
-		ONE = std::make_shared<Expression>("1"), \
-		TWO = std::make_shared<Expression>("2"), \
-		TEN = std::make_shared<Expression>("10"), \
-		MINUS_ONE = std::make_shared<Expression>("-1");
-		if (!VAR_X) VAR_X = std::make_shared<Expression>{"x"};
+		ZERO = Expression::create("0"), \
+		ONE = Expression::create("1"), \
+		TWO = Expression::create("2"), \
+		TEN = Expression::create("10"), \
+		MINUS_ONE = Expression::create("-1");
+		if (!VAR_X) VAR_X = Expression::create("x");
 	}
 	static inline bool isTwoOperand( \
-		const ArifmeticAction &action) const {
+		const ArifmeticAction &action) {
 		return action < OpSin;
 	}
 	inline bool isTwoOperand(void) const {
@@ -812,19 +838,20 @@ public:
 		const char *expression) {
 		unsigned char lenOperator;
 		bool isTwoOperand;
-		ArifmeticAction action {none};
+		ArifmeticAction action {OpNone};
 		const char * ptrOperator { \
 			_shearchNotPriorityOperator(expression, \
-				lenOperator, action)}, * newExpression {nullptr};
+				lenOperator, action)};
+		char * newExpression {nullptr};
 		if (!ptrOperator)
-			return std::make_shared<Expression>(expression);
-		Expr result {std::make_shared<Expression>(action)};
+			return Expression::create(expression);
+		Expr result {Expression::create(action)};
 		size_t lenExpression {0UL};
-		if (isTwoOperand(action)) {
+		if (Expression::isTwoOperand(action)) {
 			lenExpression = (size_t)(ptrOperator - expression);
 			newExpression = new char[lenExpression+1UL]{'\0'};
 			strncpy(newExpression, expression, lenExpression);
-			result->setFirstOperand(buildExpressionTree(newExpression));
+			result->_operand1 = Expression::buildExpressionTree(newExpression);
 			delete [] newExpression;
 			lenExpression = (size_t)(strlen(expression) - \
 				(ptrOperator - expression) - lenOperator);
@@ -833,34 +860,9 @@ public:
 				strlen(expression) + lenOperator + 1UL);
 		newExpression = new char[lenExpression+1UL]{'\0'};
 		strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
-		result->setSecondOperand(buildExpressionTree(newExpression));
+		result->_operand2 = Expression::buildExpressionTree(newExpression);
 		delete [] newExpression;
 		return result;
-	}
-	inline bool operator==(const Expression * operand2) const {
-		if (_typeData != operand2->_typeData) return false;
-		switch (_typeData) {
-			case numberTD:
-				{
-					const mpfr_t &operand1Num {_data.number}, \
-						&operand2Num {operand2->_data.number};
-					return mpfr_equal_p(operand1Num, operand2Num);
-				}
-			case variableTD:
-				return true;
-			case actionTD:
-				if (_data.action != _data.action) return false;
-				{
-					bool equalOperand1 \
-						{_operand1->operator==(operand2->_operand1)};
-					if (isTwoOperand()){
-						return equalOperand1 == \
-							_operand2->operator==(operand2->_operand2);
-					}
-					return equalOperand1;
-				}
-		}
-		return false;
 	}
 	inline const char *print(void) {
 		char * expression {nullptr};
@@ -901,36 +903,6 @@ public:
 		delete [] operand1;
 		return expression;
 	}
-	/*
-	inline Expression * copy( \
-		Expression * parent = 0L \
-	) const {
-		Expression *result {new Expression{}};
-		result->_parent = parent;
-		char * temp = 0L;
-		switch (_typeData) {
-			case numberTD:
-				mpfr_init2(result->_data.number, size);
-				mpfr_set(result->_data.number, _data.number, MPFR_RNDN);
-				result->_typeData = numberTD;
-				return result;
-			case variableTD:
-				//std::cout << "fvhfdnk " << _data.variable << ' ' << strlen(_data.variable) + 1UL << std::endl;
-				temp = new char[strlen(_data.variable) + 1UL];
-				strcpy(temp, _data.variable);
-				result->_data.variable = temp;
-				result->_typeData = variableTD;
-				return result;
-			case actionTD:
-				result->_data.action = _data.action;
-				result->_operand1 = _operand1->copy(result);
-				if (isTwoOperand())
-					result->_operand2 = _operand2->copy(result);
-				result->_typeData = actionTD;
-		}
-		return result;
-	}
-	*/
 	inline Diff heandlerDifferentiate(void) const {
 		switch (_typeData) {
 			case numberTD:
@@ -946,118 +918,95 @@ public:
 				return actionVaribleDi;
 		return diff;
 	}
-	inline Expr operator+(Expression * operand2 \
+
+	inline Expr mod(Expr operand2 \
 	) noexcept {
-		return std::make_shared<Expression>( \
-			OpAddition, shared_from_this(), operand2);
-	}
-	inline Expr operator-(Expression * operand2 \
-	) noexcept {
-		return std::make_shared<Expression>( \
-			OpSubtraction, shared_from_this() operand2);
-	}
-	inline Expr mod(Expression * operand2 \
-	) noexcept {
-		return std::make_shared<Expression>( \
+		return Expression::create( \
 			OpRemainderFromDivision, shared_from_this(), operand2);
 	}
-	inline Expr pow(Expression * operand2 \
+	inline Expr pow(Expr operand2 \
 	) noexcept {
-		return std::make_shared<Expression>( \
+		return Expression::create( \
 			OpPower, shared_from_this(), operand2);
 	}
-	inline Expr operator*(Expression * operand2 \
+
+	inline Expr log(Expr operand2 \
 	) noexcept {
-		return std::make_shared<Expression>( \
-			OpMultiplication, shared_from_this(), operand2);
-	}
-	inline Expr operator/(Expression * operand2 \
-	) noexcept {
-		return std::make_shared<Expression>( \
-			OpPower, shared_from_this(), operand2);
-	}
-	inline Expr log(Expression * operand2 \
-	) noexcept {
-		return std::make_shared<Expression>( \
+		return Expression::create( \
 			OpLog, shared_from_this(), operand2);
 	}
 	inline Expr sin(void) noexcept {
-		return std::make_shared<Expression>(OpSin, shared_from_this());
+		return Expression::create(OpSin, shared_from_this());
 	}
 	inline Expr cos(void) noexcept {
-		return std::make_shared<Expression>(OpCos, shared_from_this());
+		return Expression::create(OpCos, shared_from_this());
 	}
 	inline Expr tan(void) noexcept {
-		return std::make_shared<Expression>(OpTan, shared_from_this());
+		return Expression::create(OpTan, shared_from_this());
 	}
 	inline Expr cot(void) noexcept {
-		return std::make_shared<Expression>(OpCot, shared_from_this());
+		return Expression::create(OpCot, shared_from_this());
 	}
 	inline Expr sec(void) noexcept {
-		return std::make_shared<Expression>(OpSec, shared_from_this());
+		return Expression::create(OpSec, shared_from_this());
 	}
 	inline Expr csc(void) noexcept {
-		return std::make_shared<Expression>(OpCsc, shared_from_this());
+		return Expression::create(OpCsc, shared_from_this());
 	}
 	inline Expr asin(void) noexcept {
-		return std::make_shared<Expression>(OpAsin, shared_from_this());
+		return Expression::create(OpAsin, shared_from_this());
 	}
 	inline Expr acos(void) noexcept {
-		return std::make_shared<Expression>(OpAcos, shared_from_this()); 
+		return Expression::create(OpAcos, shared_from_this()); 
 	}
 	inline Expr atan(void) noexcept {
-		return std::make_shared<Expression>(OpAtan, shared_from_this());
+		return Expression::create(OpAtan, shared_from_this());
 	}
 	inline Expr acot(void) noexcept {
-		return std::make_shared<Expression>(OpAcot, shared_from_this());
+		return Expression::create(OpAcot, shared_from_this());
 	}
 	inline Expr asec(void) noexcept {
-		return std::make_shared<Expression>(OpAsec, shared_from_this());
+		return Expression::create(OpAsec, shared_from_this());
 	}
 	inline Expr acsc(void) noexcept {
-		return std::make_shared<Expression>(OpAcsc, shared_from_this());
+		return Expression::create(OpAcsc, shared_from_this());
 	}
 	inline Expr sqrt(void) noexcept {
-		return std::make_shared<Expression>(OpSqrt, shared_from_this());
-	}
-	inline Expr sqrt(void) noexcept {
-		return std::make_shared<Expression>(OpSqrt, shared_from_this());
+		return Expression::create(OpSqrt, shared_from_this());
 	}
 	inline Expr sqr(void) noexcept {
-		return std::make_shared<Expression>(OpSqr, shared_from_this());
+		return Expression::create(OpSqr, shared_from_this());
 	}
 	inline Expr cbrt(void) noexcept {
-		return std::make_shared<Expression>(OpCbrt, shared_from_this());
+		return Expression::create(OpCbrt, shared_from_this());
 	}
 	inline Expr unaryMinus(void) noexcept {
-		return std::make_shared<Expression>(OpUnaryMinus, shared_from_this());
+		return Expression::create(OpUnaryMinus, shared_from_this());
 	}
 	inline Expr abs(void) noexcept {
-		return std::make_shared<Expression>(OpAbs, shared_from_this());
+		return Expression::create(OpAbs, shared_from_this());
 	}
 	inline Expr sgn(void) noexcept {
-		return std::make_shared<Expression>(OpSgn, shared_from_this());
+		return Expression::create(OpSgn, shared_from_this());
 	}
 	inline Expr lg(void) noexcept {
-		return std::make_shared<Expression>(OpLg, shared_from_this());
+		return Expression::create(OpLg, shared_from_this());
 	}
 	inline Expr ln(void) noexcept {
-		return std::make_shared<Expression>(OpLn, shared_from_this());
+		return Expression::create(OpLn, shared_from_this());
 	}
 	inline Expr exp(void) noexcept {
-		return std::make_shared<Expression>(OpExp, shared_from_this());
+		return Expression::create(OpExp, shared_from_this());
 	}
-	inline Expr diff(void) const {
+	inline Expr diff(void) {
 		switch (heandlerDifferentiate()) {
-			case numberDi:
-				return ZERO->copy();
-			case variableDi:
-				return ONE->copy();
+			case numberDi: return ZERO;
+			case variableDi: return ONE;
 		}
 		Expr &operand1 {_operand1}, &operand2 {_operand2}, \
 			result {nullptr};
 		Diff operand1Di {operand1->heandlerDifferentiate()}, \
-			operand2Di {nullptr};
+			operand2Di {noneDi};
 		if (operand2) operand2Di = operand2->heandlerDifferentiate();
 
 		const ArifmeticAction &action {_data.action};
@@ -1070,7 +1019,7 @@ public:
 				else if (operand2Di == numberDi)
 					result = _operand1->diff();
 				else 
-					result = std::make_shared<Expression>(action, \
+					result = Expression::create(action, \
 						operand1->diff(), operand2->diff());
 				return result;
 			case OpMultiplication:
@@ -1114,7 +1063,7 @@ public:
 				if (operand1Di == variableDi) return result;
 				break;
 			case OpTan:
-				result = operand1->sec()->qsr();
+				result = operand1->sec()->sqr();
 				if (operand1Di == variableDi) return result;
 				break;
 			case OpCot:
@@ -1156,7 +1105,7 @@ public:
 				break;
 			case OpAsec:
 				result = ONE / (operand1->abs() * \
-					(ONE - operand1->sqr())->sqrt())
+					(ONE - operand1->sqr())->sqrt());
 				if (operand1Di == variableDi) return result;
 				break;
 			case OpAcsc:
@@ -1168,36 +1117,35 @@ public:
 			case OpSgn:
 				return ZERO;
 		}
-		return std::make_shared<Expression>( \
+		return Expression::create( \
 			OpMultiplication, result, operand1->diff());
 	}
-	inline Expression *integrate(Expression * parent = 0L) const {
+	inline Expr integrate(Expression * parent = 0L) {
 		switch (heandlerDifferentiate()) {
 			case numberDi:
 				return shared_from_this() * VAR_X;
 			case variableDi:
 				return shared_from_this()->sqr() / TWO;
 		}
-		Expr result {nullptr};
 		const ArifmeticAction &action {_data.action};
+		Expr &operand1 {_operand1}, &operand2 {_operand2};
 		Diff operand1Di {_operand1->heandlerDifferentiate()}, \
 			operand2Di {noneDi};
 		if (_operand2) operand2Di = _operand2->heandlerDifferentiate();
 		switch (action) {
 			case OpAddition:
 			case OpSubtraction:
-				return std::make_shared<Expression>(action, \
+				return Expression::create(action, \
 					operand1->integrate(), operand2->integrate());
 			case OpMultiplication:
 				// Попробовать упростить (если один из операндов — константа)
 				if (operand1Di == numberDi)
-					result = operand1 * operand2->integrate();
+					return operand1 * operand2->integrate();
 				else if (operand2Di == numberDi)
-					result = operand1->integrate() * operand2;
+					return operand1->integrate() * operand2;
 				// Иначе применить интегрирование по частям: ∫u dv = uv - ∫v du
-				else result = operand1 * operand2->integrate() - \
+				else return operand1 * operand2->integrate() - \
 					(operand2->integrate() * operand1->diff())->integrate();
-				return result;
 			case OpDivision:  // Деление: ∫(u / v) dx → зависит от формы u и v
 				return (ONE / operand1 * operand2)->integrate();
 			case OpPower:
@@ -1205,242 +1153,77 @@ public:
 			case OpAbs:
 				return operand1 * operand1->abs() / TWO;
 			case OpLog:
-				resAction = OpSubtraction;
-				resOperand1 = new Expression{OpMultiplication, result};
-				resOperand1->_operand1 = _operand2->copy(resOperand1);
-				resOperand1Operand2 = new Expression{OpLog, result};
-				resOperand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = \
-					_operand1->copy(resOperand1Operand2);
-				resOperand1Operand2->_operand2 = \
-					_operand2->copy(resOperand1Operand2);
-				resOperand2 = new Expression{OpDivision, result};
-				resOperand2->_operand1 = _operand2->copy(resOperand2);
-				resOperand2Operand2 = new Expression{OpLn, resOperand2};
-				resOperand2->_operand2 = resOperand2Operand2;
-				resOperand2Operand2->_operand1 = \
-					_operand1->copy(resOperand2Operand2);
-				return result;
+				return operand2 * operand1->log(operand2) - \
+					operand2 / operand1->ln();
 			case OpLn:
-				resAction = OpSubtraction;
-				resOperand2 = _operand1->copy(result);
-				resOperand1 = new Expression{OpMultiplication, result};
-				resOperand1->_operand1 = _operand1->copy(result);
-				resOperand1Operand2 = new Expression{OpLn, resOperand1};
-				resOperand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = \
-					_operand1->copy(resOperand1Operand2);
-				return result;
+				return operand1 * operand1->ln() - operand1;
 			case OpLg:
-				resAction = OpSubtraction;
-				resOperand1 = new Expression{OpMultiplication, result};
-				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{OpLg, resOperand1};
-				resOperand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{OpDivision, result};
-				resOperand2->_operand1 = _operand1->copy(resOperand2);
-				resOperand2Operand2 = new Expression{OpLg, resOperand2};
-				resOperand2->_operand2 = resOperand2Operand2;
-				resOperand2Operand2->_operand1 = _operand1->copy(resOperand2Operand2);
-				return result;
+				return operand1 * operand1->lg() - operand1 / operand1->lg();
 			case OpUnaryMinus:
-				resAction = OpUnaryMinus;
-				resOperand1 = _operand1->integrate();
-				return result;
+				return operand1->integrate()->unaryMinus(); 
 			case OpExp:
-				throw std::runtime_error("exp integrate");
-				return result;
+				return (operand1->exp() * (ONE / operand1->diff()))->integrate();
 			case OpSin:
-				resAction = OpUnaryMinus;
-				resOperand1 = new Expression{OpCos, result};
-				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				return result;
+				return operand1->cos()->unaryMinus();
 			case OpCos:
-				resAction = OpSin;
-				resOperand1 = _operand1->copy(result);
-				return result;
+				return operand1->sin();
 			case OpTan:
-				resAction = OpLn;
-				resOperand1 = new Expression{OpAbs, result};
-				resOperand1Operand1 = new Expression{OpSec, resOperand1};
-				resOperand1->_operand1 = resOperand1Operand1;
-				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
-				return result;
+				return operand1->sec()->abs()->ln();
 			case OpCot:
-				resAction = OpLn;
-				resOperand1 = new Expression{OpAbs, result};
-				resOperand1Operand1 = new Expression{OpSin, resOperand1};
-				resOperand1->_operand1 = resOperand1Operand1;
-				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
-				return result;
+				return operand1->sin()->abs()->ln();
 			case OpSec:
-				resAction = OpLn;
-				resOperand1 = new Expression{OpAbs, result};
-				resOperand1Operand1 = new Expression{OpAddition, resOperand1};
-				resOperand1->_operand1 = resOperand1Operand1;
-				resOperand2Operand1 = new Expression{OpSec, resOperand1Operand1};
-				resOperand1Operand1->_operand1 = resOperand2Operand1;
-				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
-				resOperand1Operand2 = new Expression{OpTan, resOperand1Operand1};
-				resOperand1Operand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				return result;
+				return (operand1->tan() + operand1->sec())->abs();
 			case OpCsc:
-				resAction = OpLn;
-				resOperand1 = new Expression{OpAbs, result};
-				resOperand1Operand1 = new Expression{OpTan, resOperand1};
-				resOperand1->_operand1 = resOperand1Operand1;
-				resOperand2Operand1 = new Expression{OpDivision, resOperand1Operand1};
-				resOperand1Operand1->_operand1 = resOperand2Operand1;
-				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
-				resOperand2Operand1->_operand2 = TWO->copy(resOperand2Operand1);
-				return result;
+				return (operand1 / TWO)->tan()->abs();
 			case OpAsin:
-				resAction = OpAddition;
-				resOperand1 = new Expression{OpMultiplication, result};
-				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{OpAsin, resOperand1};
-				resOperand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{OpSqrt, result};
-				resOperand2Operand1 = new Expression{OpSubtraction, resOperand2};
-				resOperand2->_operand1 = resOperand2Operand1;
-				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
-				resOperand1Operand2 = new Expression{OpSqr};
-				resOperand2Operand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				return result;
+				return operand1 * operand1->asin() + (ONE - \
+					operand1->sqr())->sqrt();
 			case OpAcos:
-				resAction = OpSubtraction;
-				resOperand1 = new Expression{OpMultiplication, result};
-				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{OpAcos, resOperand1};
-				resOperand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{OpSqrt, result};
-				resOperand2Operand1 = new Expression{OpSubtraction, resOperand2};
-				resOperand2->_operand1 = resOperand2Operand1;
-				resOperand2Operand1->_operand1 = ONE->copy(resOperand2Operand1);
-				resOperand1Operand2 = new Expression{OpSqr};
-				resOperand2Operand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				return result;
+				return operand1 * operand1->acos() - \
+					(ONE - operand1->sqr())->sqr();
 			case OpAtan:
-				resAction = OpSubtraction;
-				resOperand1 = new Expression{OpMultiplication, result};
-				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{OpAtan, resOperand1};
-				resOperand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{OpDivision, result};
-				resOperand2->_operand2 = TWO->copy(resOperand2);
-				resOperand2Operand1 = new Expression{OpLn, resOperand2};
-				resOperand2->_operand1 = resOperand2Operand1;
-				resOperand1Operand1 = new Expression{OpAddition, resOperand2Operand1};
-				resOperand2Operand1->_operand1 = resOperand1Operand1;
-				resOperand1Operand1->_operand1 = ONE->copy(resOperand1Operand1);
-				resOperand1Operand2 = new Expression{OpSqr, resOperand1Operand1};
-				resOperand1Operand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				return result;
+				return operand1 * operand1->atan() - \
+					(ONE + operand1->sqr())->ln() / TWO;
 			case OpAcot:
-				resAction = OpAddition;
-				resOperand1 = new Expression{OpMultiplication, result};
-				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{OpAcot, resOperand1};
-				resOperand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{OpDivision, result};
-				resOperand2->_operand2 = TWO->copy(resOperand2);
-				resOperand2Operand1 = new Expression{OpLn, resOperand2};
-				resOperand2->_operand1 = resOperand2Operand1;
-				resOperand1Operand1 = new Expression{OpAddition, resOperand2Operand1};
-				resOperand2Operand1->_operand1 = resOperand1Operand1;
-				resOperand1Operand1->_operand1 = ONE->copy(resOperand1Operand1);
-				resOperand1Operand2 = new Expression{OpSqr, resOperand1Operand1};
-				resOperand1Operand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				return result;			
+				return operand1 * operand1->acos() + \
+					(ONE + operand1->sqr())->ln() / TWO;
 			case OpAsec:
-				resAction = OpSubtraction;
-				resOperand1 = new Expression{OpMultiplication, result};
-				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{OpAsec, resOperand1};
-				resOperand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{OpMultiplication, result};
-				resOperand2Operand1 = new Expression{OpSgn, resOperand2};
-				resOperand2->_operand1 = resOperand2Operand1;
-				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
-				resOperand2Operand2 = new Expression{OpLn, resOperand2};
-				resOperand2->_operand2 = resOperand2Operand2;
-				resOperand2Operand1 = new Expression{OpAddition, resOperand2Operand2};
-				resOperand2Operand2->_operand1 = resOperand2Operand1;
-				resOperand1Operand1 = new Expression{OpAbs, resOperand2Operand1};
-				resOperand2Operand1->_operand1 = resOperand1Operand1;
-				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
-				resOperand1Operand2 = new Expression{OpSqrt, resOperand2Operand1};
-				resOperand2Operand1->_operand2 = resOperand1Operand2;
-				resOperand2Operand1 = new Expression{OpSubtraction, resOperand1Operand2};
-				resOperand1Operand2->_operand1 = resOperand2Operand1;
-				resOperand2Operand1->_operand2 = ONE->copy(resOperand2Operand1);
-				resOperand1Operand1 = new Expression{OpSqr, resOperand2Operand1};
-				resOperand2Operand1->_operand1 = resOperand1Operand1;
-				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
-				return result;
-
+				return operand1 * operand1->asec() - \
+					(operand1->sgn() * (operand1->abs() \
+					+ (operand1->sqr() - ONE)->sqrt())->ln());
 			case OpAcsc:
-				resAction = OpAddition;
-				resOperand1 = new Expression{OpMultiplication, result};
-				resOperand1->_operand1 = _operand1->copy(resOperand1);
-				resOperand1Operand2 = new Expression{OpAsec, resOperand1};
-				resOperand1->_operand2 = resOperand1Operand2;
-				resOperand1Operand2->_operand1 = _operand1->copy(resOperand1Operand2);
-				resOperand2 = new Expression{OpMultiplication, result};
-				resOperand2Operand1 = new Expression{OpSgn, resOperand2};
-				resOperand2->_operand1 = resOperand2Operand1;
-				resOperand2Operand1->_operand1 = _operand1->copy(resOperand2Operand1);
-				resOperand2Operand2 = new Expression{OpLn, resOperand2};
-				resOperand2->_operand2 = resOperand2Operand2;
-				resOperand2Operand1 = new Expression{OpAddition, resOperand2Operand2};
-				resOperand2Operand2->_operand1 = resOperand2Operand1;
-				resOperand1Operand1 = new Expression{OpAbs, resOperand2Operand1};
-				resOperand2Operand1->_operand1 = resOperand1Operand1;
-				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
-				resOperand1Operand2 = new Expression{OpSqrt, resOperand2Operand1};
-				resOperand2Operand1->_operand2 = resOperand1Operand2;
-				resOperand2Operand1 = new Expression{OpSubtraction, resOperand1Operand2};
-				resOperand1Operand2->_operand1 = resOperand2Operand1;
-				resOperand2Operand1->_operand2 = ONE->copy(resOperand2Operand1);
-				resOperand1Operand1 = new Expression{OpSqr, resOperand2Operand1};
-				resOperand2Operand1->_operand1 = resOperand1Operand1;
-				resOperand1Operand1->_operand1 = _operand1->copy(resOperand1Operand1);
-				return result;
+				return operand1 * operand1->acsc() - \
+					(operand1->sgn() * (operand1->abs() \
+					+ (operand1->sqr() - ONE)->sqrt())->ln());
 		}
-		return 0L;
+		return nullptr;
 	}
 	~Expression() {
-		//puts("delete Expression");
-		switch (_typeData) {
-			case numberTD:
-				mpfr_clear(_data.number);
-				return;
-			case variableTD:
-				delete [] _data.variable;
-				return;
-			case actionTD:
-				if (_operand1) delete _operand1;
-				if (isTwoOperand()) {
-					if (_operand2) delete _operand2;
-				}
-				return;
-		}
+		if (_typeData == numberTD)
+			mpfr_clear(_data.number);
 	}
 };
-
+inline Expr operator+(Expr operand1, Expr operand2 \
+) noexcept {
+	return Expression::create( \
+		OpAddition, operand1, operand2);
+}
+inline Expr operator-(Expr operand1, Expr operand2 \
+) noexcept {
+	return Expression::create( \
+		OpSubtraction, operand1, operand2);
+}
+inline Expr operator*(Expr operand1, Expr operand2 \
+) noexcept {
+	return Expression::create( \
+		OpMultiplication, operand1, operand2);
+}
+inline Expr operator/(Expr operand1, Expr operand2 \
+) noexcept {
+	return Expression::create( \
+		OpPower, operand1, operand2);
+}
 size_t Expression::size = 256;
-Expression Expression::ZERO, Expression::ONE, \
+Expr Expression::ZERO, Expression::ONE, \
 	Expression::TWO, Expression::TEN, \
 	Expression::MINUS_ONE, Expression::VAR_X;
-
