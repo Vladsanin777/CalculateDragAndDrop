@@ -98,7 +98,7 @@ const byte rowOperators1 {byte(2)}, \
 	columnOperators1 {byte(5)};
 const char * const operators1[rowOperators1][columnOperators1] {
 	{"+", "-", ":", "*", "^"}, \
-	{"!", "sqrt(", "ln(", "log(", "lg("} \
+	{"!", "sqrt(", "ln(", "log", "lg("} \
 };
 const byte rowOperators2 {byte(2)}, \
 	columnOperators2 {byte(3)};

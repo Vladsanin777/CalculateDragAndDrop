@@ -287,6 +287,11 @@ namespace Check {
 
 		while (symbol = *ptr) {
 			if (expectOperand) {
+				// Check for right unary
+				checkUnaryOps(ptr, rightUnaryOps, \
+					countRightUnaryOps, is = false);
+				if (is) continue;
+				
 				// Check for number
 				error = parseNumber(ptr, expectOperand, expression);
 				if (error) return error;
@@ -297,11 +302,6 @@ namespace Check {
 					if (error) return error;
 					if (!expectOperand) continue;
 				}
-
-				// Check for right unary
-				checkUnaryOps(ptr, rightUnaryOps, \
-					countRightUnaryOps, is = false);
-				if (is) continue;
 
 				// Check for opening bracket
 				if (isOpenBrackets(symbol)) {
@@ -340,58 +340,6 @@ namespace Check {
 		return nullptr;
 	}
 }
-/*
-в C++ проверить строку являетсяли она математическим выражением
-Напиши поддержку операторов c двумя опеоандами + ^ / : * mod log
-с левым операндом ! %
-с правым операндом sqr sqrt ln lg sgn abs exp cbrt asin acos atan asec acsc sin cos tan asec acsc
-У лево сторонних операндов может и не быть скобок и поэтому это "sqrt25" валидно
-При этом числа могут быть двоичные 0b101010 восьмеричные 0o173 шестнадцатиричные 0xA8F1 и дестичные 789823
-Сделай так чтобы код обределял в каком символе от начала строки ошибка Так же говорил в чём конкретно ошибка и символ из за которого происходит ошибка
-Не используй библиотеки string за место неё используй char * также избавься от unordered_set в пользу обычного массива с константой для хранения длинны
-добавь поддержку скобок () [] {}
-вот структура для возврата ошибки
-struct Error {
-    size_t errorPos;
-    char* message;
-    char errorChar;
-};
-на до всегда возращать указатель на эту структуру
-и если ошибки нет возращать nullptr
-пример с функцией для проверки баланса скобок тебе её писать не надо а посто сделать так чтобы она органично вписалась в твой код
-Error *isBalancedParentheses(const char * const expression) {
-	std::stack<std::pair<char, const char *>> balanceBrackets;
-	char symbol {'\0'};
-	for (const char * ptr {expression}, \
-		* const ptrEnd {expression + strlen(expression)}; \
-		ptr != ptrEnd; ptr++) {
-		switch (symbol = *ptr) {
-			case '(':
-			case '[':
-			case '{':
-				balanceBrackets.push({symbol, ptr});
-				continue;
-			case ')':
-			case ']':
-			case '}':
-				if (balanceBrackets.empty() || \
-					balanceBrackets.top().first != \
-					bracketsIsValid.at(symbol))
-					return new Error{(size_t)(ptr - expression), "Exstra Bracket", symbol};
-				else
-					balanceBrackets.pop();
-		}
-	}
-	if (!balanceBrackets.empty()) {
-		char *exstraBracket {new char[30]{'\0'}};
-		size_t index {};
-		sprintf(exstraBracket, "%lu  '%c'", \
-			index, balanceBrackets.top().first);
-		return new Error{(size_t)(balanceBrackets.top().second - expression), "Exstra Bracket", symbol};
-	}
-	return nullptr;
-}
-*/
 
 
 // Add this function definition
@@ -575,6 +523,8 @@ static inline const char * _shearchNotPriorityOperator( \
 			lenOperator = 3, action = OpSgn, ptr = temp;
 		if (((temp = strrstr(copyExpression, "log")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpLog, ptr = temp;
+		if (((temp = strrstr(copyExpression, "cbrt")) < ptr || !ptr) && temp)
+			lenOperator = 4, action = OpCbrt, ptr = temp;
 		if (((temp = strrstr(copyExpression, "sqrt")) < ptr || !ptr) && temp)
 			lenOperator = 4, action = OpSqrt, ptr = temp;
 		if (((temp = strrstr(copyExpression, "sqr")) < ptr || !ptr) && temp)
@@ -602,25 +552,6 @@ static inline const char * _shearchNotPriorityOperator( \
 	std::cout << (void*)ptr << std::endl;
 	return ptr;
 }
-/*
-static inline const char * normalize( \
-	const char * const expression, bool isDelete = true \
-) {
-	char *number {new char[strlen(expression) + 1UL]};
-	strcpy(number, expression);
-	if (isDelete)
-		delete [] expression;
-	char * deleteChar;
-	size_t len {strlen(number) + 1UL};
-	//std::cout << len << std::endl;
-	while (deleteChar = strchr(number, '('))
-		memmove(deleteChar, deleteChar + 1L, len - (number - deleteChar));
-	while (deleteChar = strchr(number, ')'))
-		memmove(deleteChar, deleteChar + 1L, len - (number - deleteChar));
-	return number;
-}
-*/
-
 
 enum TypeData { \
 	nullTD, numberTD, variableTD, actionTD \
@@ -659,8 +590,8 @@ private:
 	
 	static size_t size, count;
 	static char *strPrint;
-	static Expr ZERO, ONE, \
-		TWO, TEN, VAR_X, MINUS_ONE;
+	static Expr ZERO, ONE, TWO, THREE, \
+		FOUR, TEN, VAR_X, MINUS_ONE;
 	inline explicit Expression (
 		const char * const number \
 	) : _typeData{nullTD}, _operand1{nullptr}, \
@@ -800,8 +731,6 @@ private:
 				break;
 			case OpSgn:
 				mpfr_set_si(*result, mpfr_sgn(*operand1), MPFR_RNDN);
-				//puts("sgn");
-				//mpfr_printf("Результат: %.50Rf\n", result);
 		}
 		mpfr_clear(*operand1);
 		delete [] operand1;
@@ -840,6 +769,8 @@ public:
 		ZERO = Expression::create("0"), \
 		ONE = Expression::create("1"), \
 		TWO = Expression::create("2"), \
+		THREE = Expression::create("3"), \
+		FOUR = Expression::create("4"), \
 		TEN = Expression::create("10"), \
 		MINUS_ONE = Expression::create("-1");
 		if (!VAR_X) VAR_X = Expression::create("x");
@@ -1122,13 +1053,23 @@ public:
 			case OpSqrt:
 				switch (operand1Di) {
 					case variableDi:
-						result = ONE / (TWO * shared_from_this());
+						return ONE / (TWO * shared_from_this());
 					case numberDi:
-						result = ZERO;
+						return ZERO;
 					case actionVaribleDi:
-						result = operand1->diff() / (TWO * shared_from_this());
+						return operand1->diff() / (TWO * shared_from_this());
 				}
-				return result;
+				return nullptr;
+			case OpCbrt:
+				switch (operand1Di) {
+					case variableDi:
+						return ONE / (THREE * operand1->sqr()->cbrt());
+					case numberDi:
+						return ZERO;
+					case actionVaribleDi:
+						return operand1->diff() / (THREE * operand1->sqr()->cbrt());
+				}
+				return nullptr;
 			case OpLog:
 				result = ONE / operand1 * operand2->ln();
 				break;
@@ -1143,31 +1084,24 @@ public:
 				break;
 			case OpSin:
 				result = operand1->cos();
-				if (operand1Di == variableDi) return result;
 				break;
 			case OpCos:
 				result = operand1->sin()->unaryMinus();
-				if (operand1Di == variableDi) return result;
 				break;
 			case OpTan:
 				result = operand1->sec()->sqr();
-				if (operand1Di == variableDi) return result;
 				break;
 			case OpCot:
 				result = operand1->csc()->unaryMinus()->sqr();
-				if (operand1Di == variableDi) return result;
 				break;
 			case OpSec:
 				result = operand1->sec() * operand1->tan();
-				if (operand1Di == variableDi) return result;
 				break;
 			case OpCsc:
 				result = operand1->csc()->unaryMinus() * operand1->cot();
-				if (operand1Di == variableDi) return result;
 				break;
 			case OpAbs:
 				result = operand1->sgn();
-				if (operand1Di == variableDi) return result;
 				break;
 			case OpUnaryMinus:
 				puts("diff unary minus");
@@ -1177,35 +1111,29 @@ public:
 					(operand1 / operand2)->abs();
 			case OpAsin:
 				result = ONE / (ONE - operand1->sqr())->sqrt();
-				if (operand1Di == variableDi) return result;
 				break;
 			case OpAcos:
 				result = (ONE / (ONE - operand1->sqr())->sqrt())->unaryMinus();
-				if (operand1Di == variableDi) return result;
 				break;
 			case OpAtan:
 				result = ONE / (ONE + operand1->sqr())->sqrt();
-				if (operand1Di == variableDi) return result;
 				break;
 			case OpAcot:
 				result = (ONE / (ONE + operand1->sqr())->sqrt())->unaryMinus();
-				if (operand1Di == variableDi) return result;
 				break;
 			case OpAsec:
 				result = ONE / (operand1->abs() * \
 					(ONE - operand1->sqr())->sqrt());
-				if (operand1Di == variableDi) return result;
 				break;
 			case OpAcsc:
 				result = ONE / (operand1->abs() * \
 					(ONE - operand1->sqr())->sqrt());
-				if (operand1Di == variableDi) return result;
 				break;
     
 			case OpSgn:
 				return ZERO;
 		}
-		if (operand1->heandlerDifferentiate() == variableDi)
+		if (operand1Di == variableDi)
 			return result;
 		return result * operand1->diff();
 	}
@@ -1262,6 +1190,19 @@ public:
 				return operand1->integrate()->unaryMinus(); 
 			case OpExp:
 				return (operand1->exp() * (ONE / operand1->diff()))->integrate();
+			case OpRemainderFromDivision:
+				{
+					Expr div {operand1 / operand2}, \
+						op2Integrate {operand2->integrate()};
+					return operand1->integrate() - div * op2Integrate + \
+						(op2Integrate * div->diff())->integrate();
+				}
+			case OpCbrt:
+				return THREE / FOUR * operand1->pow(FOUR / THREE);
+			case OpSqrt:
+				return TWO / THREE * operand1->pow(THREE / TWO);
+			case OpSqr:
+				return operand1->pow(THREE) / THREE;
 			case OpSin:
 				return operand1->cos()->unaryMinus();
 			case OpCos:
@@ -1294,6 +1235,8 @@ public:
 				return operand1 * operand1->acsc() - \
 					(operand1->sgn() * (operand1->abs() \
 					+ (operand1->sqr() - ONE)->sqrt())->ln());
+			case OpSgn:
+				return operand1->abs();
 		}
 		return nullptr;
 	}
@@ -1325,5 +1268,6 @@ inline Expr operator/(Expr operand1, Expr operand2 \
 size_t Expression::size {0UL}, Expression::count {0UL};
 char * Expression::strPrint {nullptr};
 Expr Expression::ZERO {nullptr}, Expression::ONE {nullptr}, \
-	Expression::TWO {nullptr}, Expression::TEN {nullptr}, \
+	Expression::TWO {nullptr}, Expression::THREE {nullptr}, \
+	Expression::FOUR {nullptr}, Expression::TEN {nullptr}, \
 	Expression::MINUS_ONE {nullptr}, Expression::VAR_X {nullptr};
