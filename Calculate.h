@@ -16,13 +16,13 @@ namespace Check {
 		const char * op;
 		size_t length;
 	};
-	const size_t countRightUnaryOps {20};
+	const size_t countRightUnaryOps {21};
 	const Op rightUnaryOps[countRightUnaryOps] {
 		{"sqrt", 4}, {"cbrt", 4}, {"asin", 4}, {"acos", 4}, \
 		{"atan", 4}, {"acot", 4}, {"asec", 4}, {"acsc", 4}, \
 		{"sgn", 3}, {"abs", 3}, {"sin", 3}, {"cos", 3}, \
 		{"tan", 3}, {"cot", 3}, {"sec", 3}, {"csc", 3}, \
-		{"ln", 2}, {"lg", 2}, {"sqr", 3}, {"exp", 3} \
+		{"ln", 2}, {"lg", 2}, {"sqr", 3}, {"exp", 3}, {"-", 1} \
 	};
 	const size_t countLeftUnaryOps {2};
 	const Op leftUnaryOps[countLeftUnaryOps] {
@@ -160,6 +160,7 @@ namespace Check {
 	inline Error *isNumber(const char * &ptr, \
 		bool (*func)(const char &), \
 		const char * const &exprStart) {
+		puts(ptr);
 		char symbol {*ptr};
 		if (symbol == '-') symbol = *++ptr;
 		if (!func(symbol)) 
@@ -170,7 +171,9 @@ namespace Check {
 				"No comma after zero", symbol};
 		while (func(*ptr)) ptr++;
 		if (!isPoint(*ptr)) return nullptr;
+		ptr++;
 		while (func(*ptr)) ptr++;
+		//puts("isNumber double point");
 		if (isPoint(symbol = *ptr))
 			return new Error{(size_t)(ptr - exprStart), \
 				"Double point", symbol};
@@ -197,6 +200,7 @@ namespace Check {
 		char symbol {*ptr};
 		if (symbol == '-') symbol = *++ptr;
 		while (isDecimalDigit(*ptr)) ptr++;
+		//puts("Decimal Zero");
 		if (isPoint(symbol = *ptr))
 			return new Error{(size_t)(ptr - exprStart), \
 				"Double point", symbol};
@@ -571,13 +575,16 @@ static inline const char * _shearchNotPriorityOperator( \
 			lenOperator = 3, action = OpSgn, ptr = temp;
 		if (((temp = strrstr(copyExpression, "log")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpLog, ptr = temp;
-		if (((temp = strstr(copyExpression, "sqr")) < ptr || !ptr) && temp)
+		if (((temp = strrstr(copyExpression, "sqrt")) < ptr || !ptr) && temp)
+			lenOperator = 4, action = OpSqrt, ptr = temp;
+		if (((temp = strrstr(copyExpression, "sqr")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpSqr, ptr = temp;
-		if (((temp = strstr(copyExpression, "exp")) < ptr || !ptr) && temp)
+		if (((temp = strrstr(copyExpression, "exp")) < ptr || !ptr) && temp)
 			lenOperator = 3, action = OpExp, ptr = temp;
-		if (((temp = strchr(copyExpression, '^')) < ptr || !ptr) && temp)
+		if (((temp = strrchr(copyExpression, '^')) < ptr || !ptr) && temp)
 			lenOperator = 1, action = OpPower, ptr = temp;
-		if (action == OpUnaryMinus && !ptr) ptr = strchr(copyExpression, '-');
+		if (((temp = strrchr(copyExpression, '-')) < ptr || !ptr) && temp)
+			lenOperator = 1, action = OpUnaryMinus, ptr = temp;
 		puts(copyExpression);
 		std::cout << (void*)ptr << "fj" << \
 			(action == OpUnaryMinus) << "gf" << action  << \
@@ -595,7 +602,7 @@ static inline const char * _shearchNotPriorityOperator( \
 	std::cout << (void*)ptr << std::endl;
 	return ptr;
 }
-
+/*
 static inline const char * normalize( \
 	const char * const expression, bool isDelete = true \
 ) {
@@ -612,7 +619,7 @@ static inline const char * normalize( \
 		memmove(deleteChar, deleteChar + 1L, len - (number - deleteChar));
 	return number;
 }
-
+*/
 
 
 enum TypeData { \
@@ -650,7 +657,8 @@ private:
 	TypeData _typeData;
 
 	
-	static size_t size;
+	static size_t size, count;
+	static char *strPrint;
 	static Expr ZERO, ONE, \
 		TWO, TEN, VAR_X, MINUS_ONE;
 	inline explicit Expression (
@@ -661,6 +669,7 @@ private:
 			_typeData = numberTD;
 			mpfr_init2(_data.number, size);
 			mpfr_set_str(_data.number, number, 10, MPFR_RNDN);
+			puts(number);
 		} else {
 			_typeData = variableTD;
 			_data.variable = "x";
@@ -804,21 +813,30 @@ private:
 		mpfr_printf("%Rf\n", *result);
 		return result;
 	}
-public:
-	const char *calc(void) {
-		char * const resStr{new char[100]{0}};
-		mpfr_t * const result{calculate()};
-		mpfr_sprintf(resStr, "%.77Rf", *result);
-		mpfr_clear(*result);
-		delete [] result;
-		char * ptr{resStr + strlen(resStr) - 1UL};
-		for (; ptr != resStr; ptr--)
+	static void deleteZeros(char * const str) {
+		char * ptr {str + strlen(str) - 1UL};
+		for (; ptr != str; ptr--)
 			if (*ptr != '0') break;
 		if (*ptr == '.') *ptr = '\0';
-		else if (strchr(resStr, '.')) *++ptr = '\0';
-		return (const char *)resStr;
+		else if (strchr(str, '.')) *++ptr = '\0';
+		return;
 	}
-	static void init(void) {
+public:
+	const char *calc(void) {
+		char * str {nullptr};
+		mpfr_t * const result {calculate()};
+		mpfr_asprintf(&str, Expression::strPrint, *result);
+		mpfr_clear(*result);
+		delete [] result;
+		deleteZeros(str);
+		return (const char *)str;
+	}
+	static void init(size_t bits) {
+		Expression::size = bits;
+		Expression::count = bits * 10 / 34;
+		if (Expression::strPrint)
+			delete [] Expression::strPrint;
+		asprintf(&Expression::strPrint, "%%.%luRf", count);
 		ZERO = Expression::create("0"), \
 		ONE = Expression::create("1"), \
 		TWO = Expression::create("2"), \
@@ -835,7 +853,7 @@ public:
 	}
 	
 	static Expr buildExpressionTree( \
-		const char *expression) {
+		char *expression) {
 		unsigned char lenOperator;
 		bool isTwoOperand;
 		ArifmeticAction action {OpNone};
@@ -843,10 +861,23 @@ public:
 			_shearchNotPriorityOperator(expression, \
 				lenOperator, action)};
 		char * newExpression {nullptr};
-		if (!ptrOperator)
-			return Expression::create(expression);
-		Expr result {Expression::create(action)};
 		size_t lenExpression {0UL};
+		if (!ptrOperator) {
+			puts("Number");
+			puts(expression);
+			lenExpression = strlen(expression);
+			if (*(newExpression = expression + \
+				(size_t)(lenExpression - 1UL)) == ')')
+				*newExpression = '\0'; 
+			if (*expression == '(')
+				memmove(expression, expression + 1UL, 
+					(size_t)(lenExpression));
+
+			puts(expression);
+			return Expression::create(expression);
+		}
+		Expr result {Expression::create(action)};
+		Expr *operand {nullptr};
 		if (Expression::isTwoOperand(action)) {
 			lenExpression = (size_t)(ptrOperator - expression);
 			newExpression = new char[lenExpression+1UL]{'\0'};
@@ -855,12 +886,15 @@ public:
 			delete [] newExpression;
 			lenExpression = (size_t)(strlen(expression) - \
 				(ptrOperator - expression) - lenOperator);
-		} else
+			operand = &result->_operand2;
+		} else {
 			lenExpression = (size_t)(ptrOperator - expression + \
 				strlen(expression) + lenOperator + 1UL);
+			operand = &result->_operand1;
+		}
 		newExpression = new char[lenExpression+1UL]{'\0'};
 		strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
-		result->_operand2 = Expression::buildExpressionTree(newExpression);
+		*operand = Expression::buildExpressionTree(newExpression);
 		delete [] newExpression;
 		return result;
 	}
@@ -869,17 +903,16 @@ public:
 		switch (_typeData){
 			case numberTD:
 				puts("numberTD");
-				expression = new char[12];
-				mpfr_sprintf(expression, "%05.5Rf", _data.number);
+				mpfr_asprintf(&expression, Expression::strPrint, \
+					_data.number);
+				deleteZeros(expression);
 				return expression;
 			case variableTD:
 				puts("variableTD");
-				expression = new char[strlen(_data.variable) + 1UL];
-				strcpy(expression, _data.variable);
-				return expression;
+				return strdup("x");
 		}
-		puts("actionTD");
-		puts(ARIFMETIC_STR_ACTION[_data.action]);
+		//puts("actionTD");
+		//puts(ARIFMETIC_STR_ACTION[_data.action]);
 		//if (isTwoOperand()) puts(_operand2->print());
 		const char *operand1 {_operand1->print()}, \
 			*action {ARIFMETIC_STR_ACTION[_data.action]};
@@ -889,17 +922,22 @@ public:
 				strlen(action) + strlen(operand2) + 3UL];
 			strcpy(expression, "(");
 			strcat(expression, operand1);
+			strcat(expression, ")");
 			strcat(expression, action);
+			strcat(expression, "(");
 			strcat(expression, operand2);
 			strcat(expression, ")");
 			delete [] operand2;
 		} else {
-			expression = new char[strlen(action) + strlen(operand1) + 1UL];
-			strcpy(expression, "(");
-			strcat(expression, action);
+			expression = new char[strlen(action) + \
+				strlen(operand1) + 1UL];
+			puts("operand1");
+			strcpy(expression, action);
+			strcat(expression, "(");
 			strcat(expression, operand1);
 			strcat(expression, ")");
 		}
+		//puts(operand1);
 		delete [] operand1;
 		return expression;
 	}
@@ -911,6 +949,8 @@ public:
 			case variableTD:
 				return variableDi;
 		}
+		//std::cout << _typeData << std::endl;
+		puts(ARIFMETIC_STR_ACTION[_data.action]);
 		Diff diff {_operand1->heandlerDifferentiate()};
 		if (diff != numberDi) return actionVaribleDi;
 		if (isTwoOperand())
@@ -1013,14 +1053,20 @@ public:
 
         switch (action) {
 			case OpAddition:
+				if (operand1Di == numberDi)
+					result = operand2->diff();
+				else if (operand2Di == numberDi)
+					result = operand1->diff();
+				else 
+					result = operand1->diff() + operand2->diff();
+				return result;
 			case OpSubtraction:
 				if (operand1Di == numberDi)
-					result = _operand2->diff();
+					result = operand2->diff()->unaryMinus();
 				else if (operand2Di == numberDi)
-					result = _operand1->diff();
+					result = operand1->diff();
 				else 
-					result = Expression::create(action, \
-						operand1->diff(), operand2->diff());
+					result = operand1->diff() - operand2->diff();
 				return result;
 			case OpMultiplication:
 				if (operand1Di == numberDi && \
@@ -1032,6 +1078,17 @@ public:
 				else if (operand2Di == variableDi && \
 					operand1Di == numberDi)
 					result = operand1;
+				else if (operand2Di == variableDi && \
+					operand1Di == variableDi)
+					result = TWO * operand1;
+				else if (operand1Di == numberDi)
+					result = operand1 * operand2->diff();
+				else if (operand2Di == numberDi)
+					result = operand2 * operand1->diff();
+				else if (operand1Di == variableDi)
+					result = operand2 + operand1 * operand2->diff();
+				else if (operand2Di == variableDi)
+					result = operand1 + operand2 * operand1->diff();
 				else
 					result = operand1->diff() * operand2 + \
 						operand1 * operand2->diff();
@@ -1040,8 +1097,38 @@ public:
 				result = (operand1 * operand2)->diff() / operand2->sqr();
 				return result;
 			case OpPower:
-				result = operand2 * operand1->pow(operand2 - ONE);
-				break;
+				switch (operand2Di) {
+					case numberDi:
+						result = operand2 * operand1->pow(operand2 - ONE);
+						break;
+					case variableDi:
+					case actionVaribleDi:
+						result = shared_from_this() * (operand2->diff() * \
+							operand1->ln() + operand2 * operand1->diff() / operand1);
+				}
+				return result;
+			case OpSqr:
+				switch (operand1Di) {
+					case variableDi:
+						result = TWO * operand1;
+						break;
+					case numberDi:
+						result = ZERO;
+						break;
+					case actionVaribleDi:
+						result = TWO * (operand1->diff() * operand1);
+				}
+				return result;
+			case OpSqrt:
+				switch (operand1Di) {
+					case variableDi:
+						result = ONE / (TWO * shared_from_this());
+					case numberDi:
+						result = ZERO;
+					case actionVaribleDi:
+						result = operand1->diff() / (TWO * shared_from_this());
+				}
+				return result;
 			case OpLog:
 				result = ONE / operand1 * operand2->ln();
 				break;
@@ -1083,6 +1170,7 @@ public:
 				if (operand1Di == variableDi) return result;
 				break;
 			case OpUnaryMinus:
+				puts("diff unary minus");
 				return operand1->diff()->unaryMinus();
 			case OpRemainderFromDivision:
 				return operand1->diff() - operand2->diff() * \
@@ -1117,8 +1205,9 @@ public:
 			case OpSgn:
 				return ZERO;
 		}
-		return Expression::create( \
-			OpMultiplication, result, operand1->diff());
+		if (operand1->heandlerDifferentiate() == variableDi)
+			return result;
+		return result * operand1->diff();
 	}
 	inline Expr integrate(Expression * parent = 0L) {
 		switch (heandlerDifferentiate()) {
@@ -1134,9 +1223,19 @@ public:
 		if (_operand2) operand2Di = _operand2->heandlerDifferentiate();
 		switch (action) {
 			case OpAddition:
+				if (operand1Di == numberDi)
+					return operand2->integrate();
+				else if (operand2Di == numberDi)
+					return operand1->integrate();
+				else 
+					return operand1->integrate() + operand2->integrate();
 			case OpSubtraction:
-				return Expression::create(action, \
-					operand1->integrate(), operand2->integrate());
+				if (operand1Di == numberDi)
+					return operand2->integrate()->unaryMinus();
+				else if (operand2Di == numberDi)
+					return operand1->integrate();
+				else 
+					return operand1->integrate() - operand2->integrate();
 			case OpMultiplication:
 				// Попробовать упростить (если один из операндов — константа)
 				if (operand1Di == numberDi)
@@ -1221,9 +1320,10 @@ inline Expr operator*(Expr operand1, Expr operand2 \
 inline Expr operator/(Expr operand1, Expr operand2 \
 ) noexcept {
 	return Expression::create( \
-		OpPower, operand1, operand2);
+		OpDivision, operand1, operand2);
 }
-size_t Expression::size = 256;
-Expr Expression::ZERO, Expression::ONE, \
-	Expression::TWO, Expression::TEN, \
-	Expression::MINUS_ONE, Expression::VAR_X;
+size_t Expression::size {0UL}, Expression::count {0UL};
+char * Expression::strPrint {nullptr};
+Expr Expression::ZERO {nullptr}, Expression::ONE {nullptr}, \
+	Expression::TWO {nullptr}, Expression::TEN {nullptr}, \
+	Expression::MINUS_ONE {nullptr}, Expression::VAR_X {nullptr};

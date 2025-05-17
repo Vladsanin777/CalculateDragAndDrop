@@ -303,7 +303,7 @@ public:
 				alignment: center;
 			}
 		)");
-		Expression::init();
+		Expression::init(256);
 		createWindow(nullptr);
 	}
 	void createWindow(QPushButton *button);
@@ -825,7 +825,7 @@ namespace NewHistoriElement {
 			setObjectName(cssName);
 			this->setFont(QFont(this->font().family(), 20));
 			if (!customCallback)
-				_callback = label;
+				_callback = strdup(label);
 			else 
 				delete [] label;
 			return;
@@ -1006,12 +1006,8 @@ public:
 		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
 
 		if (strlen(_lineEditText) > 0) {
-			// window->setResult(_lineEditText);  // Устанавливаем результат
-			
-			buttonOther();                         // Вызываем другую функцию
 			addHistori();    // Добавляем в историю
-
-			_window->setResult("0");            // Сбрасываем результат
+			_window->setResult(strdup("0"));            // Сбрасываем результат
 		}
 
 		_window->getLineEdit()->setText(""); // Очищаем поле ввода
@@ -1022,7 +1018,7 @@ public:
 		memmove(pos, pos + 3, strlen(pos + 3) + 1UL);
 
 		if (strlen(_lineEditText) > 0)
-			buttonOther(), addHistori();
+			addHistori();
 		memmove(_lineEditText, pos, strlen(pos) + 1UL);
 		_window->getLineEdit()->setText(_lineEditText);
 	}
@@ -1032,7 +1028,7 @@ public:
 		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
 
 		if (strlen(_lineEditText) > 0)
-			buttonOther(), addHistori();
+			addHistori();
 		*pos = '\0';
 		_window->getLineEdit()->setText(_lineEditText);
 	}
@@ -1041,15 +1037,14 @@ public:
 
 		std::cout << _window << std::endl;
         const char *result = _window->getResult();
+		puts("button_RES");
 		char *pos = strstr(_lineEditText, "_RES");
 		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
 
-		if (strlen(_lineEditText) > 0) {
-            // window.setResult(_lineEditText);
-            buttonOther();
+		if (strlen(_lineEditText) > 0)
             addHistori();
-		}
-        QLineEdit *line_edit {_window->getLineEdit()};
+		puts(result);
+        LineEdit *line_edit {_window->getLineEdit()};
         line_edit->setText(result);
         line_edit->setCursorPosition(strlen(result));
 	}
@@ -1159,12 +1154,14 @@ public:
 		Expr expression {Expression:: \
 			buildExpressionTree(_lineEditText)};
 		if (!expression) return;
+		puts(expression->print());
 		switch (*inputtin) {
 			case 0:
 				result = expression->calc();
 				break;
 			case 1:
 				result = expression->diff()->print();
+				puts(result);
 				break;
 			case 2:
 				result = expression->integrate()->print();
