@@ -24,6 +24,65 @@
 
 using byte = unsigned char;
 
+char* replace(const char* str, const char* oldStr, \
+	const char* newStr, size_t count = 0) {
+    // Проверка на некорректные входные данные
+    if (str == NULL || oldStr == NULL || newStr == NULL \
+		|| strlen(oldStr) == 0) {
+        return NULL;
+    }
+
+    size_t len_str = strlen(str);
+    size_t len_old = strlen(oldStr);
+    size_t len_new = strlen(newStr);
+
+    // Подсчёт количества замен
+    const char *current_pos = str;
+    int remaining = (count <= 0) ? INT_MAX : count;
+    int num_replacements = 0;
+
+    while (remaining > 0) {
+        const char *occurrence = strstr(current_pos, oldStr);
+        if (occurrence == NULL) break;
+        num_replacements++;
+        remaining--;
+        current_pos = occurrence + len_old;
+    }
+
+    // Вычисление длины новой строки
+    size_t new_len = len_str + (len_new - len_old) * num_replacements;
+    char *result = (char*)malloc(new_len + 1); // +1 для нулевого символа
+    if (result == NULL) return NULL;
+
+    // Копирование с заменами
+    const char *current_src = str;
+    char *current_dest = result;
+    remaining = (count <= 0) ? INT_MAX : count;
+
+    while (remaining > 0) {
+        const char *occurrence = strstr(current_src, oldStr);
+        if (occurrence == NULL) break;
+
+        // Копируем часть до вхождения old
+        size_t copy_len = occurrence - current_src;
+        memcpy(current_dest, current_src, copy_len);
+        current_dest += copy_len;
+
+        // Вставляем new
+        memcpy(current_dest, newStr, len_new);
+        current_dest += len_new;
+
+        // Сдвигаем указатель на оставшуюся строку
+        current_src = occurrence + len_old;
+        remaining--;
+    }
+
+    // Копируем остаток исходной строки
+    strcpy(current_dest, current_src);
+
+    return result;
+}
+
 class CalculateDragAndDrop;
 class Window;
 
@@ -1138,6 +1197,12 @@ public:
 	void buttonOther() {
 		puts("buttonOther");
 		const byte * const inputtin {_window->getInputtin()};
+		const char * result {nullptr};
+		if (*inputtin == 4 && (inputtin[1] == 0 || inputtin[1] == 1)) {
+			_window->setResult(_lineEditText);
+			_window->setWindowTitle(windowTitle);
+			return;
+		}
 		Check::Error * error {Check:: \
 			validateExpression(_lineEditText, *inputtin != 0)};
 		if (error) {
@@ -1149,13 +1214,17 @@ public:
 			delete [] errStr;
 			delete error;
 			return;
+		} else if (*inputtin == 4 && inputtin[1] == 2) {
+			_lineEditText = replace(_lineEditText, _window-> \
+				getResult(byte(4), byte(0)), _window-> \
+				getResult(byte(4), byte(1)));
 		}
-		const char * result {nullptr};
 		Expr expression {Expression:: \
 			buildExpressionTree(_lineEditText)};
 		if (!expression) return;
 		puts(expression->print());
 		switch (*inputtin) {
+			case 4:
 			case 0:
 				result = expression->calc();
 				break;
@@ -1166,8 +1235,22 @@ public:
 			case 2:
 				result = expression->integrate()->print();
 				break;
+			case 3:
+				switch (inputtin[1]) {
+					case 0:
+					case 1:
+						result = expression->calc();
+						break;
+					case 2:
+						result = (Expression::create(expression->calc( \
+							Expression::create(_window->getResult(byte(3), \
+							byte(1))))) - Expression::create(expression->calc( \
+							Expression::create(_window->getResult(byte(3), \
+							byte(0))))))->calc();
+						break;
+				}
 			default:
-				break;
+				return;
 		}
 		_window->setResult(result);
 		_window->setWindowTitle(windowTitle);

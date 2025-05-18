@@ -616,28 +616,17 @@ private:
 		_operand1{nullptr}, _operand2{nullptr}, _typeData{nullTD} {}
 	
 
-	static std::shared_ptr<Expression> create(const char* str) {
-        return std::shared_ptr<Expression>{new Expression{str}};
-    }
 
-	static std::shared_ptr<Expression> create(void) {
-		return std::shared_ptr<Expression>{new Expression{}};
-	}
-
-    static std::shared_ptr<Expression> create( \
-		ArifmeticAction action, Expr a = nullptr, Expr b = nullptr) {
-        return std::shared_ptr<Expression>{new Expression{action, a, b}};
-    }
-	mpfr_t* calculate(void) {
+	mpfr_t* calculate(Expr xNumber = nullptr) {
 		mpfr_t* result {new mpfr_t[1]};
 		mpfr_init2(*result, size);
-		if (_typeData == variableTD) {
-			mpfr_set_str(*result, "6", 10, MPFR_RNDN);
-			return result;
-		}
-		if (_typeData == numberTD) {
-			mpfr_set(*result, _data.number, MPFR_RNDN);
-			return result;
+		switch (_typeData) {
+			case variableTD:
+				mpfr_set(*result, xNumber->_data.number, MPFR_RNDN);
+				return result;
+			case numberTD:
+				mpfr_set(*result, _data.number, MPFR_RNDN);
+				return result;
 		}
 		mpfr_t* operand1 = _operand1->calculate(), *operand2;
 		ArifmeticAction arifmeticAction = _data.action;
@@ -739,7 +728,7 @@ private:
 			delete [] operand2;
 		}
 		//puts("skddk");
-		mpfr_printf("%Rf\n", *result);
+		//mpfr_printf("%Rf\n", *result);
 		return result;
 	}
 	static void deleteZeros(char * const str) {
@@ -751,9 +740,21 @@ private:
 		return;
 	}
 public:
-	const char *calc(void) {
+	static std::shared_ptr<Expression> create(const char* str) {
+        return std::shared_ptr<Expression>{new Expression{str}};
+    }
+
+	static std::shared_ptr<Expression> create(void) {
+		return std::shared_ptr<Expression>{new Expression{}};
+	}
+
+    static std::shared_ptr<Expression> create( \
+		ArifmeticAction action, Expr a = nullptr, Expr b = nullptr) {
+        return std::shared_ptr<Expression>{new Expression{action, a, b}};
+    }
+	const char *calc(Expr xNumber = nullptr) {
 		char * str {nullptr};
-		mpfr_t * const result {calculate()};
+		mpfr_t * const result {calculate(xNumber)};
 		mpfr_asprintf(&str, Expression::strPrint, *result);
 		mpfr_clear(*result);
 		delete [] result;
@@ -831,7 +832,7 @@ public:
 	}
 	inline const char *print(void) {
 		char * expression {nullptr};
-		switch (_typeData){
+		switch (_typeData) {
 			case numberTD:
 				puts("numberTD");
 				mpfr_asprintf(&expression, Expression::strPrint, \
