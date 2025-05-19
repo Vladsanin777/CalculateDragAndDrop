@@ -24,63 +24,59 @@
 
 using byte = unsigned char;
 
-char* replace(const char* str, const char* oldStr, \
-	const char* newStr, size_t count = 0) {
-    // Проверка на некорректные входные данные
-    if (str == NULL || oldStr == NULL || newStr == NULL \
-		|| strlen(oldStr) == 0) {
-        return NULL;
-    }
+void replace(char* &str, const char* const &oldStr, \
+	const char* const &newStr, const size_t count = \
+	size_t(0xFFFFFFFFFFFFFFFFUL)) {
+	size_t lenStr {strlen(str)}, lenOld {strlen(oldStr)}, \
+		lenNew {strlen(newStr)};
+	if (!lenOld || !str || !oldStr || !newStr || !count) return;
 
-    size_t len_str = strlen(str);
-    size_t len_old = strlen(oldStr);
-    size_t len_new = strlen(newStr);
 
     // Подсчёт количества замен
-    const char *current_pos = str;
-    int remaining = (count <= 0) ? INT_MAX : count;
-    int num_replacements = 0;
-
-    while (remaining > 0) {
-        const char *occurrence = strstr(current_pos, oldStr);
-        if (occurrence == NULL) break;
-        num_replacements++;
-        remaining--;
-        current_pos = occurrence + len_old;
+    const char *currentPos = str;
+    size_t countReplacements {0UL};
+	const char *occurrence {nullptr};
+    while (countReplacements < count) {
+        occurrence = strstr(currentPos, oldStr);
+        if (!occurrence) break;
+        countReplacements++;
+        currentPos = occurrence + lenOld;
     }
 
     // Вычисление длины новой строки
-    size_t new_len = len_str + (len_new - len_old) * num_replacements;
-    char *result = (char*)malloc(new_len + 1); // +1 для нулевого символа
-    if (result == NULL) return NULL;
+    size_t lenNewStr = lenStr + (lenNew - lenOld) * \
+		countReplacements;
+    char * const result {new char[lenNewStr + 1]};
+    if (!result) return;
 
     // Копирование с заменами
-    const char *current_src = str;
-    char *current_dest = result;
-    remaining = (count <= 0) ? INT_MAX : count;
-
-    while (remaining > 0) {
-        const char *occurrence = strstr(current_src, oldStr);
-        if (occurrence == NULL) break;
+    currentPos = str;
+    char *currentDest {result};
+	size_t copyLen {0UL};
+    while (countReplacements > 0) {
+        occurrence = strstr(currentPos, oldStr);
+        if (!occurrence) break;
 
         // Копируем часть до вхождения old
-        size_t copy_len = occurrence - current_src;
-        memcpy(current_dest, current_src, copy_len);
-        current_dest += copy_len;
+        copyLen = occurrence - currentPos;
+        memcpy(currentDest, currentPos, copyLen);
+        currentDest += copyLen;
 
         // Вставляем new
-        memcpy(current_dest, newStr, len_new);
-        current_dest += len_new;
+        memcpy(currentDest, newStr, lenNew);
+        currentDest += lenNew;
 
         // Сдвигаем указатель на оставшуюся строку
-        current_src = occurrence + len_old;
-        remaining--;
+        currentPos = occurrence + lenOld;
+        countReplacements--;
     }
 
     // Копируем остаток исходной строки
-    strcpy(current_dest, current_src);
+    strcpy(currentDest, currentPos);
 
-    return result;
+	delete [] str;
+	str = result;
+    return;
 }
 
 class CalculateDragAndDrop;
@@ -550,7 +546,7 @@ public:
 		const char * & res {_result[tab][index]};
 		delete[] res;
 		res = newResult;
-		updataResultButton();
+		updataResultButton(tab, index);
 		return;
 	}
 	inline void setResult( \
@@ -576,6 +572,7 @@ public:
 		return;
 	}
 	void updataResultButton(void) const noexcept;
+	void updataResultButton(byte tab, byte index) const noexcept;
 	inline ~Window(void);
 };
 
@@ -828,6 +825,11 @@ namespace Button {
 void Window::updataResultButton(void) const noexcept {
 	_resultButton->setText(_result[*_inputtin][_inputtin[1]]);
 }
+void Window::updataResultButton(byte tab, byte index) \
+const noexcept {
+	puts(_result[tab][index]);
+	_resultButton->setText(_result[tab][index]);
+}
 
 class  LineEdit : public QLineEdit {
 private:
@@ -1070,6 +1072,7 @@ public:
 		}
 
 		_window->getLineEdit()->setText(""); // Очищаем поле ввода
+		delete [] _lineEditText;
 	}
 
 	void button_DO() {
@@ -1080,6 +1083,7 @@ public:
 			addHistori();
 		memmove(_lineEditText, pos, strlen(pos) + 1UL);
 		_window->getLineEdit()->setText(_lineEditText);
+		delete [] _lineEditText;
 	}
 
 	void button_POS() {
@@ -1090,6 +1094,7 @@ public:
 			addHistori();
 		*pos = '\0';
 		_window->getLineEdit()->setText(_lineEditText);
+		delete [] _lineEditText;
 	}
 
 	void button_RES() {
@@ -1106,6 +1111,7 @@ public:
         LineEdit *line_edit {_window->getLineEdit()};
         line_edit->setText(result);
         line_edit->setCursorPosition(strlen(result));
+		delete [] _lineEditText;
 	}
 
 	void addHistori() {
@@ -1191,6 +1197,7 @@ public:
 		if (pos == _lineEditText) *_lineEditText = '\0';
 		else memmove(pos-1, pos + 2, strlen(pos + 2) + 1);
 		_window->getLineEdit()->setText(_lineEditText);
+		delete [] _lineEditText;
 	}
 
 	
@@ -1198,33 +1205,46 @@ public:
 		puts("buttonOther");
 		const byte * const inputtin {_window->getInputtin()};
 		const char * result {nullptr};
-		if (*inputtin == 4 && (inputtin[1] == 0 || inputtin[1] == 1)) {
-			_window->setResult(_lineEditText);
-			_window->setWindowTitle(windowTitle);
-			return;
+		if (*inputtin == 4) {
+			if (inputtin[1] != 2) {
+				_window->setResult(_lineEditText);
+				_lineEditText = strdup(_window-> \
+					getLineEdit(byte(4), byte(2))-> \
+					text().toUtf8().constData());
+			}
+			puts("Replacement");
+			puts(_lineEditText);
+			puts(_window->getResult(4, 1));
+			replace(_lineEditText, _window-> \
+				getResult(byte(4), byte(0)), _window-> \
+				getResult(byte(4), byte(1)));
 		}
 		Check::Error * error {Check:: \
-			validateExpression(_lineEditText, *inputtin != 0)};
+			validateExpression(_lineEditText, \
+				*inputtin != 0 && *inputtin != 4)};
 		if (error) {
 			char *errStr{new char[30]{'\0'}};
 			sprintf(errStr, "%lu %s '%c'", \
 				error->errorPos, error->message, \
 				error->errorChar);
+			printf(errStr);
 			_window->setWindowTitle(errStr);
 			delete [] errStr;
+			delete [] _lineEditText;
 			delete error;
 			return;
-		} else if (*inputtin == 4 && inputtin[1] == 2) {
-			_lineEditText = replace(_lineEditText, _window-> \
-				getResult(byte(4), byte(0)), _window-> \
-				getResult(byte(4), byte(1)));
-		}
+		} 
+		puts(_lineEditText);
 		Expr expression {Expression:: \
 			buildExpressionTree(_lineEditText)};
 		if (!expression) return;
 		puts(expression->print());
 		switch (*inputtin) {
 			case 4:
+				_window->setResult(expression->calc(), \
+					byte(4), byte(2));
+				_window->setWindowTitle(windowTitle);
+				return;
 			case 0:
 				result = expression->calc();
 				break;
@@ -1254,7 +1274,7 @@ public:
 		}
 		_window->setResult(result);
 		_window->setWindowTitle(windowTitle);
-		//_window->setForResult(window->result);
+		delete [] _lineEditText;
 	}
             
 	static void inputtinLineEdit( \
@@ -1304,7 +1324,6 @@ void LineEdit::onLineEditChanged( \
 		logicCalculate->button_POS();
 	else
 		logicCalculate->buttonOther();
-	delete [] textCh;
 }
 
 namespace Title {
