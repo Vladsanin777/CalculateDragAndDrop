@@ -1119,21 +1119,21 @@ public:
 		QLayout *elementGlobal {nullptr}, \
 			*elementLocal {nullptr};
 		byte tab = _window->getInputtin()[0];
-
+		puts(_lineEditText);
 		switch (tab) {
 			case 3:
 				elementGlobal = new NewHistoriElement:: \
 					CustomBoxHistoriElement{ \
-					_lineEditText, _window, 1, \
-					"a", _window->getResult(1, 0), \
-					"b", _window->getResult(1, 1), \
+					_lineEditText, _window, 3, \
+					"a", _window->getResult(3, 0), \
+					"b", _window->getResult(3, 1), \
 					"Integral"
 				};
 				elementLocal = new NewHistoriElement:: \
 					CustomBoxHistoriElement{ \
-					_lineEditText, _window, 1, \
-					"a", _window->getResult(1, 0), \
-					"b", _window->getResult(1, 1) \
+					_lineEditText, _window, 3, \
+					"a", _window->getResult(3, 0), \
+					"b", _window->getResult(3, 1) \
 				};
 				break;
 
@@ -1141,14 +1141,14 @@ public:
 				elementGlobal = new NewHistoriElement:: \
 					CustomBoxHistoriElement{ \
 					_lineEditText, _window, 4, \
-					"with", _window->getResult(3, 0), \
+					"with", _window->getResult(4, 0), \
 					"on", _window->getResult(4, 1), \
 					"Replacement" \
 				};
 				elementLocal = new NewHistoriElement:: \
 					CustomBoxHistoriElement{ \
 					_lineEditText, _window, 4, \
-					"with", _window->getResult(3, 0), \
+					"with", _window->getResult(4, 0), \
 					"on", _window->getResult(4, 1) \
 				};
 				break;

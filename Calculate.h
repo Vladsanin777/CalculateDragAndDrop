@@ -839,14 +839,18 @@ public:
 			operand = &result->_operand2;
 		} else {
 			lenExpression = (size_t)(ptrOperator - expression + \
-				strlen(expression) + lenOperator + 1UL);
+				strlen(expression) + lenOperator);
 			operand = &result->_operand1;
 		}
-		delete [] expression;
 		newExpression = new char[lenExpression+1UL]{'\0'};
+		puts(ptrOperator);
+		//std::cout << (void*)(ptrOperator - expression) << std::endl \
+			<< ;
 		strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
+		puts("newExpression");
+		puts(newExpression);
 		*operand = Expression::buildExpressionTree(newExpression);
-		delete [] newExpression;
+		delete []expression;
 		return result;
 	}
 	inline const char *print(void) {
@@ -870,23 +874,14 @@ public:
 		if (isTwoOperand()) {
 			const char *operand2 {_operand2->print()};
 			expression = new char[strlen(operand1) + \
-				strlen(action) + strlen(operand2) + 3UL];
-			strcpy(expression, "(");
-			strcat(expression, operand1);
-			strcat(expression, ")");
-			strcat(expression, action);
-			strcat(expression, "(");
-			strcat(expression, operand2);
-			strcat(expression, ")");
+				strlen(action) + strlen(operand2) + 5UL];
+			asprintf(&expression, "(%s)%s(%s)", operand1, action, operand2);
 			delete [] operand2;
 		} else {
 			expression = new char[strlen(action) + \
-				strlen(operand1) + 1UL];
+				strlen(operand1) + 3UL];
 			puts("operand1");
-			strcpy(expression, action);
-			strcat(expression, "(");
-			strcat(expression, operand1);
-			strcat(expression, ")");
+			asprintf(&expression, "%s(%s)", action, operand1);
 		}
 		//puts(operand1);
 		delete [] operand1;
