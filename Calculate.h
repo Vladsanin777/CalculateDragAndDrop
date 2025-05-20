@@ -887,6 +887,7 @@ public:
 		delete [] operand1;
 		return expression;
 	}
+	
 	inline Diff heandlerDifferentiate(void) const {
 		switch (_typeData) {
 			case numberTD:
