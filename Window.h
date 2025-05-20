@@ -375,19 +375,19 @@ private:
 	LineEdit ** const * const _lineEdit { \
 		new LineEdit ** const [COUNT_LOCAL_HISTORI] { \
 			new LineEdit * [1]{nullptr}, \
+			new LineEdit * [1]{nullptr}, \
+			new LineEdit * [1]{nullptr}, \
 			new LineEdit * [3]{nullptr, nullptr, nullptr}, \
-			new LineEdit * [1]{nullptr}, \
-			new LineEdit * [1]{nullptr}, \
 			new LineEdit * [3]{nullptr, nullptr, nullptr} \
 		}
 	};
 	const char ** const * const _result { \
 		new const char ** const [5]{ \
 			{new const char * [1]{new const char [] {"0"}}}, \
+			{new const char * [1]{new const char [] {"0"}}}, \
+			{new const char * [1]{new const char [] {"0"}}}, \
 			{new const char * [3]{new const char [] {"1"}, \
 				new const char [] {"2"}, new const char [] {"0"}}}, \
-			{new const char * [1]{new const char [] {"0"}}}, \
-			{new const char * [1]{new const char [] {"0"}}}, \
 			{new const char * [3]{new const char [] {"x"}, \
 				new const char [] {"0"}, new const char [] {"0"}}} \
 		} \
@@ -1262,13 +1262,21 @@ public:
 						result = expression->calc();
 						break;
 					case 2:
-						result = (Expression::create(expression->calc( \
-							Expression::create(_window->getResult(byte(3), \
-							byte(1))))) - Expression::create(expression->calc( \
-							Expression::create(_window->getResult(byte(3), \
-							byte(0))))))->calc();
+						puts("3 , 1 result");
+						puts(_window->getResult(3, 1));
+						std::cout << (void *)(Expression::create( \
+							_window->getResult(byte(3), byte(1))).get()) << std::endl;
+						result = (expression->calcExpr( \
+							Expression::create( \
+								_window->getResult(byte(3), byte(1)))) - \
+							expression->calcExpr( \
+							Expression::create( \
+								_window->getResult(byte(3), \
+							byte(0)))))->calc();
+						puts(result);
 						break;
 				}
+				break;
 			default:
 				return;
 		}

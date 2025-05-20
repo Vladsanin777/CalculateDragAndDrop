@@ -616,6 +616,11 @@ private:
 		_operand1{nullptr}, _operand2{nullptr}, _typeData{nullTD} {}
 	
 
+	inline explicit Expression(mpfr_t *number) noexcept : \
+		_typeData{numberTD}, _operand1{nullptr}, _operand2{nullptr} { \
+		mpfr_init(_data.number);
+		mpfr_set(_data.number, *number, MPFR_RNDN);
+	}
 
 	mpfr_t* calculate(Expr xNumber = nullptr) {
 		mpfr_t* result {new mpfr_t[1]};
@@ -628,11 +633,11 @@ private:
 				mpfr_set(*result, _data.number, MPFR_RNDN);
 				return result;
 		}
-		mpfr_t* operand1 = _operand1->calculate(), *operand2;
+		mpfr_t* operand1 = _operand1->calculate(xNumber), *operand2;
 		ArifmeticAction arifmeticAction = _data.action;
 		bool isTwoOperandBool {isTwoOperand()};
 		if (isTwoOperandBool)
-			operand2 = _operand2->calculate();
+			operand2 = _operand2->calculate(xNumber);
 		puts(ARIFMETIC_STR_ACTION[arifmeticAction]);
 		switch (arifmeticAction) {
 			case OpAddition:
@@ -740,17 +745,20 @@ private:
 		return;
 	}
 public:
-	static std::shared_ptr<Expression> create(const char* str) {
+	static Expr create(const char* str) {
         return std::shared_ptr<Expression>{new Expression{str}};
     }
 
-	static std::shared_ptr<Expression> create(void) {
+	static Expr create(void) {
 		return std::shared_ptr<Expression>{new Expression{}};
 	}
 
-    static std::shared_ptr<Expression> create( \
+    static Expr create( \
 		ArifmeticAction action, Expr a = nullptr, Expr b = nullptr) {
         return std::shared_ptr<Expression>{new Expression{action, a, b}};
+    }
+    static Expr create(mpfr_t * number) {
+        return std::shared_ptr<Expression>{new Expression{number}};
     }
 	const char *calc(Expr xNumber = nullptr) {
 		char * str {nullptr};
@@ -760,6 +768,13 @@ public:
 		delete [] result;
 		deleteZeros(str);
 		return (const char *)str;
+	}
+	Expr calcExpr(Expr xNumber = nullptr) {
+		mpfr_t * const result {calculate(xNumber)};
+		Expr expr {Expression::create(result)};
+		mpfr_clear(*result);
+		delete [] result;
+		return expr;
 	}
 	static void init(size_t bits) {
 		Expression::size = bits;
@@ -785,10 +800,11 @@ public:
 	}
 	
 	static Expr buildExpressionTree( \
-		char *expression) {
+		const char * constExpression) {
 		unsigned char lenOperator;
 		bool isTwoOperand;
 		ArifmeticAction action {OpNone};
+		char *expression {(char*)strdup(constExpression)};
 		const char * ptrOperator { \
 			_shearchNotPriorityOperator(expression, \
 				lenOperator, action)};
@@ -806,7 +822,9 @@ public:
 					(size_t)(lenExpression));
 
 			puts(expression);
-			return Expression::create(expression);
+			Expr expr {Expression::create(expression)};
+			delete [] expression;
+			return expr;
 		}
 		Expr result {Expression::create(action)};
 		Expr *operand {nullptr};
@@ -824,6 +842,7 @@ public:
 				strlen(expression) + lenOperator + 1UL);
 			operand = &result->_operand1;
 		}
+		delete [] expression;
 		newExpression = new char[lenExpression+1UL]{'\0'};
 		strncpy(newExpression, ptrOperator + lenOperator, lenExpression);
 		*operand = Expression::buildExpressionTree(newExpression);
