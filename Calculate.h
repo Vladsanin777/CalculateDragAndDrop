@@ -866,9 +866,6 @@ public:
 				puts("variableTD");
 				return strdup("x");
 		}
-		//puts("actionTD");
-		//puts(ARIFMETIC_STR_ACTION[_data.action]);
-		//if (isTwoOperand()) puts(_operand2->print());
 		const char *operand1 {_operand1->print()}, \
 			*action {ARIFMETIC_STR_ACTION[_data.action]};
 		if (isTwoOperand()) {
@@ -883,7 +880,6 @@ public:
 			puts("operand1");
 			asprintf(&expression, "%s(%s)", action, operand1);
 		}
-		//puts(operand1);
 		delete [] operand1;
 		return expression;
 	}

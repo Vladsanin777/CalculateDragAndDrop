@@ -860,6 +860,7 @@ public:
 		setMinimumWidth(40);
 		setContentsMargins(0, 0, 0, 0);
 	}
+protected:
 	void focusInEvent( \
 			QFocusEvent *event \
 	) override {
@@ -876,7 +877,21 @@ namespace NewHistoriElement {
 	public:
 		explicit inline LabelHistori( \
 			const char* label, const char *cssName, \
-			Window *window, const char *customCallback = nullptr \
+			Window *window \
+		) : QLabel(label), _callback{nullptr}, \
+			_window{window} {
+			setAlignment(Qt::AlignmentFlag::AlignCenter);
+			setSizePolicy(QSizePolicy::Policy::Expanding, \
+				QSizePolicy::Policy::Expanding);
+			setContentsMargins(0, 0, 0, 0);
+			setObjectName(cssName);
+			this->setFont(QFont(this->font().family(), 20));
+			_callback = strdup(label);
+			return;
+		}
+		explicit inline LabelHistori( \
+			const char* label, const char *cssName, \
+			Window *window, const char *customCallback \
 		) : QLabel(label), _callback{customCallback}, \
 			_window{window} {
 			setAlignment(Qt::AlignmentFlag::AlignCenter);
@@ -885,12 +900,9 @@ namespace NewHistoriElement {
 			setContentsMargins(0, 0, 0, 0);
 			setObjectName(cssName);
 			this->setFont(QFont(this->font().family(), 20));
-			if (!customCallback)
-				_callback = strdup(label);
-			else 
-				delete [] label;
 			return;
 		}
+
 	private:
 		inline void mousePressEvent(QMouseEvent* event \
 		) noexcept override {
@@ -977,26 +989,40 @@ namespace NewHistoriElement {
 	public:
 		explicit inline CustomBoxHistoriElement( \
 			const char * const expression, \
+			const char * const result, \
+			Window * const  window, byte tab, \
+			const char * const label1, \
+			const char * const text1, \
+			const char * const label2, \
+			const char * const text2 \
+		) noexcept : QVBoxLayout() {
+			setSpacing(0);
+			setContentsMargins(0, 0, 0, 0);
+			addLayout(new SubCustomBoxHistoriElement{ \
+				window, label1, text1, \
+				label2, text2});
+			addLayout(new BaseBoxHistoriElement{ \
+				expression, window, result});
+		}
+		explicit inline CustomBoxHistoriElement( \
+			const char * const expression, \
+			const char * const result, \
 			Window * const  window, byte tab, \
 			const char * const label1, \
 			const char * const text1, \
 			const char * const label2, \
 			const char * const text2, \
-			const char * const  nameOperation = nullptr \
+			const char * const  nameOperation \
 		) noexcept : QVBoxLayout() {
 			setSpacing(0);
 			setContentsMargins(0, 0, 0, 0);
-			if (nameOperation)
-				addWidget(new LabelHistori{ \
-					nameOperation, "keyboard", window});
+			addWidget(new LabelHistori{ \
+				nameOperation, "keyboard", window});
 			addLayout(new SubCustomBoxHistoriElement{ \
 				window, label1, text1, \
 				label2, text2});
-			LineEdit * const lineEdit \
-				{window->getLineEdit(tab, byte(2))};
 			addLayout(new BaseBoxHistoriElement{ \
-				lineEdit->text().toUtf8().data(), \
-				window, window->getResult(tab, byte(2))});
+				expression, window, result});
 		}
 	};
 }
@@ -1055,13 +1081,23 @@ class LogicCalculate {
 private:
     char *_lineEditText;
 	Window *_window = nullptr;
+	byte _tab {byte(0)}, _index{byte(0)};
 public:
 	explicit LogicCalculate( \
 		char *lineEditText, \
 		Window *window \
-	) : _lineEditText(lineEditText), \
-	_window(window) {}
-
+	) : _lineEditText{lineEditText}, \
+	_window{window} {
+		const byte * const temp {_window->getInputtin()};
+		_tab = *temp;
+		_index = temp[1];
+	}
+	inline bool isMainTab(void) {
+		return _tab < 3;
+	}
+	inline bool isMainLineEdit(void) {
+		return isMainTab() || _index == 2;
+	}
 	void button_ALL() {
 		char* pos = {strstr(_lineEditText, "_ALL")};
 		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
@@ -1104,13 +1140,20 @@ public:
 		puts("button_RES");
 		char *pos = strstr(_lineEditText, "_RES");
 		memmove(pos, pos + 4, strlen(pos + 4) + 1); // Сдвигаем остаток строки влево
+		puts("_lineEditText");
+		puts(_lineEditText);
 
-		if (strlen(_lineEditText) > 0)
-            addHistori();
-		puts(result);
-        LineEdit *line_edit {_window->getLineEdit()};
-        line_edit->setText(result);
-        line_edit->setCursorPosition(strlen(result));
+		LineEdit *lineEdit {_window->getLineEdit()};
+		if (isMainLineEdit()) {
+			if (strlen(_lineEditText) > 0)
+				addHistori();
+			puts(result);
+			lineEdit->setText(result);
+			lineEdit->setCursorPosition(strlen(result));
+		} else {
+			lineEdit->setText(_lineEditText);
+			lineEdit->setCursorPosition(strlen(_lineEditText));
+		}
 		delete [] _lineEditText;
 	}
 
@@ -1118,56 +1161,44 @@ public:
 
 		QLayout *elementGlobal {nullptr}, \
 			*elementLocal {nullptr};
-		byte tab = _window->getInputtin()[0];
 		puts(_lineEditText);
-		switch (tab) {
+		const char * label1 {nullptr}, *label2 {nullptr};
+		switch (_tab) {
 			case 3:
-				elementGlobal = new NewHistoriElement:: \
-					CustomBoxHistoriElement{ \
-					_lineEditText, _window, 3, \
-					"a", _window->getResult(3, 0), \
-					"b", _window->getResult(3, 1), \
-					"Integral"
-				};
-				elementLocal = new NewHistoriElement:: \
-					CustomBoxHistoriElement{ \
-					_lineEditText, _window, 3, \
-					"a", _window->getResult(3, 0), \
-					"b", _window->getResult(3, 1) \
-				};
+				label1 = "a";
+				label2 = "b";
 				break;
-
 			case 4:
-				elementGlobal = new NewHistoriElement:: \
-					CustomBoxHistoriElement{ \
-					_lineEditText, _window, 4, \
-					"with", _window->getResult(4, 0), \
-					"on", _window->getResult(4, 1), \
-					"Replacement" \
-				};
-				elementLocal = new NewHistoriElement:: \
-					CustomBoxHistoriElement{ \
-					_lineEditText, _window, 4, \
-					"with", _window->getResult(4, 0), \
-					"on", _window->getResult(4, 1) \
-				};
-				break;
-
-			default:
-				{
-
-					elementGlobal = new NewHistoriElement:: \
-						BasicBoxHistoriElement{ \
-						_lineEditText, _window, \
-						_window->getResult(), lstTabs[tab] \
-					};
-					elementLocal = new NewHistoriElement:: \
-						BaseBoxHistoriElement{ \
-						_lineEditText, _window, \
-						_window->getResult() \
-					};
-				}
-				break;
+				label1 = "with";
+				label2 = "on";
+		}
+		if (isMainTab()) {
+			const char * const result {_window->getResult()};
+			elementGlobal = new NewHistoriElement:: \
+				BasicBoxHistoriElement{ \
+				_lineEditText, _window, result, lstTabs[_tab] \
+			};
+			elementLocal = new NewHistoriElement:: \
+				BaseBoxHistoriElement{ \
+				_lineEditText, _window, result \
+			};
+		} else {
+			const char * const resultGenerate \
+				{_window->getResult(_tab, 2)}, \
+				* const text1 {_window->getResult(_tab, 0)}, \
+				* const text2 {_window->getResult(_tab, 1)};
+			elementGlobal = new NewHistoriElement:: \
+				CustomBoxHistoriElement{ \
+				_lineEditText, resultGenerate, \
+				_window, _tab, label1, text1, \
+				label2, text2, lstTabs[_tab] \
+			};
+			elementLocal = new NewHistoriElement:: \
+				CustomBoxHistoriElement{ \
+				_lineEditText, resultGenerate, \
+				_window, _tab, label1, text1, \
+				label2, text2 \
+			};
 		}
 		std::cout << "Global" << elementGlobal << std::endl;
 		std::cout << "Local" << elementLocal << std::endl;
@@ -1183,7 +1214,7 @@ public:
 		std::cout << "ok" << std::endl;
 
 		// Добавление элемента в локальную историю
-		_window->getAddLocalHistori(tab)->addLayout(elementLocal);
+		_window->getAddLocalHistori(_tab)->addLayout(elementLocal);
 		_window->getResizeLocalHistori()->adjustSize();
 		QScrollArea *localHistori \
 			{_window->getLocalHistori()};
@@ -1262,10 +1293,7 @@ public:
 						result = expression->calc();
 						break;
 					case 2:
-						puts("3 , 1 result");
-						puts(_window->getResult(3, 1));
-						std::cout << (void *)(Expression::create( \
-							_window->getResult(byte(3), byte(1))).get()) << std::endl;
+						expression = expression->integrate();
 						result = (expression->calcExpr( \
 							Expression::create( \
 								_window->getResult(byte(3), byte(1)))) - \
@@ -1273,7 +1301,6 @@ public:
 							Expression::create( \
 								_window->getResult(byte(3), \
 							byte(0)))))->calc();
-						puts(result);
 						break;
 				}
 				break;
