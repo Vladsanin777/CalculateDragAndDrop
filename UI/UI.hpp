@@ -16,6 +16,7 @@
 #include <QTabWidget>
 #include <QLabel>
 #include <QStyle>
+#include <QPainter>
 
 #include <functional>
 
@@ -203,6 +204,7 @@ namespace Application {
 namespace Window {
 	class Window : public QMainWindow {
 	private:
+		size_t _longArifmetic {256UL};
 		CreateHistori::HistoriScroll ** const _localHistori \
 			{new CreateHistori::HistoriScroll*[COUNT_LOCAL_HISTORI]{nullptr}};
 		CreateHistori::HistoriWidget ** const _resizeLocalHistori \
@@ -304,6 +306,9 @@ namespace Window {
 		void updataResultButton(void) const noexcept;
 		void updataResultButton(byte tab, byte index \
 		) const noexcept;
+	protected:
+		void paintEvent(QPaintEvent *event) override;
+	private:
 		inline ~Window(void);
 	};
 }
@@ -489,6 +494,11 @@ namespace LogicButton {
             QPushButton *button, Window::Window *window \
         );
 	};
+	class Setting {
+		Window::Window * _window {nullptr};
+		inline explicit Setting(Window::Window *window) noexcept;
+		void applyLongArifmetic(QPushButton* button) noexcept;
+	}
 }
 namespace Title {
 	class TitleLayout : public QHBoxLayout {
@@ -521,10 +531,21 @@ namespace Title {
 	};
 }
 
+namespace Setting {
+	class SettingWidget : public QWidget {
+		inline explicit SettingWidget(Window::Window * window \
+		) noexcept;
+	};
+	class SettingDock : public QDockWidget {
+		inline explicit SettingDock(Window::Window * window \
+		) noexcept;
+	};
+}
+
 namespace Grid {
-	template<class TButton, byte rowEnd, byte columnEnd>
+	template<class TButton, byte rowSize, byte columnSize>
 	inline void buildingGridKeyboard( \
-		const char * const (&buttons)[rowEnd][columnEnd], \
+		const char * const (&buttons)[rowSize][columnSize], \
 		QGridLayout *grid, Window::Window *window, \
 		const byte rowStart = byte(0), \
 		const byte columnStart = byte(0), \

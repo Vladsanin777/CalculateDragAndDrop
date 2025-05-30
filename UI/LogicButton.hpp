@@ -255,4 +255,13 @@ namespace LogicButton {
         lineEdit->setText(result);
         lineEdit->setCursorPosition(positionCursor + strlen(label));
     }
+
+    inline Setting::Setting(Window::Window * window) noexcept : \
+    _window{window} {}
+    inline Setting::applyLongArifmetic(QPushButton *button \
+    ) noexcept {
+        const char * const text \
+            {_window->getLineEditLongArifmetic()};
+        
+    }
 }

@@ -1,3 +1,5 @@
+#pragma once
+
 namespace Check {
 	struct Error {
 		const size_t errorPos;

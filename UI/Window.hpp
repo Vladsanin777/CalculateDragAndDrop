@@ -10,6 +10,9 @@ namespace Window {
 		resize(400, 800);
 		setObjectName("Window");
 		setCentralWidget(new MainWidget::MainWidget{_app, this});
+		//centralWidget()->setAutoFillBackground(true);
+		//setAutoFillBackground(true);  // Для QMainWindow
+		//setAttribute(Qt::WA_StyledBackground, true);
 		show();
 		return;
 	}
@@ -171,6 +174,24 @@ namespace Window {
 		puts(_result[tab][index]);
 		_resultButton->setText(_result[tab][index]);
 	}
+	void Window::paintEvent(QPaintEvent *event) {
+        Q_UNUSED(event);
+        
+        QPainter painter(this);
+        
+        // Создаем радиальный градиент
+        QRadialGradient gradient(rect().center(), 
+                                qMax(width(), height()) / 2);
+        
+        gradient.setColorAt(0, QColor(48, 116, 235));  // Начальный цвет
+        gradient.setColorAt(1, QColor(17, 61, 138));   // Конечный цвет
+        
+        // Заливаем фон градиентом
+        painter.fillRect(rect(), gradient);
+        
+        // Важно: вызываем родительский paintEvent для отрисовки дочерних виджетов
+        QMainWindow::paintEvent(event);
+    }
 	inline Window::~Window(void) {
 		LineEdit::LineEdit *** ptrLineEdit \
 			{const_cast<LineEdit::LineEdit ***>(_lineEdit)};
