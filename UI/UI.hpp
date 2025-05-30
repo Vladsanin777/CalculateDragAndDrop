@@ -532,6 +532,10 @@ namespace Title {
 }
 
 namespace Setting {
+	class SettingGrid : public QGridLayout {
+		inline explicit SettingGrid(Window::Window * window \
+		) noexcept;
+	}
 	class SettingWidget : public QWidget {
 		inline explicit SettingWidget(Window::Window * window \
 		) noexcept;
