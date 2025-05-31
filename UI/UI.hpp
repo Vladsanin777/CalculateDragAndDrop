@@ -494,11 +494,8 @@ namespace LogicButton {
             QPushButton *button, Window::Window *window \
         );
 	};
-	class Setting {
-		Window::Window * _window {nullptr};
-		inline explicit Setting(Window::Window *window) noexcept;
-		void applyLongArifmetic(QPushButton* button) noexcept;
-	}
+	void applyLongArifmetic(Window::Window * window, \
+		QPushButton* button) noexcept;
 }
 namespace Title {
 	class TitleLayout : public QHBoxLayout {

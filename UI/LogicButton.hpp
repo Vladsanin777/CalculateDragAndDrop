@@ -1,6 +1,7 @@
 
 #pragma once
 #include "UI.hpp"
+#include "../isNumber.hpp"
 #include "../replace.hpp"
 #include "../Calculate/Check.hpp"
 #include "../Calculate/Calculate.hpp"
@@ -256,12 +257,11 @@ namespace LogicButton {
         lineEdit->setCursorPosition(positionCursor + strlen(label));
     }
 
-    inline Setting::Setting(Window::Window * window) noexcept : \
-    _window{window} {}
-    inline Setting::applyLongArifmetic(QPushButton *button \
-    ) noexcept {
+    inline applyLongArifmetic(Window::Window * window, \
+        QPushButton *button) noexcept {
         const char * const text \
-            {_window->getLineEditLongArifmetic()};
+            {window->getLineEditLongArifmetic()};
+        if (isNumber(text)) 
         
     }
 }

@@ -17,9 +17,18 @@ namespace LineEdit {
             this, &QLineEdit::textChanged, this, \
             &LineEdit::onLineEditChanged \
         );
-        QFont font = this->font();
-        font.setPointSize(25);
-        setFont(font);
+        setMaximumHeight(40);
+        setMinimumWidth(40);
+        setContentsMargins(0, 0, 0, 0);
+    }
+    inline LineEdit::LineEdit ( \
+        Window::Window *window, const char *text \
+    ) : _window{window}, QLineEdit{}, \
+    _tab{tab}, _index{index} {
+        setDragEnabled(true);
+        setText(QString::fromUtf8(text));
+        QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        setSizePolicy(sizePolicy);
         setMaximumHeight(40);
         setMinimumWidth(40);
         setContentsMargins(0, 0, 0, 0);
