@@ -10,16 +10,13 @@ namespace LogicButton {
     inline LogicCalculate::LogicCalculate( \
         char *lineEditText, Window::Window *window \
     ) : _lineEditText{lineEditText}, \
-    _window{window} {
-        const byte * const temp {_window->getInputtin()};
-        _tab = *temp;
-        _index = temp[1];
-    }
+    _window{window}, _mod{_window->getMod()}, \
+    _index{_window->getIndex()} {}
     inline bool LogicCalculate::isMainTab(void) {
-        return _tab < 3;
+        return _mod < INTEGRAL;
     }
     inline bool LogicCalculate::isMainLineEdit(void) {
-        return isMainTab() || _index == 2;
+        return isMainTab() || _index == byte(2);
     }
     inline void LogicCalculate::button_ALL(void) {
         char* pos = {strstr(_lineEditText, "_ALL")};
@@ -86,12 +83,12 @@ namespace LogicButton {
             *elementLocal {nullptr};
         puts(_lineEditText);
         const char * label1 {nullptr}, *label2 {nullptr};
-        switch (_tab) {
-            case 3:
+        switch (_mod) {
+            case INTEGRAL:
                 label1 = "a";
                 label2 = "b";
                 break;
-            case 4:
+            case REPLACEMENT:
                 label1 = "with";
                 label2 = "on";
         }
@@ -99,7 +96,7 @@ namespace LogicButton {
             const char * const result {_window->getResult()};
             elementGlobal = new NewHistoriElement:: \
                 BasicBoxHistoriElement{ \
-                _lineEditText, _window, result, lstTabs[_tab] \
+                _lineEditText, _window, result, lstTabs[_mod] \
             };
             elementLocal = new NewHistoriElement:: \
                 BaseBoxHistoriElement{ \
@@ -107,24 +104,22 @@ namespace LogicButton {
             };
         } else {
             const char * const resultGenerate \
-                {_window->getResult(_tab, 2)}, \
-                * const text1 {_window->getResult(_tab, 0)}, \
-                * const text2 {_window->getResult(_tab, 1)};
+                {_window->getResult(_mod, 2)}, \
+                * const text1 {_window->getResult(_mod, 0)}, \
+                * const text2 {_window->getResult(_mod, 1)};
             elementGlobal = new NewHistoriElement:: \
                 CustomBoxHistoriElement{ \
                 _lineEditText, resultGenerate, \
-                _window, _tab, label1, text1, \
-                label2, text2, lstTabs[_tab] \
+                _window, _mod, label1, text1, \
+                label2, text2, lstTabs[_mod] \
             };
             elementLocal = new NewHistoriElement:: \
                 CustomBoxHistoriElement{ \
                 _lineEditText, resultGenerate, \
-                _window, _tab, label1, text1, \
+                _window, _mod, label1, text1, \
                 label2, text2 \
             };
         }
-        std::cout << "Global" << elementGlobal << std::endl;
-        std::cout << "Local" << elementLocal << std::endl;
 
         // Добавление элемента в глобальную историю
         _window->getAddGlobalHistori()->addLayout(elementGlobal);
@@ -134,10 +129,9 @@ namespace LogicButton {
         globalHistori->verticalScrollBar()->setValue(
             globalHistori->verticalScrollBar()->maximum()
         );
-        std::cout << "ok" << std::endl;
 
         // Добавление элемента в локальную историю
-        _window->getAddLocalHistori(_tab)->addLayout(elementLocal);
+        _window->getAddLocalHistori(_mod)->addLayout(elementLocal);
         _window->getResizeLocalHistori()->adjustSize();
         QScrollArea *localHistori \
             {_window->getLocalHistori()};
@@ -157,25 +151,26 @@ namespace LogicButton {
     
     inline void LogicCalculate::buttonOther(void) {
         puts("buttonOther");
-        const byte * const inputtin {_window->getInputtin()};
+        const MODS mod {_window->getMod()};
+        const byte index {_window->getIndex()};
         const char * result {nullptr};
-        if (*inputtin == 4) {
-            if (inputtin[1] != 2) {
+        if (mod == REPLACEMENT) {
+            if (index != byte(2)) {
                 _window->setResult(_lineEditText);
                 _lineEditText = strdup(_window-> \
-                    getLineEdit(byte(4), byte(2))-> \
+                    getLineEdit(REPLACEMENT, byte(2))-> \
                     text().toUtf8().constData());
             }
             puts("Replacement");
             puts(_lineEditText);
-            puts(_window->getResult(4, 1));
+            puts(_window->getResult(REPLACEMENT, byte(1)));
             replace(_lineEditText, _window-> \
-                getResult(byte(4), byte(0)), _window-> \
-                getResult(byte(4), byte(1)));
+                getResult(REPLACEMENT, byte(0)), _window-> \
+                getResult(REPLACEMENT, byte(1)));
         }
         Check::Error * error {Check:: \
             validateExpression(_lineEditText, \
-                *inputtin != 0 && *inputtin != 4)};
+                mod != BASIC && mod != REPLACEMENT)};
         if (error) {
             char *errStr{new char[30]{'\0'}};
             sprintf(errStr, "%lu %s '%c'", \
@@ -193,24 +188,24 @@ namespace LogicButton {
             buildExpressionTree(_lineEditText)};
         if (!expression) return;
         puts(expression->print());
-        switch (*inputtin) {
-            case 4:
+        switch (mod) {
+            case REPLACEMENT:
                 _window->setResult(expression->calc(), \
-                    byte(4), byte(2));
+                    REPLACEMENT, byte(2));
                 _window->setWindowTitle(windowTitle);
                 return;
-            case 0:
+            case BASIC:
                 result = expression->calc();
                 break;
-            case 1:
+            case DERIVATIVE:
                 result = expression->diff()->print();
                 puts(result);
                 break;
-            case 2:
+            case INTEGRATE:
                 result = expression->integrate()->print();
                 break;
-            case 3:
-                switch (inputtin[1]) {
+            case INTEGRAL:
+                switch (index) {
                     case 0:
                     case 1:
                         result = expression->calc();
@@ -219,10 +214,10 @@ namespace LogicButton {
                         expression = expression->integrate();
                         result = (expression->calcExpr( \
                             Expression::create( \
-                                _window->getResult(byte(3), byte(1)))) - \
+                                _window->getResult(INTEGRAL, byte(1)))) - \
                             expression->calcExpr( \
                             Expression::create( \
-                                _window->getResult(byte(3), \
+                                _window->getResult(INTEGRAL, \
                             byte(0)))))->calc();
                         break;
                 }
@@ -241,7 +236,7 @@ namespace LogicButton {
         const char *label = strdup(button->text().toUtf8().constData());
         LineEdit::LineEdit *lineEdit \
             {window->getLineEdit()};
-        const char *text {lineEdit->text().toUtf8().data()};
+        const char *text {lineEdit->text().toUtf8().constData()};
         size_t positionCursor = lineEdit->cursorPosition();
         char *result {new char[strlen(text)+strlen(label)+1UL]{""}};
         // Копируем часть строки до курсора
@@ -256,12 +251,53 @@ namespace LogicButton {
         lineEdit->setText(result);
         lineEdit->setCursorPosition(positionCursor + strlen(label));
     }
-
-    inline applyLongArifmetic(Window::Window * window, \
+    inline void visibleSetting(Window::Window * window, \
+        QPushButton *button) noexcept {
+        Setting::SettingDock * settingDock \
+            {window->getSettingDock()};
+        settingDock->setVisible(!settingDock->isVisible());
+        return;
+    }
+	inline void changeHistoriVisible( \
+        Window::Window * window, QPushButton *button \
+    ) noexcept {
+        CreateHistori::HistoriScroll * globalHistori \
+            {window->getGlobalHistori()},\
+            * localHistoriBasic {window->getLocalHistori(BASIC)}, \
+            * localHistoriDerivative {window->getLocalHistori(DERIVATIVE)}, \
+            * localHistoriIntegrate {window->getLocalHistori(INTEGRATE)}, \
+            * localHistoriIntegral {window->getLocalHistori(INTEGRAL)}, \
+            * localHistoriReplacement {window->getLocalHistori(REPLACEMENT)};
+		if (globalHistori->isVisible()) {
+			button->setText("Global Histori");
+			globalHistori->setVisible(false);
+			localHistoriBasic->setVisible(true);
+			localHistoriIntegral->setVisible(true);
+			localHistoriDerivative->setVisible(true);
+			localHistoriIntegrate->setVisible(true);
+			localHistoriReplacement->setVisible(true);
+		} else {
+            std::cout << (void *) localHistoriIntegrate << std::endl;
+			button->setText("Local Histori");
+			globalHistori->setVisible(true);
+			localHistoriBasic->setVisible(false);
+			localHistoriDerivative->setVisible(false);
+			localHistoriIntegrate->setVisible(false);
+			localHistoriIntegral->setVisible(false);
+			localHistoriReplacement->setVisible(false);
+		}
+		return;
+	}
+    inline void applyLongArifmetic(Window::Window * window, \
         QPushButton *button) noexcept {
         const char * const text \
-            {window->getLineEditLongArifmetic()};
-        if (isNumber(text)) 
-        
+            {window->getLineEditLongArifmetic()-> \
+                text().toUtf8().constData()};
+        if (isNumber(text)) {
+            size_t longArifmetic {0UL};
+            sscanf(text, "%lu", &longArifmetic);
+            Expression::init(longArifmetic);
+        }
+        return;
     }
 }

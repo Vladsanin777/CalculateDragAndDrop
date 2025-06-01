@@ -10,6 +10,11 @@ namespace Window {
 		resize(400, 800);
 		setObjectName("Window");
 		setCentralWidget(new MainWidget::MainWidget{_app, this});
+		Setting::SettingDock * settingDock \
+			{new Setting::SettingDock{this}};
+		_settingDock = settingDock;
+		addDockWidget(Qt::LeftDockWidgetArea, \
+			settingDock);
 		//centralWidget()->setAutoFillBackground(true);
 		//setAutoFillBackground(true);  // Для QMainWindow
 		//setAttribute(Qt::WA_StyledBackground, true);
@@ -51,71 +56,76 @@ namespace Window {
 		return;
 	}
 	inline CreateHistori::HistoriScroll* \
-	Window::getLocalHistori(byte index) const noexcept {
-		return _localHistori[index];
+	Window::getLocalHistori(MODS mod) const noexcept {
+		return _localHistori[mod];
 	}
 	inline CreateHistori::HistoriScroll* \
 	Window::getLocalHistori(void) const noexcept {
-		return _localHistori[_inputtin[0]];
+		return _localHistori[_currentMod];
 	}
 	inline void Window::setLocalHistori( \
-		CreateHistori::HistoriScroll* newLocalHistori, byte tab \
+		CreateHistori::HistoriScroll* newLocalHistori, MODS mod \
 	) noexcept {
-		_localHistori[tab] = newLocalHistori;
+		_localHistori[mod] = newLocalHistori;
 		return;
 	}	
 	inline CreateHistori::HistoriWidget* \
-	Window::getResizeLocalHistori(byte index) const noexcept {
-		return _resizeLocalHistori[index];
+	Window::getResizeLocalHistori(MODS mod) const noexcept {
+		return _resizeLocalHistori[mod];
 	}
 	inline CreateHistori::HistoriWidget* \
 	Window::getResizeLocalHistori(void) const noexcept {
-		return _resizeLocalHistori[_inputtin[0]];
+		return _resizeLocalHistori[_currentMod];
 	}
 	inline void Window::setResizeLocalHistori( \
 		CreateHistori::HistoriWidget* newResizeLocalHistori, \
-		byte index) noexcept {
-		_resizeLocalHistori[index] = newResizeLocalHistori;
+		MODS mod) noexcept {
+		_resizeLocalHistori[mod] = newResizeLocalHistori;
 		return;
 	}
 
 	inline CreateHistori::HistoriVBox* \
-	Window::getAddLocalHistori(byte index) const noexcept {
-		return _addLocalHistori[index];
+	Window::getAddLocalHistori(MODS mod) const noexcept {
+		return _addLocalHistori[mod];
 	}
 	inline CreateHistori::HistoriVBox* \
 	Window::getAddLocalHistori(void) const noexcept {
-		return _addLocalHistori[_inputtin[0]];
+		return _addLocalHistori[_currentMod];
 	}
 	inline void Window::setAddLocalHistori( \
 		CreateHistori::HistoriVBox* newAddLocalHistori, \
-		byte index) noexcept {
-		_addLocalHistori[index] = newAddLocalHistori;
+		MODS mod) noexcept {
+		_addLocalHistori[mod] = newAddLocalHistori;
 		return;
 	}
 	inline LineEdit::LineEdit* Window::getLineEdit( \
-		byte tab, byte index \
+		MODS mod, byte index \
 	) const noexcept {
-		return _lineEdit[tab][index];
+		return _lineEdit[mod][index];
 	}
 	inline LineEdit::LineEdit* Window::getLineEdit(void \
 	) const noexcept {
-		return _lineEdit[*_inputtin][_inputtin[1]];
+		return _lineEdit[_currentMod][_currentIndex];
 	}
 	inline void Window::setLineEdit( \
-		LineEdit::LineEdit* newLineEdit, byte tab, byte index \
+		LineEdit::LineEdit* newLineEdit, MODS mod, byte index \
 	) noexcept {
-		_lineEdit[tab][index] = newLineEdit;
+		_lineEdit[mod][index] = newLineEdit;
 		return;
 	}
-	inline const byte* Window::getInputtin(void) \
-	const noexcept {
-		return _inputtin;
+
+	inline MODS Window::getMod(void) const noexcept {
+		return _currentMod;
 	}
-	inline void Window::setInputtin(const byte &tab, \
-		const byte &index) noexcept {
-		*_inputtin = tab;
-		_inputtin[1] = index;
+	inline void Window::setMod(const MODS mod) noexcept {
+		_currentMod = mod;
+		return;
+	}
+	inline byte Window::getIndex(void) const noexcept {
+		return _currentIndex;
+	}
+	inline void Window::setIndex(const byte index) noexcept {
+		_currentIndex = index;
 		return;
 	}
 	inline Button::ButtonDrag* Window::getResultButton( \
@@ -129,24 +139,24 @@ namespace Window {
 		return;
 	}
 	inline const char *Window::getResult( \
-		byte tab, byte index \
+		MODS mod, byte index \
 	) const noexcept {
-		return _result[tab][index];
+		return _result[mod][index];
 	}
 	inline const char *Window::getResult(void) const noexcept {
-		return _result[*_inputtin][_inputtin[1]];
+		return _result[_currentMod][_currentIndex];
 	}
 	inline void Window::setResult(const char *newResult,
-		byte tab, byte index) noexcept {
-		const char * & res {_result[tab][index]};
+		MODS mod, byte index) noexcept {
+		const char * & res {_result[mod][index]};
 		delete[] res;
 		res = newResult;
-		updataResultButton(tab, index);
+		updataResultButton(mod, index);
 		return;
 	}
 	inline void Window::setResult( \
 		const char *newResult) noexcept {
-		const char * & res {_result[*_inputtin][_inputtin[1]]};
+		const char * & res {_result[_currentMod][_currentIndex]};
 		delete [] res;
 		res = newResult;
 		updataResultButton();
@@ -166,15 +176,35 @@ namespace Window {
 		delete ptr[4][2];
 		return;
 	}
-	void Window::updataResultButton(void) const noexcept {
-		_resultButton->setText(_result[*_inputtin][_inputtin[1]]);
+	inline void Window::updataResultButton(void) const noexcept {
+		_resultButton->setText(_result[_currentMod][_currentIndex]);
 	}
-	void Window::updataResultButton(byte tab, byte index) \
+	inline void Window::updataResultButton(MODS mod, byte index) \
 	const noexcept {
-		puts(_result[tab][index]);
-		_resultButton->setText(_result[tab][index]);
+		puts(_result[mod][index]);
+		_resultButton->setText(_result[mod][index]);
 	}
-	void Window::paintEvent(QPaintEvent *event) {
+	inline void Window::setLineEditLongArifmetic( \
+		LineEdit::LineEdit * lineEdit \
+	) noexcept {
+		_lineEditLongArifmetic = lineEdit;
+		return;
+	}
+	inline LineEdit::LineEdit * Window::getLineEditLongArifmetic( \
+		void) const noexcept {
+		return _lineEditLongArifmetic;
+	}
+	inline void Window::setSettingDock( \
+		Setting::SettingDock * settingDock \
+	) noexcept {
+		_settingDock = settingDock;
+		return;
+	}
+	inline Setting::SettingDock * Window::getSettingDock( \
+		void) const noexcept {
+		return _settingDock;
+	}
+	inline void Window::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);
         
         QPainter painter(this);
@@ -220,7 +250,6 @@ namespace Window {
 		delete [] _addLocalHistori;
 
 		delete [] _lineEdit;
-		delete [] _inputtin;
 		delete _resultButton;
 		delete _globalHistori;
 		delete _addGlobalHistori;

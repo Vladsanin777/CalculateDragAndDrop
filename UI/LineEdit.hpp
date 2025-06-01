@@ -4,10 +4,10 @@
 
 namespace LineEdit {
     inline LineEdit::LineEdit ( \
-        Window::Window *window, byte tab, byte index, \
+        Window::Window *window, MODS mod, byte index, \
         const char *text \
     ) : _window{window}, QLineEdit{}, \
-    _tab{tab}, _index{index} {
+    _mod{mod}, _index{index} {
         setDragEnabled(true);
         std::cout << _window << std::endl;
         setText(QString::fromUtf8(text));
@@ -23,8 +23,7 @@ namespace LineEdit {
     }
     inline LineEdit::LineEdit ( \
         Window::Window *window, const char *text \
-    ) : _window{window}, QLineEdit{}, \
-    _tab{tab}, _index{index} {
+    ) : _window{window}, QLineEdit{} {
         setDragEnabled(true);
         setText(QString::fromUtf8(text));
         QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -35,8 +34,8 @@ namespace LineEdit {
     }
     inline void LineEdit::focusInEvent( \
         QFocusEvent *event) {
-        std::cout << (short)_tab << (short)_index << std::endl;
-        _window->setInputtin(_tab, _index);
+        _window->setMod(_mod);
+        _window->setIndex(_index);
         QLineEdit::focusInEvent(event);
     }
     void LineEdit::onLineEditChanged( \

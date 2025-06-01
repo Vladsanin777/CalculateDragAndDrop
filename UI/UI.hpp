@@ -11,8 +11,10 @@
 #include <QString>
 #include <QFocusEvent>
 #include <QDrag>
+#include <QDockWidget>
 #include <QMimeData>
 #include <QTabBar>
+#include <QTimer>
 #include <QTabWidget>
 #include <QLabel>
 #include <QStyle>
@@ -24,6 +26,7 @@
 
 using byte = unsigned char;
 
+enum MODS {BASIC, DERIVATIVE, INTEGRATE, INTEGRAL, REPLACEMENT};
 
 const char * const windowTitle \
 	{"CalculateDragAndDrop"};
@@ -204,7 +207,10 @@ namespace Application {
 namespace Window {
 	class Window : public QMainWindow {
 	private:
-		size_t _longArifmetic {256UL};
+		MODS _currentMod {BASIC};
+		byte _currentIndex {byte(0)};
+		Setting::SettingDock * _settingDock {nullptr};
+		LineEdit::LineEdit * _lineEditLongArifmetic {nullptr};
 		CreateHistori::HistoriScroll ** const _localHistori \
 			{new CreateHistori::HistoriScroll*[COUNT_LOCAL_HISTORI]{nullptr}};
 		CreateHistori::HistoriWidget ** const _resizeLocalHistori \
@@ -233,7 +239,6 @@ namespace Window {
 					new const char [] {"0"}, new const char [] {"0"}}} \
 			} \
 		};
-		byte * const _inputtin {new byte [2]{0, 0}};
 		Button::ButtonDrag *_resultButton {nullptr};
 		CreateHistori::HistoriScroll *_globalHistori {nullptr};
 		CreateHistori::HistoriVBox *_addGlobalHistori {nullptr};
@@ -260,54 +265,63 @@ namespace Window {
 			CreateHistori::HistoriVBox* newAddGlobalHistori \
 		) noexcept;
 		inline CreateHistori::HistoriScroll* getLocalHistori( \
-			byte index) const noexcept;
+			MODS mod) const noexcept;
 		inline CreateHistori::HistoriScroll* getLocalHistori( \
 			void) const noexcept;
 		inline void setLocalHistori( \
 		CreateHistori::HistoriScroll* newLocalHistori, \
-			byte tab) noexcept;
+			MODS mod) noexcept;
 		inline CreateHistori::HistoriWidget* getResizeLocalHistori( \
-			byte index) const noexcept;
+			MODS mod) const noexcept;
 		inline CreateHistori::HistoriWidget* getResizeLocalHistori( \
 			void) const noexcept;
 		inline void setResizeLocalHistori( \
 		CreateHistori::HistoriWidget* newResizeLocalHistori, \
-			byte index) noexcept;
+			MODS mod) noexcept;
 		inline CreateHistori::HistoriVBox* getAddLocalHistori( \
-			byte index) const noexcept;
+			MODS mod) const noexcept;
 		inline CreateHistori::HistoriVBox* getAddLocalHistori( \
 			void) const noexcept;
 		inline void setAddLocalHistori( \
 			CreateHistori::HistoriVBox* newAddLocalHistori, \
-			byte index) noexcept;
+			MODS mod) noexcept;
 		inline LineEdit::LineEdit* getLineEdit( \
-			byte tab, byte index) const noexcept;
+			MODS mod, byte index) const noexcept;
 		inline LineEdit::LineEdit* getLineEdit(void \
 		) const noexcept;
 		inline void setLineEdit(LineEdit::LineEdit* newLineEdit, \
-			byte tab, byte index) noexcept;
-		inline const byte* getInputtin() const noexcept;
-		inline void setInputtin(const byte &tab, \
-			const byte &index) noexcept;
+			MODS mod, byte index) noexcept;
+		inline MODS getMod(void) const noexcept;
+		inline void setMod(const MODS mod) noexcept;
+		inline byte getIndex(void) const noexcept;
+		inline void setIndex(const byte index) noexcept;
 		inline Button::ButtonDrag* getResultButton() noexcept;
 		inline void setResultButton( \
 			Button::ButtonDrag* resultButton) noexcept;
 		inline const char *getResult( \
-			byte tab, byte index) const noexcept;
+			MODS mod, byte index) const noexcept;
 		inline const char *getResult(void) const noexcept;
 		inline void setResult( \
-			const char *newResult, byte tab, byte index \
+			const char *newResult, MODS mod, byte index \
 		) noexcept;
 		inline void setResult(const char *newResult \
 		) noexcept;
 		template<typename TDel>
 		inline void deleteResultOrLineEdit(TDel ptr \
 		) const noexcept;
-		void updataResultButton(void) const noexcept;
-		void updataResultButton(byte tab, byte index \
+		inline void updataResultButton(void) const noexcept;
+		inline void updataResultButton(MODS mod, byte index \
 		) const noexcept;
+		inline void setLineEditLongArifmetic( \
+			LineEdit::LineEdit * lineEdit) noexcept;
+		inline LineEdit::LineEdit * getLineEditLongArifmetic( \
+			void) const noexcept;
+		inline void setSettingDock( \
+			Setting::SettingDock * settingDock) noexcept;
+		inline Setting::SettingDock * getSettingDock( \
+			void) const noexcept;
 	protected:
-		void paintEvent(QPaintEvent *event) override;
+		inline void paintEvent(QPaintEvent *event) override;
 	private:
 		inline ~Window(void);
 	};
@@ -365,11 +379,15 @@ namespace LineEdit {
 	class LineEdit : public QLineEdit {
 	private:
         Window::Window *_window;
-        byte _tab {byte(0)}, _index {byte(0)};
+        MODS _mod {BASIC};
+		byte _index {byte(0)};
     public:
         explicit LineEdit ( \
-            Window::Window *window, byte tab, byte index, \
+            Window::Window *window, MODS mod, byte index, \
             const char *text = "" \
+        );
+        explicit LineEdit ( \
+            Window::Window *window, const char *text = "" \
         );
     protected:
         void focusInEvent(QFocusEvent *event) override;
@@ -476,7 +494,8 @@ namespace LogicButton {
 	private:
 		char *_lineEditText {nullptr};
 		Window::Window *_window {nullptr};
-		byte _tab {byte(0)}, _index{byte(0)};
+		MODS _mod {BASIC};
+		byte _index{byte(0)};
 	public:
         explicit LogicCalculate( \
             char *lineEditText, Window::Window *window \
@@ -494,27 +513,21 @@ namespace LogicButton {
             QPushButton *button, Window::Window *window \
         );
 	};
-	void applyLongArifmetic(Window::Window * window, \
+	inline void visibleSetting(Window::Window * window, \
+		QPushButton * button) noexcept;
+	inline void changeHistoriVisible( \
+		Window::Window * window, QPushButton * button \
+	) noexcept;
+	inline void applyLongArifmetic(Window::Window * window, \
 		QPushButton* button) noexcept;
 }
 namespace Title {
 	class TitleLayout : public QHBoxLayout {
-	private:
-		const Window::Window         *_window                  {nullptr};
-		CreateHistori::HistoriScroll *_globalHistori           {nullptr};
-		CreateHistori::HistoriScroll *_localHistoriBasic       {nullptr};
-		CreateHistori::HistoriScroll *_localHistoriIntegral    {nullptr};
-		CreateHistori::HistoriScroll *_localHistoriDerivative  {nullptr};
-		CreateHistori::HistoriScroll *_localHistoriIntegrate   {nullptr};
-		CreateHistori::HistoriScroll *_localHistoriReplacement {nullptr};
-		Button::ButtonBase           *_buttonChangeHistori     {nullptr};
 	public:
 		explicit TitleLayout( \
 			Application::CalculateDragAndDrop *app, \
 			Window::Window *window \
 		) noexcept;
-		void buttonInit(void);
-		void changeHistoriVisible(QPushButton *button) const;
 	};
 	class TitleBar : public QWidget {
 	private:
@@ -530,14 +543,17 @@ namespace Title {
 
 namespace Setting {
 	class SettingGrid : public QGridLayout {
+	public:
 		inline explicit SettingGrid(Window::Window * window \
 		) noexcept;
-	}
+	};
 	class SettingWidget : public QWidget {
+	public:
 		inline explicit SettingWidget(Window::Window * window \
 		) noexcept;
 	};
 	class SettingDock : public QDockWidget {
+	public:
 		inline explicit SettingDock(Window::Window * window \
 		) noexcept;
 	};
@@ -569,25 +585,25 @@ namespace Grid {
 	class GridBaseCalc : public QGridLayout {
 	public:
 		inline explicit GridBaseCalc( \
-			Window::Window *window, byte tab \
+			Window::Window *window, MODS mod \
 		);
 	};
 	class GridDefaultCalc : public GridBaseCalc {
 	public:
 		inline explicit GridDefaultCalc( \
-			Window::Window *window, byte tab \
+			Window::Window *window, MODS mod \
 		);
 	};
 	class GridIntegralCalc : public GridBaseCalc {
 	public:
 		inline explicit GridIntegralCalc( \
-			Window::Window *window, byte tab = byte(3) \
+			Window::Window *window, MODS mod = INTEGRAL \
 		);
 	};
 	class GridReplacementCalc : public GridBaseCalc {
 	public:
 		inline explicit GridReplacementCalc( \
-			Window::Window *window, byte tab = byte(4) \
+			Window::Window *window, MODS mod = REPLACEMENT \
 		);
 	};
 }
@@ -636,3 +652,4 @@ namespace MainWidget {
 #include "TabWidget.hpp"
 #include "Title.hpp"
 #include "Window.hpp"
+#include "Setting.hpp"

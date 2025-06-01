@@ -94,7 +94,7 @@ namespace Grid {
 
 		Button::ButtonDrag *resultButton {\
 			new Button::ButtonDrag { \
-				window->getResult(0, 0), \
+				window->getResult(BASIC, 0), \
 				window, nullptr, "number" \
 			}
 		};
@@ -103,41 +103,41 @@ namespace Grid {
 	}
 
 	inline GridBaseCalc::GridBaseCalc( \
-		Window::Window *window, byte tab \
+		Window::Window *window, MODS mod \
 	) : QGridLayout() {
 		setSpacing(12);
 		setContentsMargins(10, 0, 10, 0);
 		CreateHistori::HistoriScroll *localHistori \
 			{new CreateHistori::HistoriScroll{ \
 				"Local histori", window}};
-		window->setLocalHistori(localHistori, tab);
+		window->setLocalHistori(localHistori, mod);
 		CreateHistori::HistoriWidget *resizeLocalHistori \
 			{localHistori->getResizeHistori()};
-		window->setResizeLocalHistori(resizeLocalHistori, tab);
-		window->setAddLocalHistori(resizeLocalHistori->getAddHistori(), tab);
+		window->setResizeLocalHistori(resizeLocalHistori, mod);
+		window->setAddLocalHistori(resizeLocalHistori->getAddHistori(), mod);
 		addWidget(localHistori, 0, 0, 1, 6);
 	}
 
 	inline GridDefaultCalc::GridDefaultCalc( \
-		Window::Window *window, byte tab \
-	) : GridBaseCalc(window, tab) {
+		Window::Window *window, MODS mod \
+	) : GridBaseCalc(window, mod) {
 		LineEdit::LineEdit *lineEdit \
-			{new LineEdit::LineEdit{window, tab, byte(0)}};
-		window->setLineEdit(lineEdit, tab, byte(0));
+			{new LineEdit::LineEdit{window, mod, byte(0)}};
+		window->setLineEdit(lineEdit, mod, byte(0));
 		addWidget(lineEdit, 1, 0, 1, 6);
 	}
 
 	inline GridIntegralCalc::GridIntegralCalc( \
-		Window::Window *window, byte tab \
-	) : GridBaseCalc(window, tab) {
+		Window::Window *window, MODS mod \
+	) : GridBaseCalc(window, mod) {
 		addWidget( \
 			new Button::ButtonBase{ \
 				"a = ", window, nullptr \
 			}, 1, 0, 1, 1 \
 		);
 		LineEdit::LineEdit *aLineEdit \
-			{new LineEdit::LineEdit{window, 1, 0, "1"}};
-		window->setLineEdit(aLineEdit, tab, byte(0));
+			{new LineEdit::LineEdit{window, DERIVATIVE, 0, "1"}};
+		window->setLineEdit(aLineEdit, mod, byte(0));
 		addWidget(aLineEdit, 1, 1, 1, 2);
 		addWidget( \
 			new Button::ButtonBase{ \
@@ -145,17 +145,17 @@ namespace Grid {
 			}, 1, 3, 1, 1 \
 		);
 		LineEdit::LineEdit *bLineEdit \
-			{new LineEdit::LineEdit{window, tab, byte(1), "2"}};
-		window->setLineEdit(bLineEdit, tab, byte(1));
+			{new LineEdit::LineEdit{window, mod, byte(1), "2"}};
+		window->setLineEdit(bLineEdit, mod, byte(1));
 		addWidget(bLineEdit, 1, 4, 1, 2);
 		LineEdit::LineEdit *mainLineEdit \
-			{new LineEdit::LineEdit{window, tab, byte(2)}};
-		window->setLineEdit(mainLineEdit, tab, byte(2));
+			{new LineEdit::LineEdit{window, mod, byte(2)}};
+		window->setLineEdit(mainLineEdit, mod, byte(2));
 		addWidget(mainLineEdit, 2, 0, 1, 6);
 	}
 	inline GridReplacementCalc::GridReplacementCalc( \
-		Window::Window *window, byte tab \
-	) : GridBaseCalc{window, tab} {
+		Window::Window *window, MODS mod \
+	) : GridBaseCalc{window, mod} {
 		addWidget( \
 			new Button::ButtonBase{ \
 				"with =", window, \
@@ -163,8 +163,8 @@ namespace Grid {
 			}, 1, 0, 1, 1 \
 		);
 		LineEdit::LineEdit *withLineEdit = \
-			new LineEdit::LineEdit(window, tab, byte(0), "x");
-		window->setLineEdit(withLineEdit, tab, byte(0));
+			new LineEdit::LineEdit(window, mod, byte(0), "x");
+		window->setLineEdit(withLineEdit, mod, byte(0));
 		addWidget(withLineEdit, 1, 1, 1, 2);
 		addWidget( \
 			new Button::ButtonBase( \
@@ -173,12 +173,12 @@ namespace Grid {
 			), 1, 3, 1, 1 \
 		);
 		LineEdit::LineEdit *onLineEdit \
-			{new LineEdit::LineEdit{window, tab, byte(1), "0"}};
-		window->setLineEdit(onLineEdit, tab, byte(1));
+			{new LineEdit::LineEdit{window, mod, byte(1), "0"}};
+		window->setLineEdit(onLineEdit, mod, byte(1));
 		addWidget(onLineEdit, 1, 4, 1, 2);
 		LineEdit::LineEdit *mainLineEdit \
-			{new LineEdit::LineEdit{window, tab, byte(2)}};
-		window->setLineEdit(mainLineEdit, tab, byte(2));
+			{new LineEdit::LineEdit{window, mod, byte(2)}};
+		window->setLineEdit(mainLineEdit, mod, byte(2));
 		addWidget(mainLineEdit, 2, 0, 1, 6);
 	}
 }

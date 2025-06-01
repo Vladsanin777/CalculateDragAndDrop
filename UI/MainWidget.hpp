@@ -43,7 +43,6 @@ namespace MainWidget {
         };
         addWidget(new Button::ButtonBase{ \
             "close", window, func, "hide"});
-        titleBar->getChild()->buttonInit();
         setStretch(0, 1);
         setStretch(1, 20);
         setStretch(2, 20);

@@ -97,15 +97,15 @@ namespace TabWidget {
 	inline MainTabWidget::MainTabWidget( \
 		Window::Window *window) : QTabWidget() {
 		addTab(new TabQWidget{ \
-			new Grid::GridDefaultCalc{window, byte(0)} \
+			new Grid::GridDefaultCalc{window, BASIC} \
 		}, lstTabs[0]);
 		addTab(new TabQWidget{ \
 			new Grid:: \
-				GridDefaultCalc{window, byte(1)} \
+				GridDefaultCalc{window, DERIVATIVE} \
 		}, lstTabs[1]);
 		addTab(new TabQWidget{ \
 			new Grid:: \
-				GridDefaultCalc{window, byte(2)} \
+				GridDefaultCalc{window, INTEGRATE} \
 		}, lstTabs[2]);
 		addTab(new TabQWidget{ \
 			new Grid::GridIntegralCalc(window) \
