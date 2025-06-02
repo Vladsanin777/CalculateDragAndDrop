@@ -127,5 +127,5 @@ namespace Application {
 	}
 	inline void CalculateDragAndDrop::createWindow( \
 		QPushButton * button \
-	) { Window::Window *win = new Window::Window{this}; }
+	) { new Window::Window{this}; }
 }

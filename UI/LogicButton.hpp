@@ -300,4 +300,8 @@ namespace LogicButton {
         }
         return;
     }
+
+	inline void createWindow( \
+		QPushButton * button) noexcept {
+        new Window::Window{this}; return; }
 }

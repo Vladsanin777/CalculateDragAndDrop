@@ -5,7 +5,8 @@
 namespace Window {
 	inline Window::Window( \
 		Application::CalculateDragAndDrop \
-		*app) : QMainWindow{}, _app{app} {
+		*app) : QMainWindow{}, _app{app} , \
+		_rgb0{8, 116, 235}, _rgb1{17, 61, 138} {
 		setWindowTitle(::windowTitle);
 		resize(400, 800);
 		setObjectName("Window");
@@ -213,8 +214,10 @@ namespace Window {
         QRadialGradient gradient(rect().center(), 
                                 qMax(width(), height()) / 2);
         
-        gradient.setColorAt(0, QColor(48, 116, 235));  // Начальный цвет
-        gradient.setColorAt(1, QColor(17, 61, 138));   // Конечный цвет
+        gradient.setColorAt(0, QColor( \
+			_rgb0.red(), _rgb0.green(), _rgb0.blue()));
+        gradient.setColorAt(1, QColor( \
+			_rgb1.red(), _rgb1.green(), _rgb1.blue()));
         
         // Заливаем фон градиентом
         painter.fillRect(rect(), gradient);

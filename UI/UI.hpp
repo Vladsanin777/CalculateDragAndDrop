@@ -26,6 +26,7 @@
 
 using byte = unsigned char;
 
+
 enum MODS {BASIC, DERIVATIVE, INTEGRATE, INTEGRAL, REPLACEMENT};
 
 const char * const windowTitle \
@@ -138,6 +139,7 @@ const char * const emptyMain[rowEmptyMain] \
 	{"", "", "", "", ""} \
 };
 
+class RGB;
 
 namespace Application {
 	class CalculateDragAndDrop;
@@ -195,6 +197,21 @@ namespace MainWidget {
 	class MainWidget;
 }
 
+class RGB {
+	byte _red{byte(0)}, \
+	_green{byte(0)}, _blue{byte(0)};
+public:
+	inline explicit RGB(int red, \
+		int green, int blue) noexcept \
+		_red{red}, _green{green}, _blue{blue} {}
+	inline void set(int red, int green, int blue) {
+		_red = red, _green = green, _blue = blue;
+	}
+	inline int red(void) {return _red;}
+	inline int green(void) {return _green;}
+	inline int blue(void) {return _blue;}
+};
+
 namespace Application {
 	class CalculateDragAndDrop : public QApplication {
 	public:
@@ -207,6 +224,7 @@ namespace Application {
 namespace Window {
 	class Window : public QMainWindow {
 	private:
+		RGB _rgb0 {0, 0, 0}, _rgb1{0, 0, 0};
 		MODS _currentMod {BASIC};
 		byte _currentIndex {byte(0)};
 		Setting::SettingDock * _settingDock {nullptr};
@@ -520,6 +538,11 @@ namespace LogicButton {
 	) noexcept;
 	inline void applyLongArifmetic(Window::Window * window, \
 		QPushButton* button) noexcept;
+	inline void setRGB(Window::Window * window, \
+		int red, int green, int blue, \
+		QPushButton* button) noexcept;
+	inline void createWindow( \
+		QPushButton * button) noexcept;
 }
 namespace Title {
 	class TitleLayout : public QHBoxLayout {
