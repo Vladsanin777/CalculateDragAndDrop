@@ -6,6 +6,7 @@
 #include "../Calculate/Check.hpp"
 #include "../Calculate/Calculate.hpp"
 
+
 namespace LogicButton {
     inline LogicCalculate::LogicCalculate( \
         char *lineEditText, Window::Window *window \
@@ -301,7 +302,15 @@ namespace LogicButton {
         return;
     }
 
-	inline void createWindow( \
-		QPushButton * button) noexcept {
-        new Window::Window{this}; return; }
+    inline void setRGB(Window::Window * window, \
+		byte red0, byte green0, byte blue0, \
+		byte red1, byte green1, byte blue1 \
+		) noexcept {
+        window->setRGB(red0, green0, blue0, \
+            red1, green1, blue1);
+    }
+
+	inline void createWindow(Application:: \
+        CalculateDragAndDrop * app) noexcept {
+        new Window::Window{app}; return; }
 }

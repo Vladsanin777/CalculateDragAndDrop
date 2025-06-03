@@ -1,22 +1,46 @@
 
 #pragma once
 #include "UI.hpp"
+#include <functional>
 
 namespace Button {
 	inline ButtonBase::ButtonBase( \
 		const char *label, Window::Window *window, \
 		std::function<void(QPushButton *)> \
 		*callback, const char *cssName \
-	) : _window(window), QPushButton(label) {
+	) noexcept : _window(window), QPushButton(label) {
 		setAttribute(Qt::WA_Hover, true);
 		setContentsMargins(0, 0, 0, 0);
-		if (callback) 
-			connect(this, &QPushButton::clicked, \
-				[this, callback](bool) {
-				if (callback) {
-					(*callback)(this);
-				}
-			});
+		connect(this, &QPushButton::clicked, \
+			[this, callback](bool) {
+			(*callback)(this); });
+		if (cssName)
+			setObjectName(cssName);
+		setMinimumWidth(70);
+		setMinimumHeight(40);
+	}
+	inline ButtonBase::ButtonBase( \
+		const char *label, Window::Window *window, \
+		std::function<void(void)> \
+		*callback, const char *cssName \
+	) noexcept : _window(window), QPushButton(label) {
+		setAttribute(Qt::WA_Hover, true);
+		setContentsMargins(0, 0, 0, 0);
+		connect(this, &QPushButton::clicked, \
+			[this, callback](bool) {
+			(*callback)(); });
+		if (cssName)
+			setObjectName(cssName);
+		setMinimumWidth(70);
+		setMinimumHeight(40);
+	}
+
+	inline ButtonBase::ButtonBase( \
+		const char *label, Window::Window *window, \
+		const char *cssName \
+	) noexcept : _window(window), QPushButton(label) {
+		setAttribute(Qt::WA_Hover, true);
+		setContentsMargins(0, 0, 0, 0);
 		if (cssName)
 			setObjectName(cssName);
 		setMinimumWidth(70);
@@ -230,5 +254,37 @@ namespace Button {
 		update();
 		event->acceptProposedAction();
 		return;
+	}
+
+	inline ButtonTheme::ButtonTheme(Window::Window * window, \
+		byte red0, byte green0, byte blue0, \
+		byte red1, byte green1, byte blue1 \
+	) noexcept : ButtonBase{"", window, \
+		new std::function<void(void)> { \
+			std::bind(&LogicButton::setRGB, \
+				window, red0, green0, blue0, \
+				red1, green1, blue1)}, "basic"}, \
+		_rgb0{red0, green0, blue0}, \
+		_rgb1{red1, green1, blue1} {}
+	inline void ButtonTheme::paintEvent(QPaintEvent * event \
+	) noexcept {
+        Q_UNUSED(event);
+        
+        QPainter painter(this);
+        
+        // Создаем радиальный градиент
+        QRadialGradient gradient(rect().center(), 
+                                qMax(width(), height()) / 2);
+        
+        gradient.setColorAt(0, QColor( \
+			_rgb0.red(), _rgb0.green(), _rgb0.blue()));
+        gradient.setColorAt(1, QColor( \
+			_rgb1.red(), _rgb1.green(), _rgb1.blue()));
+        
+        // Заливаем фон градиентом
+        painter.fillRect(rect(), gradient);
+        
+        // Важно: вызываем родительский paintEvent для отрисовки дочерних виджетов
+        QPushButton::paintEvent(event);
 	}
 }

@@ -6,7 +6,7 @@
 namespace Application {
 	inline CalculateDragAndDrop:: \
 	CalculateDragAndDrop(int argc, char *argv[] \
-	) : QApplication(argc, argv) {
+	) noexcept : QApplication(argc, argv) {
 		setStyleSheet(R"(
 			#function {
 				background-color: rgb(204, 69, 50);
@@ -123,9 +123,6 @@ namespace Application {
 			}
 		)");
 		Expression::init(256);
-		CalculateDragAndDrop::createWindow(nullptr);
+		LogicButton::createWindow(this);
 	}
-	inline void CalculateDragAndDrop::createWindow( \
-		QPushButton * button \
-	) { new Window::Window{this}; }
 }

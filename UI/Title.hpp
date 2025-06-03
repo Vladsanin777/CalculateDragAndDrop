@@ -16,18 +16,16 @@ namespace Title {
 				"Settings", window, \
 				new std::function<void(QPushButton *)> {
 					std::bind(&LogicButton::visibleSetting, \
-						window, std::placeholders::_1)
+						window, std::placeholders::_1) \
 				}, "basic" \
 			}
 		);
 		addWidget( \
 			new Button::ButtonBase{ \
 				"+ New", window, \
-				new std::function<void(QPushButton *)> { \
+				new std::function<void(void)> { \
 					std::bind( \
-						&Application::CalculateDragAndDrop::\
-						createWindow, app, std::placeholders::_1 \
-					) \
+						&LogicButton::createWindow, app) \
 				}, "basic" \
 			} \
 		);

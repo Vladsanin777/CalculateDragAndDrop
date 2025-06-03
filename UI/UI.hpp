@@ -29,6 +29,20 @@ using byte = unsigned char;
 
 enum MODS {BASIC, DERIVATIVE, INTEGRATE, INTEGRAL, REPLACEMENT};
 
+#define LIGHT_RED 219, 0, 0, 84, 3, 3
+#define LIGHT_ORANGE 244, 129, 8, 112, 61, 8
+#define LIGHT_YELLO 255, 193, 2, 121, 92, 4
+#define LIGHT_GREEN 81, 171, 42, 32, 62, 19
+#define LIGHT_BLUE 49, 118, 238, 17, 61, 138
+#define LIGHT_PURPLE 77, 41, 170, 30, 18, 61
+
+#define DARK_RED 84, 3, 3, 0, 0, 0
+#define DARK_ORANGE 112, 61, 8, 0, 0, 0
+#define DARK_YELLO 121, 92, 4, 0, 0, 0
+#define DARK_GREEN 32, 62, 19, 0, 0, 0
+#define DARK_BLUE 17, 61, 138, 0, 0, 0
+#define DARK_PURPLE 30, 18, 61, 0, 0, 0
+
 const char * const windowTitle \
 	{"CalculateDragAndDrop"};
 
@@ -151,6 +165,7 @@ namespace Button {
 	class ButtonBase;
 	class ButtonDrag;
 	class ButtonDragAndDrop;
+	class ButtonTheme;
 }
 namespace LineEdit {
 	class LineEdit;
@@ -201,24 +216,22 @@ class RGB {
 	byte _red{byte(0)}, \
 	_green{byte(0)}, _blue{byte(0)};
 public:
-	inline explicit RGB(int red, \
-		int green, int blue) noexcept \
+	inline explicit RGB(byte red, \
+		byte green, byte blue) noexcept : \
 		_red{red}, _green{green}, _blue{blue} {}
-	inline void set(int red, int green, int blue) {
+	inline void set(byte red, byte green, byte blue) {
 		_red = red, _green = green, _blue = blue;
 	}
-	inline int red(void) {return _red;}
-	inline int green(void) {return _green;}
-	inline int blue(void) {return _blue;}
+	inline byte red(void) {return _red;}
+	inline byte green(void) {return _green;}
+	inline byte blue(void) {return _blue;}
 };
 
 namespace Application {
 	class CalculateDragAndDrop : public QApplication {
 	public:
 		inline explicit CalculateDragAndDrop( \
-			int argc, char *argv[] \
-		);
-		inline void createWindow(QPushButton *button);
+			int argc, char *argv[]) noexcept;
 	};
 }
 namespace Window {
@@ -338,6 +351,13 @@ namespace Window {
 			Setting::SettingDock * settingDock) noexcept;
 		inline Setting::SettingDock * getSettingDock( \
 			void) const noexcept;
+		inline void setRGB( \
+			byte red0, byte green0, byte blue0, \
+			byte red1, byte green1, byte blue1 \
+		) noexcept;
+		inline void setRGB( \
+			RGB rgb0, RGB rgb1 \
+		) noexcept;
 	protected:
 		inline void paintEvent(QPaintEvent *event) override;
 	private:
@@ -352,9 +372,17 @@ namespace Button {
 		inline explicit ButtonBase( \
 			const char *label, Window::Window *window, \
 			std::function<void(QPushButton *)> \
-			*callback = nullptr, \
+			*callback, const char *cssName = "basic" \
+		) noexcept;
+		inline explicit ButtonBase( \
+			const char *label, Window::Window *window, \
+			std::function<void(void)> \
+			*callback, const char *cssName = "basic" \
+		) noexcept;
+		inline explicit ButtonBase( \
+			const char *label, Window::Window *window, \
 			const char *cssName = "basic" \
-		);
+		) noexcept;
 	};
 	class ButtonDrag : public ButtonBase {
 	private:
@@ -391,6 +419,18 @@ namespace Button {
 		inline void dragEnterEvent(QDragEnterEvent *event \
 		) override;
 		inline void dropEvent(QDropEvent *event) override;
+	};
+	class ButtonTheme : public ButtonBase {
+	private:
+		RGB _rgb0{0, 0, 0}, _rgb1{0, 0, 0};
+	public:
+		inline explicit ButtonTheme(Window::Window * window, \
+			byte red0, byte green0, byte blue0, \
+			byte red1, byte green1, byte blue1 \
+		) noexcept;
+	protected:
+		inline void paintEvent(QPaintEvent * event \
+		) noexcept override;
 	};
 }
 namespace LineEdit {
@@ -539,10 +579,11 @@ namespace LogicButton {
 	inline void applyLongArifmetic(Window::Window * window, \
 		QPushButton* button) noexcept;
 	inline void setRGB(Window::Window * window, \
-		int red, int green, int blue, \
-		QPushButton* button) noexcept;
-	inline void createWindow( \
-		QPushButton * button) noexcept;
+		byte red0, byte green0, byte blue0, \
+		byte red1, byte green1, byte blue1 \
+		) noexcept;
+	inline void createWindow(Application::\
+		CalculateDragAndDrop * app) noexcept;
 }
 namespace Title {
 	class TitleLayout : public QHBoxLayout {

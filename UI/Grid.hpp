@@ -132,7 +132,7 @@ namespace Grid {
 	) : GridBaseCalc(window, mod) {
 		addWidget( \
 			new Button::ButtonBase{ \
-				"a = ", window, nullptr \
+				"a = ", window \
 			}, 1, 0, 1, 1 \
 		);
 		LineEdit::LineEdit *aLineEdit \
@@ -141,7 +141,7 @@ namespace Grid {
 		addWidget(aLineEdit, 1, 1, 1, 2);
 		addWidget( \
 			new Button::ButtonBase{ \
-				"b = ", window, nullptr \
+				"b = ", window \
 			}, 1, 3, 1, 1 \
 		);
 		LineEdit::LineEdit *bLineEdit \
@@ -158,8 +158,7 @@ namespace Grid {
 	) : GridBaseCalc{window, mod} {
 		addWidget( \
 			new Button::ButtonBase{ \
-				"with =", window, \
-				nullptr \
+				"with =", window \
 			}, 1, 0, 1, 1 \
 		);
 		LineEdit::LineEdit *withLineEdit = \
@@ -168,8 +167,7 @@ namespace Grid {
 		addWidget(withLineEdit, 1, 1, 1, 2);
 		addWidget( \
 			new Button::ButtonBase( \
-				"on =", window, \
-				nullptr \
+				"on =", window \
 			), 1, 3, 1, 1 \
 		);
 		LineEdit::LineEdit *onLineEdit \

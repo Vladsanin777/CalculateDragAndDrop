@@ -205,6 +205,21 @@ namespace Window {
 		void) const noexcept {
 		return _settingDock;
 	}
+	inline void Window::setRGB( \
+		byte red0, byte green0, byte blue0, \
+		byte red1, byte green1, byte blue1 \
+	) noexcept {
+		_rgb0.set(red0, green0, blue0);
+		_rgb1.set(red1, green1, blue1);
+		return;
+	}
+	inline void Window::setRGB( \
+		RGB rgb0, RGB rgb1 \
+	) noexcept {
+		_rgb0.set(rgb0.red(), rgb0.green(), rgb0.blue());
+		_rgb1.set(rgb1.red(), rgb1.green(), rgb1.blue());
+		return;
+	}
 	inline void Window::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);
         
