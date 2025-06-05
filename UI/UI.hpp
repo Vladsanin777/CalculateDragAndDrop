@@ -1,6 +1,7 @@
 #pragma once
 #include <QPushButton>
 #include <QApplication>
+#include <QShortcut>
 #include <QMainWindow>
 #include <QWidget>
 #include <QPointF>

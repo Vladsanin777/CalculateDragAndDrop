@@ -16,6 +16,10 @@ namespace Window {
 		_settingDock = settingDock;
 		addDockWidget(Qt::LeftDockWidgetArea, \
 			settingDock);
+		// Закрытие окна по Ctrl+Shift+W
+		new QShortcut{QKeySequence("Ctrl+Shift+W"), \
+			this, SLOT(close())};
+
 		//centralWidget()->setAutoFillBackground(true);
 		//setAutoFillBackground(true);  // Для QMainWindow
 		//setAttribute(Qt::WA_StyledBackground, true);

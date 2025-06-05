@@ -20,15 +20,15 @@ namespace Title {
 				}, "basic" \
 			}
 		);
-		addWidget( \
+		Button::ButtonBase * buttonNew {
 			new Button::ButtonBase{ \
 				"+ New", window, \
 				new std::function<void(void)> { \
 					std::bind( \
 						&LogicButton::createWindow, app) \
-				}, "basic" \
-			} \
-		);
+				}, "basic"}};
+		buttonNew->setShortcut(QKeySequence("Ctrl+Shift+N"));
+		addWidget(buttonNew);
 		return;
 	}
 	
