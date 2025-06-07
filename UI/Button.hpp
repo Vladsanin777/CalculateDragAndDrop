@@ -17,7 +17,7 @@ namespace Button {
 		if (cssName)
 			setObjectName(cssName);
 		setMinimumWidth(70);
-		setMinimumHeight(40);
+		setMinimumHeight(30);
 	}
 	inline ButtonBase::ButtonBase( \
 		const char *label, Window::Window *window, \
@@ -128,8 +128,9 @@ namespace Button {
 	}
 	inline bool ButtonDragAndDrop::isConst( \
 		const char * const &text) {
-		return strcmp(text, "_E") == 0 || \
-			strcmp(text, "_PI") == 0;
+		return strcmp(text, "e") == 0 || \
+			strcmp(text, "pi") == 0 || \
+			strcmp(text, "x") == 0;
 	}
 	inline bool ButtonDragAndDrop::isBracket( \
 		const char * const &text) {
@@ -271,6 +272,10 @@ namespace Button {
         Q_UNUSED(event);
         
         QPainter painter(this);
+
+		// Создаем путь со скругленным прямоугольником
+		QPainterPath path;
+		path.addRoundedRect(rect(), 10, 10); // Скругление 10px
         
         // Создаем радиальный градиент
         QRadialGradient gradient(rect().center(), 
@@ -282,7 +287,7 @@ namespace Button {
 			_rgb1.red(), _rgb1.green(), _rgb1.blue()));
         
         // Заливаем фон градиентом
-        painter.fillRect(rect(), gradient);
+        painter.fillPath(path, gradient);
         
         // Важно: вызываем родительский paintEvent для отрисовки дочерних виджетов
         QPushButton::paintEvent(event);

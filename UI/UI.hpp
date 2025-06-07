@@ -1,4 +1,5 @@
 #pragma once
+#include <QPainterPath>
 #include <QPushButton>
 #include <QApplication>
 #include <QShortcut>
@@ -19,6 +20,7 @@
 #include <QTabWidget>
 #include <QLabel>
 #include <QStyle>
+#include <QSizePolicy>
 #include <QPainter>
 
 #include <functional>
@@ -27,22 +29,23 @@
 
 using byte = unsigned char;
 
+int fontSizeSettingLabel {20};
 
 enum MODS {BASIC, DERIVATIVE, INTEGRATE, INTEGRAL, REPLACEMENT};
 
-#define LIGHT_RED 219, 0, 0, 84, 3, 3
-#define LIGHT_ORANGE 244, 129, 8, 112, 61, 8
-#define LIGHT_YELLO 255, 193, 2, 121, 92, 4
-#define LIGHT_GREEN 81, 171, 42, 32, 62, 19
+#define LIGHT_RED 219, 0, 0, 87, 0, 0
+#define LIGHT_ORANGE 244, 129, 8, 116, 62, 4
+#define LIGHT_YELLO 255, 193, 2, 125, 95, 0
+#define LIGHT_GREEN 81, 171, 42, 46, 65, 16
 #define LIGHT_BLUE 49, 118, 238, 17, 61, 138
-#define LIGHT_PURPLE 77, 41, 170, 30, 18, 61
+#define LIGHT_PURPLE 77, 41, 170, 29, 15, 64
 
-#define DARK_RED 84, 3, 3, 0, 0, 0
-#define DARK_ORANGE 112, 61, 8, 0, 0, 0
-#define DARK_YELLO 121, 92, 4, 0, 0, 0
-#define DARK_GREEN 32, 62, 19, 0, 0, 0
-#define DARK_BLUE 17, 61, 138, 0, 0, 0
-#define DARK_PURPLE 30, 18, 61, 0, 0, 0
+#define DARK_RED 87, 0, 0, 10, 0, 0
+#define DARK_ORANGE 116, 62, 4, 42, 22, 1
+#define DARK_YELLO 125, 95, 0, 48, 36, 0
+#define DARK_GREEN 46, 65, 16, 2, 3, 1
+#define DARK_BLUE 17, 61, 138, 8, 30, 70
+#define DARK_PURPLE 29, 15, 64, 1, 0, 2
 
 const char * const windowTitle \
 	{"CalculateDragAndDrop"};
@@ -94,9 +97,9 @@ const char * const braces[rowBraces][columnBraces] {
 	{"{}", "{", "}"} \
 };
 const byte rowConsts {byte(1)}, \
-	columnConsts {byte(2)};
+	columnConsts {byte(3)};
 const char * const consts[rowConsts][columnConsts] {
-	{"_E", "_PI"} \
+	{"e", "pi", "x"} \
 };
 const byte rowInverseTrigonometricFuncs {byte(2)}, \
 	columnInverseTrigonometricFuncs {byte(3)};
@@ -145,7 +148,7 @@ const byte rowConstsMain{byte(1)}, \
 	columnConstsMain{byte(2)};
 const char * const constsMain[rowConstsMain] \
 	[columnConstsMain] {
-	{"_PI", "_E"} \
+	{"pi", "e"} \
 };
 const byte rowEmptyMain{byte(1)}, \
 	columnEmptyMain{byte(5)};
@@ -161,6 +164,9 @@ namespace Application {
 }
 namespace Window {
 	class Window;
+}
+namespace Label {
+	class LabelBasic;
 }
 namespace Button {
 	class ButtonBase;
@@ -191,7 +197,9 @@ namespace Title {
 	class TitleBar;
 }
 namespace Setting {
+	class SettingGrid;
 	class SettingWidget;
+	class SettingArea;
 	class SettingDock;
 }
 namespace Grid {
@@ -214,6 +222,7 @@ namespace MainWidget {
 }
 
 class RGB {
+private:
 	byte _red{byte(0)}, \
 	_green{byte(0)}, _blue{byte(0)};
 public:
@@ -223,9 +232,9 @@ public:
 	inline void set(byte red, byte green, byte blue) {
 		_red = red, _green = green, _blue = blue;
 	}
-	inline byte red(void) {return _red;}
-	inline byte green(void) {return _green;}
-	inline byte blue(void) {return _blue;}
+	inline byte red(void) const {return _red;}
+	inline byte green(void) const {return _green;}
+	inline byte blue(void) const {return _blue;}
 };
 
 namespace Application {
@@ -359,10 +368,20 @@ namespace Window {
 		inline void setRGB( \
 			RGB rgb0, RGB rgb1 \
 		) noexcept;
+		inline const RGB& getRGB0(void) noexcept;
+		inline const RGB& getRGB1(void) noexcept;
 	protected:
 		inline void paintEvent(QPaintEvent *event) override;
 	private:
 		inline ~Window(void);
+	};
+}
+
+namespace Label {
+	class LabelBasic : public QLabel {
+	public:
+		inline explicit LabelBasic(const char * label, \
+			int fontSize) noexcept;
 	};
 }
 namespace Button {
@@ -609,18 +628,37 @@ namespace Title {
 namespace Setting {
 	class SettingGrid : public QGridLayout {
 	public:
-		inline explicit SettingGrid(Window::Window * window \
-		) noexcept;
+		inline explicit SettingGrid(Window::Window * window, \
+			QWidget * parent = nullptr) noexcept;
 	};
 	class SettingWidget : public QWidget {
 	public:
-		inline explicit SettingWidget(Window::Window * window \
-		) noexcept;
+		inline explicit SettingWidget(Window::Window * window, \
+			QWidget * parent = nullptr) noexcept;
+	};
+	class SettingArea : public QScrollArea {
+	public:
+		inline explicit SettingArea(Window::Window * window, \
+		QWidget * parent = nullptr) noexcept;
+		void setWidget(QWidget *widget) noexcept;
+		inline bool eventFilter(QObject *obj, \
+			QEvent *event) noexcept override;
+
+	protected:
+		inline void resizeEvent(QResizeEvent *event \
+		) noexcept override;
+
+	private:
+		inline void updateMinimumWidth(void) noexcept;
 	};
 	class SettingDock : public QDockWidget {
+	private:
+		const RGB& _rgb0, &_rgb1;
 	public:
 		inline explicit SettingDock(Window::Window * window \
 		) noexcept;
+	protected:
+		inline void paintEvent(QPaintEvent *event) override;
 	};
 }
 
@@ -718,3 +756,4 @@ namespace MainWidget {
 #include "Title.hpp"
 #include "Window.hpp"
 #include "Setting.hpp"
+#include "Label.hpp"

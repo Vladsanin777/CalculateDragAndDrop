@@ -224,6 +224,12 @@ namespace Window {
 		_rgb1.set(rgb1.red(), rgb1.green(), rgb1.blue());
 		return;
 	}
+	inline const RGB& Window::getRGB0(void) noexcept {
+		return _rgb0;
+	}
+	inline const RGB& Window::getRGB1(void) noexcept {
+		return _rgb1;
+	}
 	inline void Window::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);
         
