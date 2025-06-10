@@ -41,6 +41,7 @@ namespace Setting {
         addWidget(new Button::ButtonTheme{window, DARK_BLUE}, 6, 4, 1, 1);
         addWidget(new Button::ButtonTheme{window, DARK_PURPLE}, 6, 5, 1, 1);
 
+        addWidget(new QCheckBox{"Custom theme"}, 7, 0, 1, 6);
     }
     inline SettingWidget::SettingWidget( \
         Window::Window * window, QWidget * parent) noexcept : \

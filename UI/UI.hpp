@@ -1,6 +1,9 @@
 #pragma once
 #include <QPainterPath>
+#include <QCheckBox>
 #include <QPushButton>
+#include <QAbstractButton>
+#include <QPropertyAnimation>
 #include <QApplication>
 #include <QShortcut>
 #include <QMainWindow>
@@ -376,6 +379,8 @@ namespace Window {
 		inline ~Window(void);
 	};
 }
+
+
 
 namespace Label {
 	class LabelBasic : public QLabel {
