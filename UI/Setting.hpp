@@ -6,7 +6,7 @@ namespace Setting {
     inline SettingGrid::SettingGrid( \
         Window::Window * window, QWidget *parent) noexcept : \
         QGridLayout{parent} {
-        addWidget(new Label::LabelBasic{"Bits long arifmetic", \
+        addWidget(new Label::Label{"Bits long arifmetic", \
             fontSizeSettingLabel}, 0, 0, 1, 6);
         LineEdit::LineEdit * lineEditLongArifmetic \
             {new LineEdit::LineEdit{window}};
@@ -17,14 +17,14 @@ namespace Setting {
             new std::function<void(QPushButton *)> \
                 {std::bind(&LogicButton::applyLongArifmetic, \
                     window, std::placeholders::_1)}}, 1, 4, 1, 2);
-        addWidget(new Label::LabelBasic{"Changed histori", \
+        addWidget(new Label::Label{"Changed histori", \
             fontSizeSettingLabel}, 2, 0, 1, 6);
         addWidget(new Button::ButtonBase{"Global histori", window, \
             new std::function<void(QPushButton *)> \
                 {std::bind(&LogicButton::changeHistoriVisible, \
                     window, std::placeholders::_1)}}, 3, 0, 1, 6);
 
-        addWidget(new Label::LabelBasic{"Changed There", \
+        addWidget(new Label::Label{"Changed There", \
             fontSizeSettingLabel}, 4, 0, 1, 6);
 
         addWidget(new Button::ButtonTheme{window, LIGHT_RED}, 5, 0, 1, 1);

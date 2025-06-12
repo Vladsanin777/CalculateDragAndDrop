@@ -11,6 +11,7 @@
 #include <QWidget>
 #include <QPointF>
 #include <QVBoxLayout>
+#include <QBoxLayout>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QLineEdit>
@@ -33,7 +34,7 @@
 
 using byte = unsigned char;
 
-int fontSizeSettingLabel {20};
+int fontSizeSettingLabel {20}, fontSizeLabelRGB {12};
 
 enum MODS {BASIC, DERIVATIVE, INTEGRATE, INTEGRAL, REPLACEMENT};
 
@@ -164,6 +165,7 @@ const char * const emptyMain[rowEmptyMain] \
 namespace RGB {
 	class RGB;
 	class Slider;
+	class Channel;
 	class Color;
 	class Gradient;
 }
@@ -175,7 +177,7 @@ namespace Window {
 	class Window;
 }
 namespace Label {
-	class LabelBasic;
+	class Label;
 }
 namespace Button {
 	class ButtonBase;
@@ -252,28 +254,49 @@ namespace RGB {
 		inline byte green(void) const {return _green;}
 		inline byte blue(void) const {return _blue;}
 	};
-
 	class Slider : public QSlider {
 	public:
-		inline explicit Slider(byte number) noexcept;
+		inline explicit Slider(byte number, \
+			std::function<void(void)> func, \
+			Channel *parent) noexcept;
 	};
-	class Color : public QGridLayout {
+	class Channel : public QBoxLayout {
 	private:
+		Label::Label * _label;
+		Slider * _slider;
+	public:
+		inline explicit Channel(byte number, \
+			std::function<void(void)> func) noexcept;
+		inline Slider* slider(void) noexcept;
+		inline Label::Label* label(void) noexcept;
+	};
+	class Color : public QBoxLayout {
+	private:
+		Channel * _redC{nullptr}, *_greenC{nullptr}, \
+		*_blueC{nullptr};
 		Slider * _red{nullptr}, * _green{nullptr}, \
 		* _blue{nullptr};
 	public:
 		inline explicit Color(Window::Window *window, \
-			const RGB& rgb, std::function<void( \
+			const RGB& rgb, \
+			std::function<void(void)> funcApplyValue, \
+			std::function<void( \
             std::function<void(byte, byte, byte)>)> func\
 		) noexcept;
 		inline void setValue( \
 			byte red, byte green, byte blue) noexcept;
+		inline byte getRedValue(void) noexcept;
+		inline byte getGreenValue(void) noexcept;
+		inline byte getBlueValue(void) noexcept;
+
 	};
 	class Gradient : public QGridLayout {
 	private:
 		Color *_first{nullptr}, *_second{nullptr};
+		Window::Window * _window;
 	public:
 		inline explicit Gradient(Window::Window *window) noexcept;
+		inline void applyGradient(void) noexcept;
 	};
 }
 namespace Application {
@@ -423,9 +446,11 @@ namespace Window {
 
 
 namespace Label {
-	class LabelBasic : public QLabel {
+	class Label : public QLabel {
 	public:
-		inline explicit LabelBasic(const char * label, \
+		inline explicit Label(const char * label, \
+			int fontSize) noexcept;
+		inline explicit Label(byte number, \
 			int fontSize) noexcept;
 	};
 }
