@@ -215,20 +215,31 @@ namespace Window {
 	) noexcept {
 		_rgb0.set(red0, green0, blue0);
 		_rgb1.set(red1, green1, blue1);
+		update();
 		return;
 	}
 	inline void Window::setRGB( \
-		RGB rgb0, RGB rgb1 \
+		RGB::RGB rgb0, RGB::RGB rgb1 \
 	) noexcept {
 		_rgb0.set(rgb0.red(), rgb0.green(), rgb0.blue());
 		_rgb1.set(rgb1.red(), rgb1.green(), rgb1.blue());
+		update();
 		return;
 	}
-	inline const RGB& Window::getRGB0(void) noexcept {
+	inline const RGB::RGB& Window::getRGB0(void) noexcept {
 		return _rgb0;
 	}
-	inline const RGB& Window::getRGB1(void) noexcept {
+	inline const RGB::RGB& Window::getRGB1(void) noexcept {
 		return _rgb1;
+	}
+	
+	inline void Window::setFuncRGB0(std::function<void(byte, \
+		byte, byte)> func) noexcept {
+		_rgb0.setFunc(func);
+	}
+	inline void Window::setFuncRGB1(std::function<void(byte, \
+		byte, byte)> func) noexcept {
+		_rgb1.setFunc(func);
 	}
 	inline void Window::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);

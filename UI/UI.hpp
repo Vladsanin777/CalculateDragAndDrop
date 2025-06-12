@@ -1,6 +1,7 @@
 #pragma once
 #include <QPainterPath>
 #include <QCheckBox>
+#include <QSlider>
 #include <QPushButton>
 #include <QAbstractButton>
 #include <QPropertyAnimation>
@@ -160,7 +161,12 @@ const char * const emptyMain[rowEmptyMain] \
 	{"", "", "", "", ""} \
 };
 
-class RGB;
+namespace RGB {
+	class RGB;
+	class Slider;
+	class Color;
+	class Gradient;
+}
 
 namespace Application {
 	class CalculateDragAndDrop;
@@ -223,23 +229,53 @@ namespace MainWidget {
 	class MainLayout;
 	class MainWidget;
 }
+namespace RGB {
+	class RGB {
+	private:
+		byte _red{byte(0)}, \
+		_green{byte(0)}, _blue{byte(0)};
+		std::function<void(byte, byte, byte)> _func;
+	public:
+		inline explicit RGB(byte red, \
+			byte green, byte blue) noexcept : \
+			_red{red}, _green{green}, _blue{blue} {}
+		inline void set(byte red, byte green, byte blue) {
+			_red = red, _green = green, _blue = blue;
+			if (_func) _func(red, green, blue);
+		}
+		inline void setFunc( \
+			std::function<void(byte, byte, byte)> func \
+		) {
+			_func = func;
+		}
+		inline byte red(void) const {return _red;}
+		inline byte green(void) const {return _green;}
+		inline byte blue(void) const {return _blue;}
+	};
 
-class RGB {
-private:
-	byte _red{byte(0)}, \
-	_green{byte(0)}, _blue{byte(0)};
-public:
-	inline explicit RGB(byte red, \
-		byte green, byte blue) noexcept : \
-		_red{red}, _green{green}, _blue{blue} {}
-	inline void set(byte red, byte green, byte blue) {
-		_red = red, _green = green, _blue = blue;
-	}
-	inline byte red(void) const {return _red;}
-	inline byte green(void) const {return _green;}
-	inline byte blue(void) const {return _blue;}
-};
-
+	class Slider : public QSlider {
+	public:
+		inline explicit Slider(byte number) noexcept;
+	};
+	class Color : public QGridLayout {
+	private:
+		Slider * _red{nullptr}, * _green{nullptr}, \
+		* _blue{nullptr};
+	public:
+		inline explicit Color(Window::Window *window, \
+			const RGB& rgb, std::function<void( \
+            std::function<void(byte, byte, byte)>)> func\
+		) noexcept;
+		inline void setValue( \
+			byte red, byte green, byte blue) noexcept;
+	};
+	class Gradient : public QGridLayout {
+	private:
+		Color *_first{nullptr}, *_second{nullptr};
+	public:
+		inline explicit Gradient(Window::Window *window) noexcept;
+	};
+}
 namespace Application {
 	class CalculateDragAndDrop : public QApplication {
 	public:
@@ -250,7 +286,7 @@ namespace Application {
 namespace Window {
 	class Window : public QMainWindow {
 	private:
-		RGB _rgb0 {0, 0, 0}, _rgb1{0, 0, 0};
+		RGB::RGB _rgb0 {0, 0, 0}, _rgb1{0, 0, 0};
 		MODS _currentMod {BASIC};
 		byte _currentIndex {byte(0)};
 		Setting::SettingDock * _settingDock {nullptr};
@@ -369,10 +405,14 @@ namespace Window {
 			byte red1, byte green1, byte blue1 \
 		) noexcept;
 		inline void setRGB( \
-			RGB rgb0, RGB rgb1 \
+			RGB::RGB rgb0, RGB::RGB rgb1 \
 		) noexcept;
-		inline const RGB& getRGB0(void) noexcept;
-		inline const RGB& getRGB1(void) noexcept;
+		inline const RGB::RGB& getRGB0(void) noexcept;
+		inline const RGB::RGB& getRGB1(void) noexcept;
+		inline void setFuncRGB0(std::function<void(byte, \
+			byte, byte)> func) noexcept;
+		inline void setFuncRGB1(std::function<void(byte, \
+			byte, byte)> func) noexcept;
 	protected:
 		inline void paintEvent(QPaintEvent *event) override;
 	private:
@@ -447,7 +487,7 @@ namespace Button {
 	};
 	class ButtonTheme : public ButtonBase {
 	private:
-		RGB _rgb0{0, 0, 0}, _rgb1{0, 0, 0};
+		RGB::RGB _rgb0{0, 0, 0}, _rgb1{0, 0, 0};
 	public:
 		inline explicit ButtonTheme(Window::Window * window, \
 			byte red0, byte green0, byte blue0, \
@@ -658,7 +698,7 @@ namespace Setting {
 	};
 	class SettingDock : public QDockWidget {
 	private:
-		const RGB& _rgb0, &_rgb1;
+		const RGB::RGB& _rgb0, &_rgb1;
 	public:
 		inline explicit SettingDock(Window::Window * window \
 		) noexcept;
@@ -762,3 +802,4 @@ namespace MainWidget {
 #include "Window.hpp"
 #include "Setting.hpp"
 #include "Label.hpp"
+#include "RGB.hpp"
