@@ -8,8 +8,8 @@ namespace MainWidget {
         Window::Window *window \
     ) noexcept : QVBoxLayout() {
         std::cout << window << std::endl;
-        setContentsMargins(0, 0, 0, 0);
-        setSpacing(0);
+        setContentsMargins(10, 10, 10, 10);
+        setSpacing(10);
         Title::TitleBar * const titleBar \
             {new Title::TitleBar{app, window}};
         addWidget(titleBar);
@@ -42,7 +42,8 @@ namespace MainWidget {
             }
         };
         addWidget(new Button::ButtonBase{ \
-            "close", window, func, "hide"});
+            "close", window, func, \
+            fontSizeButtonHide, "hide"});
         setStretch(0, 1);
         setStretch(1, 20);
         setStretch(2, 20);

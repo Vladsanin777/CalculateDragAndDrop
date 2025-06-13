@@ -34,20 +34,27 @@
 
 using byte = unsigned char;
 
-int fontSizeSettingLabel {20}, fontSizeLabelRGB {12};
+int fontSizeSettingLabel {20}, fontSizeLabelRGB {12}, \
+	fontSizeButtonKeyboard{18}, fontSizeLabelCalc{15}, \
+	fontSizeButtonHide{14}, fontSizeTitleButton{20}, \
+	fontSizeButtonSetting{18}, fontSizeButtonKeyboardExstra{18};
 
 enum MODS {BASIC, DERIVATIVE, INTEGRATE, INTEGRAL, REPLACEMENT};
+#define LIGHT 255, 255, 255, 150, 150, 150
+#define DARK 150, 150, 150, 0, 0, 0
 
 #define LIGHT_RED 219, 0, 0, 87, 0, 0
 #define LIGHT_ORANGE 244, 129, 8, 116, 62, 4
 #define LIGHT_YELLO 255, 193, 2, 125, 95, 0
-#define LIGHT_GREEN 81, 171, 42, 46, 65, 16
-#define LIGHT_BLUE 49, 118, 238, 17, 61, 138
-#define LIGHT_PURPLE 77, 41, 170, 29, 15, 64
 
 #define DARK_RED 87, 0, 0, 10, 0, 0
 #define DARK_ORANGE 116, 62, 4, 42, 22, 1
 #define DARK_YELLO 125, 95, 0, 48, 36, 0
+
+#define LIGHT_GREEN 81, 171, 42, 46, 65, 16
+#define LIGHT_BLUE 49, 118, 238, 17, 61, 138
+#define LIGHT_PURPLE 77, 41, 170, 29, 15, 64
+
 #define DARK_GREEN 46, 65, 16, 2, 3, 1
 #define DARK_BLUE 17, 61, 138, 8, 30, 70
 #define DARK_PURPLE 29, 15, 64, 1, 0, 2
@@ -461,17 +468,17 @@ namespace Button {
 	public:
 		inline explicit ButtonBase( \
 			const char *label, Window::Window *window, \
-			std::function<void(QPushButton *)> \
-			*callback, const char *cssName = "basic" \
+			std::function<void(QPushButton *)> *callback, \
+			int fontSize, const char *cssName = "basic" \
 		) noexcept;
 		inline explicit ButtonBase( \
 			const char *label, Window::Window *window, \
-			std::function<void(void)> \
-			*callback, const char *cssName = "basic" \
+			std::function<void(void)> *callback, \
+			int fontSize, const char *cssName = "basic" \
 		) noexcept;
 		inline explicit ButtonBase( \
 			const char *label, Window::Window *window, \
-			const char *cssName = "basic" \
+			int fontSize, const char *cssName = "basic" \
 		) noexcept;
 	};
 	class ButtonDrag : public ButtonBase {
@@ -480,8 +487,8 @@ namespace Button {
 	public:
 		explicit ButtonDrag( \
 			const char *label, Window::Window *window, \
-			std::function<void(QPushButton *)> *callback = \
-			nullptr, const char *cssName = nullptr \
+			std::function<void(QPushButton *)> *callback, \
+			int fontSize, const char *cssName = nullptr \
 		);
 	protected:
 		void mousePressEvent(QMouseEvent *event) override;
@@ -491,8 +498,8 @@ namespace Button {
 	public:
 		explicit inline ButtonDragAndDrop( \
 			const char *label, Window::Window *window, \
-			std::function<void(QPushButton *)> *callback = \
-			nullptr, const char *cssName = nullptr \
+			std::function<void(QPushButton *)> *callback, \
+			int fontSize, const char *cssName = nullptr \
 		);
 		static inline bool isEmpty(const char * const &text);
 		static inline bool isNumber(const char * const &text);
@@ -700,11 +707,13 @@ namespace Setting {
 	public:
 		inline explicit SettingGrid(Window::Window * window, \
 			QWidget * parent = nullptr) noexcept;
+
 	};
 	class SettingWidget : public QWidget {
 	public:
 		inline explicit SettingWidget(Window::Window * window, \
 			QWidget * parent = nullptr) noexcept;
+
 	};
 	class SettingArea : public QScrollArea {
 	public:
@@ -737,6 +746,7 @@ namespace Grid {
 	inline void buildingGridKeyboard( \
 		const char * const (&buttons)[rowSize][columnSize], \
 		QGridLayout *grid, Window::Window *window, \
+		int fontSizeButton, \
 		const byte rowStart = byte(0), \
 		const byte columnStart = byte(0), \
 		const char * cssName = "opertor" \
@@ -746,7 +756,8 @@ namespace Grid {
 	public:
 		inline explicit GridCalculateKeyboard( \
 			const char * const (&buttons)[rowSize][columnSize], \
-			Window::Window *window, const char * cssName \
+			Window::Window *window, int fontSize, \
+			const char * cssName \
 		) noexcept;
 	};
 	class GridCalculateCommon : public QGridLayout {

@@ -7,7 +7,7 @@ namespace Button {
 	inline ButtonBase::ButtonBase( \
 		const char *label, Window::Window *window, \
 		std::function<void(QPushButton *)> \
-		*callback, const char *cssName \
+		*callback, int fontSize, const char *cssName \
 	) noexcept : _window(window), QPushButton(label) {
 		setAttribute(Qt::WA_Hover, true);
 		setContentsMargins(0, 0, 0, 0);
@@ -22,22 +22,22 @@ namespace Button {
 	inline ButtonBase::ButtonBase( \
 		const char *label, Window::Window *window, \
 		std::function<void(void)> \
-		*callback, const char *cssName \
+		*callback, int fontSize, const char *cssName \
 	) noexcept : _window(window), QPushButton(label) {
 		setAttribute(Qt::WA_Hover, true);
 		setContentsMargins(0, 0, 0, 0);
 		connect(this, &QPushButton::clicked, \
-			[this, callback](bool) {
+			[callback](bool) {
 			(*callback)(); });
 		if (cssName)
 			setObjectName(cssName);
 		setMinimumWidth(70);
-		setMinimumHeight(40);
+		setMinimumHeight(30);
 	}
 
 	inline ButtonBase::ButtonBase( \
 		const char *label, Window::Window *window, \
-		const char *cssName \
+		int fontSize, const char *cssName \
 	) noexcept : _window(window), QPushButton(label) {
 		setAttribute(Qt::WA_Hover, true);
 		setContentsMargins(0, 0, 0, 0);
@@ -50,8 +50,8 @@ namespace Button {
 	inline ButtonDrag::ButtonDrag( \
 		const char *label, Window::Window *window, \
 		std::function<void(QPushButton *)> \
-		*callback, const char *cssName \
-	) : ButtonBase(label, window, callback, cssName) {}
+		*callback, int fontSize, const char *cssName \
+	) : ButtonBase(label, window, callback, fontSize, cssName) {}
 	inline void ButtonDrag::mousePressEvent( \
 		QMouseEvent *event) {
 		QPushButton::mousePressEvent(event);
@@ -91,8 +91,8 @@ namespace Button {
 	ButtonDragAndDrop( \
 		const char *label, Window::Window *window, \
 		std::function<void(QPushButton *)> \
-		*callback, const char *cssName \
-	) : ButtonDrag{label, window, callback, cssName} \
+		*callback, int fontSize, const char *cssName \
+	) : ButtonDrag{label, window, callback, fontSize, cssName} \
 	{setAcceptDrops(true);}
 	
 	inline bool ButtonDragAndDrop::isEmpty( \
@@ -264,7 +264,7 @@ namespace Button {
 		new std::function<void(void)> { \
 			std::bind(&LogicButton::setRGB, \
 				window, red0, green0, blue0, \
-				red1, green1, blue1)}, "basic"}, \
+				red1, green1, blue1)}, 0, "basic"}, \
 		_rgb0{red0, green0, blue0}, \
 		_rgb1{red1, green1, blue1} {}
 	inline void ButtonTheme::paintEvent(QPaintEvent * event \

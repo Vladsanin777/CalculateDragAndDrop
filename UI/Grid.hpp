@@ -8,6 +8,7 @@ namespace Grid {
 	inline void buildingGridKeyboard( \
 		const char * const (&buttons)[rowSize][columnSize], \
 		QGridLayout *grid, Window::Window *window, \
+		int fontSizeButton, \
 		const byte rowStart, const byte columnStart, \
 		const char * cssName \
 	) noexcept {
@@ -32,7 +33,8 @@ namespace Grid {
 				column != columnEnd; column++, ptr++ \
 			) {
 				grid->addWidget(new TButton { \
-					*ptr, window, func, cssName\
+					*ptr, window, func, \
+					fontSizeButton, cssName\
 				}, row, column, 1, 1);
 			}
 		}
@@ -41,61 +43,68 @@ namespace Grid {
 	inline GridCalculateKeyboard<TButton, rowSize, columnSize>:: \
 	GridCalculateKeyboard( \
 		const char * const (&buttons)[rowSize][columnSize], \
-		Window::Window *window, const char * cssName \
+		Window::Window *window, int fontSize, const char * cssName \
 	) noexcept : QGridLayout() {
-		setContentsMargins(10, 10, 10, 10);
+		setContentsMargins(0, 0, 0, 0);
 		setSpacing(10);
 		buildingGridKeyboard<TButton, rowSize, columnSize>( \
 			buttons, this, window, byte(0), \
-			byte(0), cssName \
+			byte(0), fontSize, cssName \
 		);
 	}
 	inline GridCalculateCommon::GridCalculateCommon( \
 		Window::Window *window) : QGridLayout{} {
 		setSpacing(10);
-		setContentsMargins(10, 10, 10, 10);
+		setContentsMargins(0, 0, 0, 0);
 		std::cout << "po" << window << std::endl;
 
 		buildingGridKeyboard<Button::ButtonDrag, \
 			rowFunctions, columnFunctions>(
 			functions, this, window, \
+			fontSizeButtonKeyboard, \
 			byte(0), byte(0), "function" \
 		);
 
 		buildingGridKeyboard<Button::ButtonDragAndDrop, \
 			rowBracketsMain, columnBracketsMain>(
 			bracketsMain, this, window, \
+			fontSizeButtonKeyboard, \
 			byte(1), byte(0), "bracket" \
 		);
 
 		buildingGridKeyboard<Button::ButtonDragAndDrop, \
 			rowNumbersMain, columnNumbersMain>( \
 			numbersMain, this, window, \
+			fontSizeButtonKeyboard, \
 			byte(2), byte(0), "number" \
 		);
 
 		buildingGridKeyboard<Button::ButtonDragAndDrop, \
 			rowOperatorsMain, columnOperatorsMain>(
 			operatorsMain, this, window, \
+			fontSizeButtonKeyboard, \
 			byte(1), byte(3), "operator" \
 		);
 
 		buildingGridKeyboard<Button::ButtonDragAndDrop, \
 			rowConstsMain, columnConstsMain>(
 			constsMain, this, window, \
+			fontSizeButtonKeyboard, \
 			byte(5), byte(3), "const" \
 		);
 
 		buildingGridKeyboard<Button::ButtonDragAndDrop, \
 			rowEmptyMain, columnEmptyMain>(
 			emptyMain, this, window, \
+			fontSizeButtonKeyboard, \
 			byte(6), byte(0), "empty" \
 		);
 
 		Button::ButtonDrag *resultButton {\
 			new Button::ButtonDrag { \
 				window->getResult(BASIC, 0), \
-				window, nullptr, "number" \
+				window, nullptr, 
+				fontSizeButtonKeyboard, "number" \
 			}
 		};
 		window->setResultButton(resultButton);
@@ -106,7 +115,7 @@ namespace Grid {
 		Window::Window *window, MODS mod \
 	) : QGridLayout() {
 		setSpacing(12);
-		setContentsMargins(10, 0, 10, 0);
+		setContentsMargins(0, 0, 0, 0);
 		CreateHistori::HistoriScroll *localHistori \
 			{new CreateHistori::HistoriScroll{ \
 				"Local histori", window}};
@@ -131,8 +140,8 @@ namespace Grid {
 		Window::Window *window, MODS mod \
 	) : GridBaseCalc(window, mod) {
 		addWidget( \
-			new Button::ButtonBase{ \
-				"a = ", window \
+			new Label::Label{ \
+				"a = ", fontSizeLabelCalc \
 			}, 1, 0, 1, 1 \
 		);
 		LineEdit::LineEdit *aLineEdit \
@@ -140,8 +149,8 @@ namespace Grid {
 		window->setLineEdit(aLineEdit, mod, byte(0));
 		addWidget(aLineEdit, 1, 1, 1, 2);
 		addWidget( \
-			new Button::ButtonBase{ \
-				"b = ", window \
+			new Label::Label{ \
+				"b = ", fontSizeLabelCalc \
 			}, 1, 3, 1, 1 \
 		);
 		LineEdit::LineEdit *bLineEdit \
@@ -157,8 +166,8 @@ namespace Grid {
 		Window::Window *window, MODS mod \
 	) : GridBaseCalc{window, mod} {
 		addWidget( \
-			new Button::ButtonBase{ \
-				"with =", window \
+			new Label::Label{ \
+				"with =", fontSizeLabelCalc \
 			}, 1, 0, 1, 1 \
 		);
 		LineEdit::LineEdit *withLineEdit = \
@@ -166,8 +175,8 @@ namespace Grid {
 		window->setLineEdit(withLineEdit, mod, byte(0));
 		addWidget(withLineEdit, 1, 1, 1, 2);
 		addWidget( \
-			new Button::ButtonBase( \
-				"on =", window \
+			new Label::Label( \
+				"on =", fontSizeLabelCalc \
 			), 1, 3, 1, 1 \
 		);
 		LineEdit::LineEdit *onLineEdit \

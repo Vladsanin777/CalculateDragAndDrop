@@ -17,54 +17,63 @@ namespace TabWidget {
 			new Grid::GridCalculateKeyboard< \
 				Button::ButtonDrag, rowDigits10, \
 				columnDigits10>{ \
-				digits10, window, "number" \
+				digits10, window, fontSizeButtonKeyboardExstra, \
+				"number" \
 			} \
 		}, "digits 10");
 		addTab(new TabQWidget{ \
 			new Grid::GridCalculateKeyboard< \
 				Button::ButtonDrag, rowDigits16, \
 				columnDigits16>{ \
-				digits16, window, "number" \
+				digits16, window, fontSizeButtonKeyboardExstra, \
+				"number" \
 			} \
 		}, "digits 16");
 		addTab(new TabQWidget{ \
 			new Grid::GridCalculateKeyboard< \
 				Button::ButtonDrag, rowOperators1, \
 				columnOperators1>{ \
-				operators1, window, "operator" \
+				operators1, window, fontSizeButtonKeyboardExstra, \
+				"operator" \
 			} \
 		}, "operators 1");
 		addTab(new TabQWidget{ \
 			new Grid::GridCalculateKeyboard< \
 				Button::ButtonDrag, rowOperators2, \
 				columnOperators2>{ \
-				operators2, window, "operator" \
+				operators2, window, fontSizeButtonKeyboardExstra, \
+				"operator" \
 			} \
 		}, "operators 2");
 		addTab(new TabQWidget{ \
 			new Grid::GridCalculateKeyboard< \
 				Button::ButtonDrag, rowBrackets, \
 				columnBrackets>{ \
-				brackets, window, "bracket" \
+				brackets, window, fontSizeButtonKeyboardExstra, \
+				"bracket" \
 			} \
 		}, "brackets");
 		addTab(new TabQWidget{ \
 			new Grid::GridCalculateKeyboard< \
 				Button::ButtonDrag, rowBraces, columnBraces>{ \
-				braces, window, "bracket" \
+				braces, window, fontSizeButtonKeyboardExstra, \
+				"bracket" \
 			} \
 		}, "braces");
 		addTab(new TabQWidget{ \
 			new Grid::GridCalculateKeyboard< \
 				Button::ButtonDrag, rowConsts, columnConsts>{ \
-				consts, window, "const" \
+				consts, window, fontSizeButtonKeyboardExstra, \
+				"const" \
 			} \
 		}, "consts");
 		addTab(new TabQWidget{ \
 			new Grid::GridCalculateKeyboard< \
 				Button::ButtonDrag, rowTrigonometricFuncs, \
 				columnTrigonometricFuncs>{ \
-				trigonometricFuncs, window, "operator" \
+				trigonometricFuncs, window, \
+				fontSizeButtonKeyboardExstra, \
+				"operator" \
 			} \
 		}, "trigonometric functions");
 		addTab(new TabQWidget{ \
@@ -73,21 +82,24 @@ namespace TabWidget {
 				rowInverseTrigonometricFuncs, \
 				columnInverseTrigonometricFuncs>{
 				inverseTrigonometricFuncs, \
-				window, "operator" \
+				window, fontSizeButtonKeyboardExstra, \
+				"operator" \
 			} \
 		}, "inverse trigonometric functions");
 		addTab(new TabQWidget{ \
 			new Grid::GridCalculateKeyboard< \
 				Button::ButtonDrag, rowPrefixes, \
 				columnPrefixes>{ \
-				prefixes, window, "prefix" \
+				prefixes, window, fontSizeButtonKeyboardExstra, \
+				"prefix" \
 			} \
 		}, "prefix");
 		addTab(new TabQWidget{ \
 			new Grid::GridCalculateKeyboard< \
 				Button::ButtonDrag, rowFunctions, \
 				columnFunctions>{ \
-				functions, window, "function" \
+				functions, window, fontSizeButtonKeyboardExstra, \
+				"function" \
 			} \
 		}, "functions");
 		tabBar()->setElideMode(Qt::ElideNone);

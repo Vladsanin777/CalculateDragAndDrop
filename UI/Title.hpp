@@ -7,9 +7,8 @@ namespace Title {
 		Application::CalculateDragAndDrop *app, \
 		Window::Window *window \
 	) noexcept : QHBoxLayout{} {
-		setContentsMargins(10, 10, 10, 10);
 		setSpacing(10);
-		puts("op");
+		setContentsMargins(0, 0, 0, 0);
 
 		addWidget( \
 			new Button::ButtonBase{ \
@@ -17,7 +16,7 @@ namespace Title {
 				new std::function<void(QPushButton *)> {
 					std::bind(&LogicButton::visibleSetting, \
 						window, std::placeholders::_1) \
-				}, "basic" \
+				}, fontSizeTitleButton, "basic" \
 			}
 		);
 		Button::ButtonBase * buttonNew {
@@ -26,7 +25,7 @@ namespace Title {
 				new std::function<void(void)> { \
 					std::bind( \
 						&LogicButton::createWindow, app) \
-				}, "basic"}};
+				}, fontSizeTitleButton, "basic"}};
 		buttonNew->setShortcut(QKeySequence("Ctrl+Shift+N"));
 		addWidget(buttonNew);
 		return;

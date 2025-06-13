@@ -53,15 +53,11 @@ namespace Application {
 				color: white;
 				margin: 0;
 			}
-			#hide {
-				margin: 0 10px 10px 10px;
-			}
 			QPushButton {
 				color: white;
 				border-radius: 10px;
 				padding: 4px;
 				border: 1px solid rgba(255, 255, 255, 0.5);
-				font-size: 20px;
 				text-align: start;
 			}
 			QGridLayout {
