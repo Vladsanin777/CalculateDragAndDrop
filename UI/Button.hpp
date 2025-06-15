@@ -237,7 +237,7 @@ namespace Button {
 		QPushButton::dropEvent(event);
 		const char * text { \
 			event->mimeData()->text().toUtf8().constData()}, \
-			* cssName {nullptr};
+		RGBS *rgbs {nullptr};
 		setText(text);
 		if (isEmpty(text)) cssName = "empty";
 		else if (isNumber(text)) cssName = "number";

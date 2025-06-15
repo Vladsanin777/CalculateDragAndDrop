@@ -3,6 +3,21 @@
 #include <functional>
 
 namespace RGB {
+    inline RGB(byte red, byte green, \
+        byte blue) noexcept : _red{red}, \
+        _green{green}, _blue{blue} {return;}
+    inline void set(byte red, byte green, \
+        byte blue) noexcept {
+        _red = red, _green = green, _blue = blue;
+        if (_func) _func(red, green, blue);
+        return;
+    }
+    inline void setFunc( \
+        std::function<void(byte, byte, byte)> func \
+    ) noexcept { _func = func; return; }
+    inline byte red(void) const noexcept {return _red;}
+    inline byte green(void) const noexcept {return _green;}
+    inline byte blue(void) const noexcept {return _blue;}
     inline Slider::Slider(byte number, \
         std::function<void(void)> func, \
         Channel *parent) noexcept : \

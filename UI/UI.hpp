@@ -171,6 +171,7 @@ const char * const emptyMain[rowEmptyMain] \
 
 namespace RGB {
 	class RGB;
+	class RGBS;
 	class Slider;
 	class Channel;
 	class Color;
@@ -241,26 +242,28 @@ namespace MainWidget {
 namespace RGB {
 	class RGB {
 	private:
-		byte _red{byte(0)}, \
-		_green{byte(0)}, _blue{byte(0)};
+		byte _red{byte(0)}, _green{byte(0)}, \
+			_blue{byte(0)}, _alpha{byte{0}};
 		std::function<void(byte, byte, byte)> _func;
 	public:
-		inline explicit RGB(byte red, \
-			byte green, byte blue) noexcept : \
-			_red{red}, _green{green}, _blue{blue} {}
-		inline void set(byte red, byte green, byte blue) {
-			_red = red, _green = green, _blue = blue;
-			if (_func) _func(red, green, blue);
-		}
+		inline explicit RGB(byte red, byte green, \
+			byte blue, byte alpha) noexcept;
+		inline void set(byte red, byte green, \
+			byte blue, byte alpha) noexcept;
 		inline void setFunc( \
 			std::function<void(byte, byte, byte)> func \
-		) {
-			_func = func;
-		}
-		inline byte red(void) const {return _red;}
-		inline byte green(void) const {return _green;}
-		inline byte blue(void) const {return _blue;}
+		) noexcept;
+		inline byte red(void) const noexcept;
+		inline byte green(void) const noexcept;
+		inline byte blue(void) const noexcept;
 	};
+	class RGBS {
+	private:
+		std::vector<std::pair<double, RGB>> rgbs {};
+		
+		inline explicit RGBS( \
+			size_t count, ...)
+	}
 	class Slider : public QSlider {
 	public:
 		inline explicit Slider(byte number, \
