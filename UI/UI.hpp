@@ -240,30 +240,45 @@ namespace MainWidget {
 	class MainWidget;
 }
 namespace RGB {
-	class RGB {
+	class RGBA {
 	private:
 		byte _red{byte(0)}, _green{byte(0)}, \
 			_blue{byte(0)}, _alpha{byte{0}};
-		std::function<void(byte, byte, byte)> _func;
+		//std::function<void(byte, byte, byte)> _func;
 	public:
-		inline explicit RGB(byte red, byte green, \
+		inline explicit RGBA(byte red, byte green, \
 			byte blue, byte alpha) noexcept;
 		inline void set(byte red, byte green, \
 			byte blue, byte alpha) noexcept;
-		inline void setFunc( \
+		
+		//inline void setFunc( \
 			std::function<void(byte, byte, byte)> func \
 		) noexcept;
 		inline byte red(void) const noexcept;
 		inline byte green(void) const noexcept;
 		inline byte blue(void) const noexcept;
+		inline byte alpha(void) const noexcept;
 	};
-	class RGBS {
+	class PRGBA : public RGBA {
 	private:
-		std::vector<std::pair<double, RGB>> rgbs {};
-		
-		inline explicit RGBS( \
-			size_t count, ...)
-	}
+		double _pointer {0.0};
+	public:
+		inline explicit PRGBA(double pointer, \
+			byte red, byte green, \
+			byte blue, byte alpha) noexcept;
+		inline byte pointer(void) const noexcept;
+	};
+
+	class PRGBAS {
+	private:
+		std::vector<PRGBA> _drgbas {};
+	public:
+		inline explicit PRGBAS( \
+			const std::vector<PRGBA> drgbas \
+		) noexcept;
+		PRGBA &operator[]( \
+			size_t index) noexcept;
+	};
 	class Slider : public QSlider {
 	public:
 		inline explicit Slider(byte number, \

@@ -3,21 +3,37 @@
 #include <functional>
 
 namespace RGB {
-    inline RGB(byte red, byte green, \
+    inline RGBA::RGBA(byte red, byte green, \
         byte blue) noexcept : _red{red}, \
         _green{green}, _blue{blue} {return;}
-    inline void set(byte red, byte green, \
+    inline void RGBA::set(byte red, byte green, \
         byte blue) noexcept {
         _red = red, _green = green, _blue = blue;
         if (_func) _func(red, green, blue);
         return;
     }
-    inline void setFunc( \
+    inline void RGBA::setFunc( \
         std::function<void(byte, byte, byte)> func \
     ) noexcept { _func = func; return; }
-    inline byte red(void) const noexcept {return _red;}
-    inline byte green(void) const noexcept {return _green;}
-    inline byte blue(void) const noexcept {return _blue;}
+    inline byte RGBA::red(void) const noexcept {return _red;}
+    inline byte RGBA::green(void) const noexcept {return _green;}
+    inline byte RGBA::blue(void) const noexcept {return _blue;}
+    inline byte RGBA::alpha(void) const noexcept {return _alpha;}
+
+    inline PRGBA::PRGBA(double pointer, \
+        byte red, byte green, \
+        byte blue, byte alpha) noexcept : \
+        _pointer{pointer}, \
+        RGBA{red, green, blue, alpha} {}
+    inline PRGBA::pointer(void) const noexcept {return _pointer;}
+
+    inline PRGBAS::PRGBAS( \
+        const std::vector<PRGBA> prgbas \
+    ) noexcept : _prgbas{prgbas} {return;}
+
+    PRGBA &PRGBAS::operator[]( \
+        size_t index) noexcept {return _rgbs[index];}
+
     inline Slider::Slider(byte number, \
         std::function<void(void)> func, \
         Channel *parent) noexcept : \
