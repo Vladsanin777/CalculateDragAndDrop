@@ -297,8 +297,8 @@ namespace RGB {
 	};
 	class Color : public QBoxLayout {
 	private:
-		Channel * _redC{nullptr}, *_greenC{nullptr}, \
-		*_blueC{nullptr};
+		Channel * _redCh{nullptr}, *_greenCh{nullptr}, \
+		*_blueCh{nullptr};
 		Slider * _red{nullptr}, * _green{nullptr}, \
 		* _blue{nullptr};
 	public:
@@ -322,6 +322,11 @@ namespace RGB {
 	public:
 		inline explicit Gradient(Window::Window *window) noexcept;
 		inline void applyGradient(void) noexcept;
+	};
+}
+namespace SelectColor {
+	class Dialog : public QDialog {
+
 	};
 }
 namespace Application {
