@@ -10,6 +10,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <functional>
+#include <iostream>
 #include "colorpicker.cpp"
 
 int main(int argc, char *argv[]) {

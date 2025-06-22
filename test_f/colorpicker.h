@@ -14,6 +14,7 @@ public:
     
     void setColorChangedCallback(std::function<void(qreal, qreal)> callback);
 
+    QColor getCurrentColor() const;
 protected:
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
@@ -27,6 +28,7 @@ private:
     qreal baseHue = 0.0;     // Основной цвет (устанавливается слайдером)
     qreal saturation = 1.0;  // Насыщенность (X-координата в области)
     qreal value = 1.0;       // Яркость (Y-координата в области)
+    AlphaSlider * alphaSlider {nullptr};
     QImage background;
     bool backgroundDirty = true;
     std::function<void(qreal, qreal)> colorChangedCallback;
@@ -38,16 +40,16 @@ public:
     explicit ColorPicker(QWidget *parent = nullptr);
     QColor color() const;
     void setColorChangedCallback(std::function<void(const QColor&)> callback);
-
+    void updateAlphaSliderColor();
 private:
     void handleHueChanged(int hueValue);
     void handleAreaChanged(qreal sat, qreal val);
     void handleAlphaChanged(int alphaValue);
     void updateColor();
 
-    QSlider *hueSlider;      // Вертикальный слайдер для цвета (Hue)
+    HueSlider *hueSlider;      // Вертикальный слайдер для цвета (Hue)
     ColorArea2D *colorArea;  // 2D-область для насыщенности и яркости
-    QSlider *alphaSlider;    // Вертикальный слайдер для прозрачности
+    AlphaSlider *alphaSlider;    // Вертикальный слайдер для прозрачности
     QColor currentColor;
     std::function<void(const QColor&)> colorChangedCallback;
 };

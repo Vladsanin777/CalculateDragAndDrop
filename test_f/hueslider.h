@@ -3,7 +3,9 @@
 
 class HueSlider : public QSlider {
 public:
-    explicit HueSlider(QWidget *parent = nullptr);
+    explicit HueSlider(int beginValue, \
+        int endValue, int defaultValue, \
+        QWidget *parent = nullptr);
     
     void updateGradient();
     
@@ -16,5 +18,5 @@ protected:
 private:
     QImage gradientImage;
     bool gradientDirty = true;
-    const int handleHeight = 4; // Высота белого прямоугольника-ползунка
+    const int handleHeight = 7; // Высота белого прямоугольника-ползунка
 };

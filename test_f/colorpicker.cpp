@@ -1,5 +1,5 @@
-#include "hueslider.h"
 #include "hueslider.cpp"
+#include "alphaslider.cpp"
 #include "colorpicker.h"
 
 // ColorArea2D implementation (без изменений)
@@ -22,6 +22,12 @@ void ColorArea2D::setSaturationValue(qreal sat, qreal val) {
 
 void ColorArea2D::setColorChangedCallback(std::function<void(qreal, qreal)> callback) {
     colorChangedCallback = callback;
+}
+
+QColor ColorArea2D::getCurrentColor() const {
+    QColor color;
+    color.setHsvF(baseHue, saturation, value);
+    return color;
 }
 
 void ColorArea2D::paintEvent(QPaintEvent *) {
@@ -88,34 +94,26 @@ ColorPicker::ColorPicker(QWidget *parent)
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
     mainLayout->setSpacing(15);
     
-    // Создаем кастомный слайдер для Hue
-    QVBoxLayout *hueLayout = new QVBoxLayout;
-    QLabel *hueLabel = new QLabel("H");
-    hueSlider = new HueSlider;
-    hueSlider->setRange(0, 359);
-    hueSlider->setValue(0);
-    hueLayout->addWidget(hueLabel);
-    hueLayout->addWidget(hueSlider, 1);
-    mainLayout->addLayout(hueLayout);
+
     
     // Создаем 2D область для Saturation/Value
     colorArea = new ColorArea2D;
     mainLayout->addWidget(colorArea, 3);
     
     // Создаем вертикальный слайдер для Alpha
-    QVBoxLayout *alphaLayout = new QVBoxLayout;
-    QLabel *alphaLabel = new QLabel("A");
-    alphaSlider = new QSlider(Qt::Vertical);
-    alphaSlider->setRange(0, 100);
-    alphaSlider->setValue(100);
-    alphaLayout->addWidget(alphaLabel);
-    alphaLayout->addWidget(alphaSlider, 1);
-    mainLayout->addLayout(alphaLayout);
-    
+    alphaSlider = new AlphaSlider(0, 100, 100);
+    mainLayout->addWidget(alphaSlider);
+
+    // Создаем кастомный слайдер для Hue
+    hueSlider = new HueSlider(0, 359, 0);
+    mainLayout->addWidget(hueSlider);   
+
     // Начальные значения
     colorArea->setBaseHue(0.0);
     colorArea->setSaturationValue(1.0, 1.0);
     
+    updateAlphaSliderColor();
+
     // Подключаем обработчики изменений
     QObject::connect(hueSlider, &HueSlider::valueChanged, 
                      [this](int value) { handleHueChanged(value); });
@@ -135,6 +133,13 @@ QColor ColorPicker::color() const {
 
 void ColorPicker::setColorChangedCallback(std::function<void(const QColor&)> callback) {
     colorChangedCallback = callback;
+}
+
+// Новый метод для обновления цвета в альфа-слайдере
+void ColorPicker::updateAlphaSliderColor() {
+    // Берем текущий цвет из 2D-области (без альфа)
+    QColor baseColor = colorArea->getCurrentColor();
+    alphaSlider->setBaseColor(baseColor);
 }
 
 void ColorPicker::handleHueChanged(int hueValue) {
