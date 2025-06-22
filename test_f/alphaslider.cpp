@@ -11,9 +11,7 @@ AlphaSlider::AlphaSlider(int beginValue, \
 
 void AlphaSlider::setBaseColor(const QColor &color) {
     // Обновляем только если цвет действительно изменился
-    std::cout << "okl" << std::endl;
     if (baseColor != color) {
-        std::cout << "kl" << std::endl;
         baseColor = color;
         backgroundDirty = true;
         update();

@@ -12,6 +12,10 @@ void ColorArea2D::setBaseHue(qreal hue) {
     baseHue = qBound(0.0, hue, 1.0);
     backgroundDirty = true;
     update();
+
+    if (colorChangedCallback) {
+        colorChangedCallback(hue, saturation, value);
+    }
 }
 
 void ColorArea2D::setSaturationValue(qreal sat, qreal val) {
@@ -20,7 +24,7 @@ void ColorArea2D::setSaturationValue(qreal sat, qreal val) {
     update();
 }
 
-void ColorArea2D::setColorChangedCallback(std::function<void(qreal, qreal)> callback) {
+void ColorArea2D::setColorChangedCallback(std::function<void(qreal, qreal, qreal)> callback) {
     colorChangedCallback = callback;
 }
 
@@ -84,7 +88,7 @@ void ColorArea2D::selectColorAt(const QPoint &pos) {
     setSaturationValue(sat, val);
     
     if (colorChangedCallback) {
-        colorChangedCallback(sat, val);
+        colorChangedCallback(baseHue, sat, val);
     }
 }
 
@@ -105,7 +109,7 @@ ColorPicker::ColorPicker(QWidget *parent)
     mainLayout->addWidget(alphaSlider);
 
     // Создаем кастомный слайдер для Hue
-    hueSlider = new HueSlider(0, 359, 0);
+    hueSlider = new HueSlider(0, 359, 359);
     mainLayout->addWidget(hueSlider);   
 
     // Начальные значения
@@ -119,7 +123,7 @@ ColorPicker::ColorPicker(QWidget *parent)
                      [this](int value) { handleHueChanged(value); });
     
     colorArea->setColorChangedCallback(
-        [this](qreal s, qreal v) { handleAreaChanged(s, v); });
+        [this](qreal h, qreal s, qreal v) { handleAreaChanged(h, s, v); });
     
     QObject::connect(alphaSlider, &QSlider::valueChanged,
                      [this](int value) { handleAlphaChanged(value); });
@@ -148,7 +152,8 @@ void ColorPicker::handleHueChanged(int hueValue) {
     updateColor();
 }
 
-void ColorPicker::handleAreaChanged(qreal sat, qreal val) {
+void ColorPicker::handleAreaChanged(qreal hue, qreal sat, qreal val) {
+    alphaSlider->setBaseColor(QColor::fromHsvF(hue, sat, val));
     updateColor();
 }
 

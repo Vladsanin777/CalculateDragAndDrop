@@ -8,11 +8,11 @@ public:
     explicit ColorArea2D(QWidget *parent = nullptr);
     void setBaseHue(qreal hue);
     void setSaturationValue(qreal sat, qreal val);
-    
+    qreal getBaseHue() const { return baseHue; };
     qreal getSaturation() const { return saturation; }
     qreal getValue() const { return value; }
     
-    void setColorChangedCallback(std::function<void(qreal, qreal)> callback);
+    void setColorChangedCallback(std::function<void(qreal, qreal, qreal)> callback);
 
     QColor getCurrentColor() const;
 protected:
@@ -28,10 +28,9 @@ private:
     qreal baseHue = 0.0;     // Основной цвет (устанавливается слайдером)
     qreal saturation = 1.0;  // Насыщенность (X-координата в области)
     qreal value = 1.0;       // Яркость (Y-координата в области)
-    AlphaSlider * alphaSlider {nullptr};
     QImage background;
     bool backgroundDirty = true;
-    std::function<void(qreal, qreal)> colorChangedCallback;
+    std::function<void(qreal, qreal, qreal)> colorChangedCallback;
 };
 
 
@@ -43,7 +42,7 @@ public:
     void updateAlphaSliderColor();
 private:
     void handleHueChanged(int hueValue);
-    void handleAreaChanged(qreal sat, qreal val);
+    void handleAreaChanged(qreal hue, qreal sat, qreal val);
     void handleAlphaChanged(int alphaValue);
     void updateColor();
 
