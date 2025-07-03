@@ -1,15 +1,18 @@
+#pragma once
+
 #include "gradient_strip.h"
 #include <QPainter>
 #include <QMouseEvent>
 #include <algorithm>
 
-const int STRIP_HEIGHT = 30;
-const int HANDLE_SIZE = 12;
-const int HANDLE_RADIUS = 6;
+const int STRIP_HEIGHT = 24;  // Увеличена высота для размещения точек
+const int POINT_EXTRA = 3;    // Выступ точек сверху и снизу
+const int HANDLE_SIZE = 16;   // Размер квадратной части точки
+const int TOTAL_HEIGHT = STRIP_HEIGHT + 2 * POINT_EXTRA; // Общая высота с учетом выступа
 
 GradientStrip::GradientStrip(QWidget *parent) 
     : QWidget(parent), selectedIndex(-1), dragging(false) {
-    setMinimumHeight(50);
+    setMinimumHeight(TOTAL_HEIGHT);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     
     // Начальные точки
@@ -18,7 +21,7 @@ GradientStrip::GradientStrip(QWidget *parent)
 }
 
 QSize GradientStrip::sizeHint() const {
-    return QSize(300, STRIP_HEIGHT + HANDLE_SIZE + 5);
+    return QSize(300, TOTAL_HEIGHT);
 }
 
 QGradientStops GradientStrip::gradientStops() const {
@@ -66,28 +69,38 @@ void GradientStrip::paintEvent(QPaintEvent *) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     
-    // Отрисовка градиента
-    QLinearGradient grad(0, 0, width(), 0);
+    // Отрисовка градиента (с отступом для точек)
+    QLinearGradient grad(0, POINT_EXTRA, width(), POINT_EXTRA);
     for (const auto &stop : stops) {
         grad.setColorAt(stop.position, stop.color);
     }
     
-    painter.fillRect(0, 0, width(), STRIP_HEIGHT, grad);
+    // Рисуем полосу градиента с отступами сверху и снизу
+    painter.fillRect(0, POINT_EXTRA, width(), STRIP_HEIGHT, grad);
     
-    // Отрисовка контрольных точек
+    // Отрисовка контрольных точек по центру градиента
     for (size_t i = 0; i < stops.size(); ++i) {
         const auto &stop = stops[i];
-        int x = stop.position * width();
-        int y = STRIP_HEIGHT + HANDLE_SIZE / 2;
+        int x = stop.position * width() - HANDLE_SIZE / 2;
+        int y = TOTAL_HEIGHT / 2 - HANDLE_SIZE / 2;
         
-        QRect rect = stopRect(static_cast<int>(i));
+        QRect rect(x, y, HANDLE_SIZE, HANDLE_SIZE);
         
         // Выбор формы
         if (stop.isEndPoint) {
+            // Прямоугольник с выступами
+            QRect extendedRect(
+                x - POINT_EXTRA, 
+                y - POINT_EXTRA, 
+                HANDLE_SIZE + 2 * POINT_EXTRA, 
+                HANDLE_SIZE + 2 * POINT_EXTRA
+            );
+            
             painter.setBrush(stop.color);
             painter.setPen(stop.isSelected ? Qt::white : Qt::black);
-            painter.drawRect(rect);
+            painter.drawRect(extendedRect);
         } else {
+            // Круг
             painter.setBrush(stop.color);
             painter.setPen(stop.isSelected ? Qt::white : Qt::black);
             painter.drawEllipse(rect);
@@ -99,8 +112,21 @@ QRect GradientStrip::stopRect(int index) const {
     if (index < 0 || index >= static_cast<int>(stops.size())) 
         return QRect();
     
-    int x = stops[index].position * width() - HANDLE_SIZE / 2;
-    int y = STRIP_HEIGHT;
+    const auto& stop = stops[index];
+    int x = stop.position * width() - HANDLE_SIZE / 2;
+    int y = TOTAL_HEIGHT / 2 - HANDLE_SIZE / 2;
+    
+    if (stop.isEndPoint) {
+        // Прямоугольник с выступами
+        return QRect(
+            x - POINT_EXTRA, 
+            y - POINT_EXTRA, 
+            HANDLE_SIZE + 2 * POINT_EXTRA, 
+            HANDLE_SIZE + 2 * POINT_EXTRA
+        );
+    }
+    
+    // Круг
     return QRect(x, y, HANDLE_SIZE, HANDLE_SIZE);
 }
 

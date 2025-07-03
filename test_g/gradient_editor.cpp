@@ -1,5 +1,6 @@
+#pragma once
 #include "gradient_editor.h"
-#include "gradient_strip.h"
+#include "gradient_strip.cpp"
 #include "../test_f/colorpicker.cpp"
 #include <QComboBox>
 #include <QDoubleSpinBox>
@@ -33,6 +34,7 @@ GradientEditor::GradientEditor(QWidget *parent)
     gradientStrip->setStopsChangedCallback([this] {
         updateGradient();
     });
+    show();
 }
 
 void GradientEditor::setGradientChangedCallback(GradientChangedCallback callback) {
@@ -45,15 +47,17 @@ void GradientEditor::setupUI() {
     // Тип градиента
     typeCombo = new QComboBox(this);
     typeCombo->addItem(QObject::tr("Линейный"), QGradient::LinearGradient);
+    typeCombo->addItem(QObject::tr("Радиальный"), QGradient::RadialGradient);
     layout->addWidget(new QLabel(QObject::tr("Тип:")), 0, 0);
     layout->addWidget(typeCombo, 0, 1);
     
-    // Угол
+    // Угол (сохраняем указатель на метку)
+    angleLabel = new QLabel(QObject::tr("Угол:"), this);  // Сохраняем в angleLabel
     angleSpin = new QDoubleSpinBox(this);
     angleSpin->setRange(0, 360);
     angleSpin->setValue(90);
     angleSpin->setSuffix("°");
-    layout->addWidget(new QLabel(QObject::tr("Угол:")), 0, 2);
+    layout->addWidget(angleLabel, 0, 2);
     layout->addWidget(angleSpin, 0, 3);
     
     // Предпросмотр
@@ -91,18 +95,30 @@ void GradientEditor::setupUI() {
     connect(addButton, &QPushButton::clicked, this, [this] { addStop(); });
     connect(removeButton, &QPushButton::clicked, this, [this] { removeStop(); });
     connect(typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, [this] { updateGradient(); });
+            this, [this] { 
+                // Показывать/скрывать угол для радиального градиента
+                bool isLinear = (typeCombo->currentData().toInt() == QGradient::LinearGradient);
+                angleSpin->setVisible(isLinear);
+                angleLabel->setVisible(isLinear);  // Используем сохраненный указатель
+                updateGradient(); 
+            });
     connect(angleSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, [this] { updateGradient(); });
     
     connect(colorButton, &QPushButton::clicked, this, [this] {
-        auto menu = new ColorPickerMenu(currentColor, this);
-        menu->setColorSelectedCallback([this](const QColor &color) {
-            updateColor(color);
+        auto menu = new ColorPicker(currentColor, this);
+        //menu->setColorSelectedCallback([this](const QColor &color) { \
+            updateColor(color); \
         });
-        menu->popup(colorButton->mapToGlobal(QPoint(0, colorButton->height())));
+        //menu->popup(colorButton->mapToGlobal(QPoint(0, colorButton->height())));
     });
+    
+    // Инициализация видимости угла
+    bool isLinear = (typeCombo->currentData().toInt() == QGradient::LinearGradient);
+    angleSpin->setVisible(isLinear);
+    angleLabel->setVisible(isLinear);
 }
+
 
 void GradientEditor::addStop() {
     int index = gradientStrip->selectedStop();
@@ -149,14 +165,59 @@ void GradientEditor::updateColor(const QColor &color) {
 }
 
 void GradientEditor::updateGradient() {
-    // Обновление предпросмотра
+    if (previewLabel->size().isEmpty()) return;
+    
     QPixmap pixmap(previewLabel->size());
     pixmap.fill(Qt::transparent);
     
     QPainter painter(&pixmap);
-    QLinearGradient grad(0, 0, pixmap.width(), 0);
-    grad.setStops(gradientStrip->gradientStops());
-    painter.fillRect(pixmap.rect(), grad);
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    auto type = static_cast<QGradient::Type>(typeCombo->currentData().toInt());
+    QGradientStops stops = gradientStrip->gradientStops();
+    
+    if (type == QGradient::LinearGradient) {
+        // Линейный градиент с углом
+        qreal angle = angleSpin->value();
+        qreal radians = qDegreesToRadians(angle);
+        
+        qreal dx = cos(radians);
+        qreal dy = sin(radians);
+        
+        int w = pixmap.width();
+        int h = pixmap.height();
+        QPointF center(w / 2.0, h / 2.0);
+        
+        qreal length = sqrt(w*w + h*h) / 2.0;
+        
+        QPointF start(center.x() - dx * length, center.y() - dy * length);
+        QPointF end(center.x() + dx * length, center.y() + dy * length);
+        
+        QLinearGradient grad(start, end);
+        grad.setStops(stops);
+        painter.fillRect(pixmap.rect(), grad);
+    }
+    else if (type == QGradient::RadialGradient) {
+        // Радиальный градиент
+        int w = pixmap.width();
+        int h = pixmap.height();
+        
+        // Центр градиента
+        QPointF center(w / 2.0, h / 2.0);
+        
+        // Радиус - половина минимального измерения
+        qreal radius = qMin(w, h) / 2.0;
+        
+        QRadialGradient grad(center, radius);
+        grad.setStops(stops);
+        painter.fillRect(pixmap.rect(), grad);
+    }
+    else {
+        // Запасной вариант
+        QLinearGradient grad(0, 0, pixmap.width(), 0);
+        grad.setStops(stops);
+        painter.fillRect(pixmap.rect(), grad);
+    }
     
     previewLabel->setPixmap(pixmap);
     if (gradientChangedCallback) gradientChangedCallback();

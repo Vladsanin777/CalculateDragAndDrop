@@ -40,7 +40,7 @@ private:
     QPushButton *removeButton;
     QPushButton *colorButton;
     QLabel *previewLabel;
-    
+    QLabel *angleLabel;
     QColor currentColor;
     GradientChangedCallback gradientChangedCallback;
 };
