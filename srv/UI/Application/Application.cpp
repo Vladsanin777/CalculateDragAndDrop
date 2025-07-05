@@ -1,6 +1,6 @@
 #pragma once
-#include "UI.hpp"
-#include "../Calculate/Calculate.hpp"
+#include "Application.hpp"
+#include "../../Calculate/Calculate.hpp"
 
 
 namespace Application {
@@ -69,7 +69,7 @@ namespace Application {
 			#central {
 				background: qradial-gradient(
 				cx:0.5, cy:0.5, radius: 0.5, fx:0.5, fy:0.5,
-				stop: 0 rgb(48, 116, 235), stop: 1 rgb(17, 61, 138));
+				stop: 0 rgb(48, 117, 235), stop: 1 rgb(17, 61, 138));
 			}
 			QTabWidget {
 				background: transparent;

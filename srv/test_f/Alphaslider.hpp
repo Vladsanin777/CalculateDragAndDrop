@@ -1,4 +1,5 @@
 #pragma once
+#include <QWidget>
 
 class AlphaSlider : public QSlider {
 public:

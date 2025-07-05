@@ -51,8 +51,8 @@ void GradientEditor::setupUI() {
     layout->addWidget(new QLabel(QObject::tr("Тип:")), 0, 0);
     layout->addWidget(typeCombo, 0, 1);
     
-    // Угол (сохраняем указатель на метку)
-    angleLabel = new QLabel(QObject::tr("Угол:"), this);  // Сохраняем в angleLabel
+    // Угол (для линейного градиента)
+    angleLabel = new QLabel(QObject::tr("Угол:"), this);
     angleSpin = new QDoubleSpinBox(this);
     angleSpin->setRange(0, 360);
     angleSpin->setValue(90);
@@ -60,9 +60,20 @@ void GradientEditor::setupUI() {
     layout->addWidget(angleLabel, 0, 2);
     layout->addWidget(angleSpin, 0, 3);
     
+    // Центр (для радиального градиента)
+    centerLabel = new QLabel(QObject::tr("Центр:"), this);
+    centerCombo = new QComboBox(this);
+    centerCombo->addItem(QObject::tr("центр"), "center");
+    centerCombo->addItem(QObject::tr("верх-лево"), "top-left");
+    centerCombo->addItem(QObject::tr("верх-право"), "top-right");
+    centerCombo->addItem(QObject::tr("низ-лево"), "bottom-left");
+    centerCombo->addItem(QObject::tr("низ-право"), "bottom-right");
+    layout->addWidget(centerLabel, 0, 2); // Та же позиция, что и angleLabel
+    layout->addWidget(centerCombo, 0, 3); // Та же позиция, что и angleSpin
+    
     // Предпросмотр
     previewLabel = new QLabel(this);
-    previewLabel->setMinimumSize(100, 20);
+    previewLabel->setMinimumSize(150, 150); // Увеличим для лучшего отображения
     layout->addWidget(new QLabel(QObject::tr("Предварительный просмотр:")), 0, 4);
     layout->addWidget(previewLabel, 0, 5);
     
@@ -96,13 +107,19 @@ void GradientEditor::setupUI() {
     connect(removeButton, &QPushButton::clicked, this, [this] { removeStop(); });
     connect(typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, [this] { 
-                // Показывать/скрывать угол для радиального градиента
                 bool isLinear = (typeCombo->currentData().toInt() == QGradient::LinearGradient);
+                
+                // Переключаем видимость настроек
+                angleLabel->setVisible(isLinear);
                 angleSpin->setVisible(isLinear);
-                angleLabel->setVisible(isLinear);  // Используем сохраненный указатель
+                centerLabel->setVisible(!isLinear);
+                centerCombo->setVisible(!isLinear);
+                
                 updateGradient(); 
             });
     connect(angleSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, [this] { updateGradient(); });
+    connect(centerCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, [this] { updateGradient(); });
     
     connect(colorButton, &QPushButton::clicked, this, [this] {
@@ -113,10 +130,12 @@ void GradientEditor::setupUI() {
         //menu->popup(colorButton->mapToGlobal(QPoint(0, colorButton->height())));
     });
     
-    // Инициализация видимости угла
+    // Инициализация видимости
     bool isLinear = (typeCombo->currentData().toInt() == QGradient::LinearGradient);
-    angleSpin->setVisible(isLinear);
     angleLabel->setVisible(isLinear);
+    angleSpin->setVisible(isLinear);
+    centerLabel->setVisible(!isLinear);
+    centerCombo->setVisible(!isLinear);
 }
 
 
@@ -198,17 +217,42 @@ void GradientEditor::updateGradient() {
         painter.fillRect(pixmap.rect(), grad);
     }
     else if (type == QGradient::RadialGradient) {
-        // Радиальный градиент
+        // Радиальный градиент с выбором центра
         int w = pixmap.width();
         int h = pixmap.height();
         
-        // Центр градиента
-        QPointF center(w / 2.0, h / 2.0);
+        // Определяем центр в зависимости от выбора
+        QPointF center;
+        QString centerType = centerCombo->currentData().toString();
         
-        // Радиус - половина минимального измерения
-        qreal radius = qMin(w, h) / 2.0;
+        if (centerType == "top-left") {
+            center = QPointF(0, 0);
+        } else if (centerType == "top-right") {
+            center = QPointF(w, 0);
+        } else if (centerType == "bottom-left") {
+            center = QPointF(0, h);
+        } else if (centerType == "bottom-right") {
+            center = QPointF(w, h);
+        } else { // "center"
+            center = QPointF(w / 2.0, h / 2.0);
+        }
         
-        QRadialGradient grad(center, radius);
+        // Рассчитываем максимальный радиус (до самого дальнего угла)
+        qreal maxRadius = 0;
+        QPointF corners[] = {
+            QPointF(0, 0),
+            QPointF(w, 0),
+            QPointF(0, h),
+            QPointF(w, h)
+        };
+        
+        for (const auto& corner : corners) {
+            qreal distance = QLineF(center, corner).length();
+            if (distance > maxRadius) maxRadius = distance;
+        }
+        
+        // Создаем радиальный градиент
+        QRadialGradient grad(center, maxRadius);
         grad.setStops(stops);
         painter.fillRect(pixmap.rect(), grad);
     }

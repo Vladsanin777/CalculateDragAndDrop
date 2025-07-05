@@ -1,6 +1,14 @@
 
-#pragma once
-#include "UI.hpp"
+#include "CreateHistory.hpp"
+#include "../Window/Window.cpp"
+
+namespace Window {
+	class Window;
+}
+
+namespace NewHistoriElement {
+	class LabelHistori;
+}
 
 namespace CreateHistori {
 	inline HistoriVBox::HistoriVBox( \

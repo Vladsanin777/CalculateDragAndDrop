@@ -170,12 +170,19 @@ void GradientStrip::mouseMoveEvent(QMouseEvent *event) {
         int dx = event->pos().x() - dragStartX;
         qreal newPos = dragStartPos + static_cast<qreal>(dx) / width();
         
-        // Ограничение позиции между соседними точками
-        newPos = qBound(
-            selectedIndex > 0 ? stops[selectedIndex-1].position + 0.01 : 0.0,
-            newPos,
-            selectedIndex < static_cast<int>(stops.size())-1 ? stops[selectedIndex+1].position - 0.01 : 1.0
-        );
+        // Убираем ограничения - можно перемещать по всей длине
+        newPos = qBound(0.0, newPos, 1.0);
+        
+        // Проверка на пересечение с другими точками
+        for (int i = 0; i < static_cast<int>(stops.size()); ++i) {
+            if (i != selectedIndex && qAbs(stops[i].position - newPos) < 0.01) {
+                // Небольшое смещение для визуального разделения
+                if (newPos > stops[i].position) newPos = stops[i].position + 0.01;
+                else newPos = stops[i].position - 0.01;
+                newPos = qBound(0.0, newPos, 1.0);
+                break;
+            }
+        }
         
         stops[selectedIndex].position = newPos;
         update();
@@ -183,6 +190,50 @@ void GradientStrip::mouseMoveEvent(QMouseEvent *event) {
     }
 }
 
+
 void GradientStrip::mouseReleaseEvent(QMouseEvent *) {
-    dragging = false;
+    if (dragging) {
+        dragging = false;
+        
+        // Пересортировка точек при отпускании
+        if (!stops.empty() && stops.size() > 2) {
+            // Сохраняем крайние точки
+            GradientStop firstStop = stops.front();
+            GradientStop lastStop = stops.back();
+            
+            // Копируем средние точки
+            std::vector<GradientStop> middleStops;
+            for (size_t i = 1; i < stops.size() - 1; ++i) {
+                middleStops.push_back(stops[i]);
+            }
+            
+            // Сортируем средние точки по позиции
+            std::sort(middleStops.begin(), middleStops.end(), 
+                [](const GradientStop& a, const GradientStop& b) {
+                    return a.position < b.position;
+                });
+            
+            // Собираем новый список
+            std::vector<GradientStop> newStops;
+            newStops.push_back(firstStop);
+            for (auto& stop : middleStops) {
+                newStops.push_back(stop);
+            }
+            newStops.push_back(lastStop);
+            
+            // Обновляем список
+            stops = newStops;
+            
+            // Обновляем выбранный индекс
+            for (int i = 0; i < static_cast<int>(stops.size()); ++i) {
+                if (stops[i].isSelected) {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+            
+            update();
+            if (stopsChangedCallback) stopsChangedCallback();
+        }
+    }
 }

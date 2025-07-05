@@ -35,12 +35,15 @@ private:
     GradientStrip *gradientStrip;
     QComboBox *typeCombo;
     QDoubleSpinBox *angleSpin;
+    QComboBox *centerCombo;
     QCheckBox *rotateCheck;
     QPushButton *addButton;
     QPushButton *removeButton;
     QPushButton *colorButton;
     QLabel *previewLabel;
     QLabel *angleLabel;
+    QLabel *centerLabel;
+
     QColor currentColor;
     GradientChangedCallback gradientChangedCallback;
 };

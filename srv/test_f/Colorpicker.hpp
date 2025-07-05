@@ -36,7 +36,7 @@ private:
 
 class ColorPicker : public QWidget {
 public:
-    explicit ColorPicker(QWidget *parent = nullptr);
+    explicit ColorPicker(QColor color, QWidget *parent = nullptr);
     QColor color() const;
     void setColorChangedCallback(std::function<void(const QColor&)> callback);
     void updateAlphaSliderColor();

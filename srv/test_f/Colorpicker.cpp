@@ -93,7 +93,7 @@ void ColorArea2D::selectColorAt(const QPoint &pos) {
 }
 
 // ColorPicker implementation (с изменениями для HueSlider)
-ColorPicker::ColorPicker(QWidget *parent) 
+ColorPicker::ColorPicker(QColor color, QWidget *parent) 
     : QWidget(parent), currentColor(Qt::red) {
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
     mainLayout->setSpacing(15);

@@ -1,3 +1,9 @@
-vgcore.*
-vgcore.*
-vgcore.4648
+.vscode
+*.o
+*.ko
+*.out
+*.d
+*.d.*
+CalculateDragAndDrop_autogen
+CMakeFiles
+.qt
