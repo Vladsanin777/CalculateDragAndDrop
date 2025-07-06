@@ -1,5 +1,6 @@
 #include <QVBoxLayout>
 #include <QWidget>
+#include "../Window/Window.cpp"
 
 namespace MainWidget {
 	class MainLayout : public QVBoxLayout {

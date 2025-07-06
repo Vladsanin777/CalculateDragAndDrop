@@ -1,5 +1,5 @@
 #pragma once
-#include "UI.hpp"
+#include "MainWidget.hpp"
 
 
 namespace MainWidget {
