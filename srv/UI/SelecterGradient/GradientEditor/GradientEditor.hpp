@@ -4,6 +4,17 @@
 #include <QGradient>
 #include <functional>
 #include <memory>
+#include "GradientStrip.cpp"
+#include "../../Selector/ColorPicker.cpp"
+#include <QComboBox>
+#include <QDoubleSpinBox>
+#include <QCheckBox>
+#include <QPushButton>
+#include <QLabel>
+#include <QGridLayout>
+#include <QLinearGradient>
+#include <QPainter>
+#include <QHBoxLayout>
 
 class QComboBox;
 class QDoubleSpinBox;

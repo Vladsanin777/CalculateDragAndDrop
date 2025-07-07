@@ -1,4 +1,4 @@
-#include "hueslider.h"
+#include "HueSlider.hpp"
 
 HueSlider::HueSlider(int beginValue, \
     int endValue, int defaultValue, QWidget *parent)

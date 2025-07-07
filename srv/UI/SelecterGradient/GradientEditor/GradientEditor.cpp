@@ -1,16 +1,6 @@
 #pragma once
 #include "gradient_editor.h"
-#include "gradient_strip.cpp"
-#include "../test_f/colorpicker.cpp"
-#include <QComboBox>
-#include <QDoubleSpinBox>
-#include <QCheckBox>
-#include <QPushButton>
-#include <QLabel>
-#include <QGridLayout>
-#include <QLinearGradient>
-#include <QPainter>
-#include <QHBoxLayout>
+
 
 GradientEditor::GradientEditor(QWidget *parent) 
     : QWidget(parent), currentColor(Qt::black) {

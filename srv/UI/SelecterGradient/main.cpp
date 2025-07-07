@@ -11,7 +11,7 @@
 #include <QLabel>
 #include <functional>
 #include <iostream>
-#include "gradient_editor.cpp"
+#include "GradientEditor/GradientEditor.cpp"
 
 
 int main(int argc, char *argv[]) {
