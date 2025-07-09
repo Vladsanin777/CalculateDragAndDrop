@@ -1,6 +1,6 @@
 #pragma once
 
-#include "UI.hpp"
+#include "Label.hpp"
 
 namespace Label {
     inline Label::Label( \

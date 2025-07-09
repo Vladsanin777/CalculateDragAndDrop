@@ -1,3 +1,16 @@
+#include <QLabel>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include "../Window/Window.cpp"
+
+namespace Window {
+	class Window;
+}
+
+class QLabel;
+class QHBoxLayout;
+class QVBoxLayout;
+
 namespace NewHistoriElement {
 	class LabelHistori : public QLabel {
 	private:

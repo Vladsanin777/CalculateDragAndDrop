@@ -1,3 +1,17 @@
+#include <QWidget>
+#include <QTabWidget>
+#include <QGridLayout>
+
+#include "../Window/Window.cpp"
+
+class QWidget;
+class QTabWidget;
+class QGridLayout;
+
+namespace Window {
+	class Window;
+}
+
 namespace TabWidget {
 	class TabQWidget : public QWidget {
 	public:

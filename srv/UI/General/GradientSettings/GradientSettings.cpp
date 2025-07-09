@@ -1,7 +1,4 @@
-#include "gradient_settings.h"
-#include <QLinearGradient>
-#include <QRadialGradient>
-#include <cmath>
+#include "GradientSettings.hpp"
 
 GradientSettings::GradientSettings() = default;
 

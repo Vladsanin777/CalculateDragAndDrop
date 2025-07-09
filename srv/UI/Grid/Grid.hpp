@@ -2,7 +2,7 @@
 #include <QGridLayout>
 #include <../Window/Window.cpp
 
-
+class QGridLayout;
 
 namespace Window {
     class Window;

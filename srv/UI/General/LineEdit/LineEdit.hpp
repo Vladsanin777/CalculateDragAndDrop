@@ -1,6 +1,12 @@
 #include <QLineEdit>
-#include "../Window/Window.cpp"
-#include "../GeneralUI.hpp"
+#include <QFocusEvent>
+#include <QString>
+
+#include "../../Window/Window.hpp"
+
+class QLineEdit;
+class QFocusEvent;
+class QString;
 
 namespace Window {
     class Window;

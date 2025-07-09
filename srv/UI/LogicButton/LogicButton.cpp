@@ -1,10 +1,6 @@
 
 #pragma once
-#include "UI.hpp"
-#include "../isNumber.hpp"
-#include "../replace.hpp"
-#include "../Calculate/Check.hpp"
-#include "../Calculate/Calculate.hpp"
+#include "LogicButton.hpp"
 
 
 namespace LogicButton {

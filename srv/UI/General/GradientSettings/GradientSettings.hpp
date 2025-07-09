@@ -1,9 +1,17 @@
 #pragma once
 
+#include <QLinearGradient>
+#include <QRadialGradient>
 #include <QString>
 #include <QColor>
 #include <vector>
 #include <utility>
+#include <cmath>
+
+class QLinearGradient;
+class QRadialGradient;
+class QString;
+class QColor;
 
 class GradientSettings {
 public:

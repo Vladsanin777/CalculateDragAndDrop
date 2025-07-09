@@ -1,6 +1,6 @@
 
 #pragma once
-#include "UI.hpp"
+#include "LineEdit.hpp"
 
 namespace LineEdit {
     inline LineEdit::LineEdit ( \

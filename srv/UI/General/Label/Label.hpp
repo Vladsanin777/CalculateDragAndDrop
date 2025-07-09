@@ -1,5 +1,7 @@
 #include <QLabel>
 
+class QLabel;
+
 namespace Label {
 	class Label : public QLabel {
 	public:

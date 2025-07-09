@@ -1,3 +1,27 @@
+#include <QGridLayout>
+#include <QWidget>
+#include <QScrollArea>
+#include <QEvent>
+#include <QObject>
+#include <QResizeEvent>
+#include <QDockWidget>
+#include <QPaintEvent>
+
+#include "../Window/Window.cpp"
+
+namespace Window {
+	class Window;
+}
+
+class QGridLayout;
+class QWidget;
+class QScrollArea;
+class QEvent;
+class QObject;
+class QResizeEvent;
+class QDockWidget;
+class QPaintEvent;
+
 namespace Setting {
 	class SettingGrid : public QGridLayout {
 	public:

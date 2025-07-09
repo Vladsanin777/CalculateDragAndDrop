@@ -1,3 +1,28 @@
+#include <QPushButton>
+
+#include "../Window/Window.cpp"
+#include "../Application/Application.cpp"
+
+#include "../../General/isNumber.hpp"
+#include "../../General/replace.hpp"
+#include "../../Calculate/Check.hpp"
+#include "../../Calculate/Calculate.hpp"
+
+namespace Widget {
+	class Widget;
+}
+
+namespace Application {
+	class CalculateDragAndDrop;
+}
+
+class QPushButton;
+
+extern void replace(char* &str, const char* const &oldStr, \
+	const char* const &newStr, const size_t count);
+
+extern bool isNumber(const char * str);
+
 namespace LogicButton {
 	class LogicCalculate {
 	private:

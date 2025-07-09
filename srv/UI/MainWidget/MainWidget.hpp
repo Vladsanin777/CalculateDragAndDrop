@@ -1,6 +1,18 @@
 #include <QVBoxLayout>
 #include <QWidget>
+
 #include "../Window/Window.cpp"
+#include "../Application/Application.cpp"
+
+namespace Window {
+	class Window;
+}
+namespace Application {
+	class CalculateDragAndDrop;
+}
+
+class QVBoxLayout;
+class QWidget;
 
 namespace MainWidget {
 	class MainLayout : public QVBoxLayout {

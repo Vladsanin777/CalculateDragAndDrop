@@ -1,6 +1,5 @@
 #pragma once
-#include <functional>
-#include "UI.hpp"
+#include "Setting.hpp"
 
 namespace Setting {
     inline SettingGrid::SettingGrid( \

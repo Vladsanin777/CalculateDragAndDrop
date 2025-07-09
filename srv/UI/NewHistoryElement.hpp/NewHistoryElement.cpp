@@ -1,6 +1,5 @@
-
 #pragma once
-#include "UI.hpp"
+#include "NewHistoryElement.hpp"
 
 namespace NewHistoriElement {
 	inline LabelHistori::LabelHistori( \

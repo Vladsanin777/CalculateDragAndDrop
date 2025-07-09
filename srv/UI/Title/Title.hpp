@@ -1,3 +1,19 @@
+#include <QWidget>
+#include <QHBoxLayout>
+#include "../Application/Application.cpp"
+#include "../Window/Window.cpp"
+
+namespace Application {
+	class CalculateDragAndDrop;
+}
+
+namespace Window {
+	class Window;
+}
+
+class QHBoxLayout;
+class QWidget;
+
 namespace Title {
 	class TitleLayout : public QHBoxLayout {
 	public:
