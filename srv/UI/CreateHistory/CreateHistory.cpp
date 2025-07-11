@@ -1,49 +1,39 @@
-
 #include "CreateHistory.hpp"
-#include "../Window/Window.cpp"
 
-namespace Window {
-	class Window;
-}
-
-namespace NewHistoriElement {
-	class LabelHistori;
-}
-
-namespace CreateHistori {
-	inline HistoriVBox::HistoriVBox( \
+namespace CreateHistory {
+	inline HistoryVBox::HistoryVBox( \
 		const char * label, Window::Window *window \
 	) : QVBoxLayout{} {
 		setSpacing(0);
 		setContentsMargins(0, 0, 0, 0);
-		setObjectName("histori");
-		addWidget(new NewHistoriElement::LabelHistori{ \
+		setObjectName("history");
+		addWidget(new NewHistoryElement::LabelHistory{ \
 			label, "basic", window});
 	}
 
-	inline HistoriWidget::HistoriWidget( \
+	inline HistoryWidget::HistoryWidget( \
 		const char * label, Window::Window * window \
 	) : QWidget() {
-		setObjectName("histori");
-		setLayout(_addHistori = \
-			new HistoriVBox{label, window});
+		setObjectName("history");
+		setLayout(_addHistory = \
+			new HistoryVBox{label, window});
 		setContentsMargins(0, 0, 0, 0);
 	}
-	inline HistoriVBox *HistoriWidget::getAddHistori(void) {
-		return _addHistori;
+	inline HistoryVBox *HistoryWidget::getAddHistory(void) {
+		return _addHistory;
 	}
 
-	inline HistoriScroll::HistoriScroll( \
+	inline HistoryScroll::HistoryScroll( \
 		const char * label, Window::Window * window \
 	) : QScrollArea() {
 		setHorizontalScrollBarPolicy( \
 				Qt::ScrollBarPolicy::ScrollBarAlwaysOff \
 		);
-		setObjectName("histori");
+		setObjectName("history");
 		setWidgetResizable(true);
-		setWidget(_resizeHistori = \
-			new HistoriWidget{label, window});
+		setWidget(_resizeHistory = \
+			new HistoryWidget{label, window});
 	}
-	inline HistoriWidget *HistoriScroll::getResizeHistori( \
-		void) {return _resizeHistori;}
+	inline HistoryWidget *HistoryScroll::getResizeHistory( \
+		void) {return _resizeHistory;}
 }

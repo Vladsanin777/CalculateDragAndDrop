@@ -1,6 +1,7 @@
 #include <QLabel>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+
 #include "../Window/Window.cpp"
 
 namespace Window {
@@ -11,17 +12,25 @@ class QLabel;
 class QHBoxLayout;
 class QVBoxLayout;
 
-namespace NewHistoriElement {
-	class LabelHistori : public QLabel {
+namespace NewHistoryElement {
+	class LabelHistory;
+	class BaseBoxHistoryElement;
+	class BasicBoxHistoryElement;
+	class SubCustomBoxHistoryElement;
+	class CustomBoxHistoryElement;
+}
+
+namespace NewHistoryElement {
+	class LabelHistory : public QLabel {
 	private:
 		Window::Window *_window {nullptr};
 		const char *_callback {nullptr};
 	public:
-		explicit inline LabelHistori( \
+		explicit inline LabelHistory( \
 			const char* label, const char *cssName, \
 			Window::Window *window \
 		);
-		explicit inline LabelHistori( \
+		explicit inline LabelHistory( \
 			const char* label, const char *cssName, \
 			Window::Window *window, const char *customCallback \
 		);
@@ -29,33 +38,33 @@ namespace NewHistoriElement {
 		inline void mousePressEvent(QMouseEvent* event \
 		) noexcept override;
 	private:
-		~LabelHistori(void);
+		~LabelHistory(void);
 	};
-	class BaseBoxHistoriElement : public QHBoxLayout {
+	class BaseBoxHistoryElement : public QHBoxLayout {
 	public:
-		explicit inline BaseBoxHistoriElement( \
+		explicit inline BaseBoxHistoryElement( \
 			const char * expression, Window::Window *window, \
 			const char * result
 		) noexcept;
 	};
-	class BasicBoxHistoriElement : public QVBoxLayout {
+	class BasicBoxHistoryElement : public QVBoxLayout {
 	public:
-		explicit inline BasicBoxHistoriElement( \
+		explicit inline BasicBoxHistoryElement( \
 			const char * expression, Window::Window * window, \
 			const char * result, const char * nameOperation \
 		) noexcept;
 	};
-	class SubCustomBoxHistoriElement : public QHBoxLayout {
+	class SubCustomBoxHistoryElement : public QHBoxLayout {
 	public:
-		explicit inline SubCustomBoxHistoriElement( \
+		explicit inline SubCustomBoxHistoryElement( \
 			Window::Window * window, \
 			const char * label1, const char * text1, \
 			const char * label2, const char * text2 \
 		) noexcept;
 	};
-	class CustomBoxHistoriElement : public QVBoxLayout {
+	class CustomBoxHistoryElement : public QVBoxLayout {
 	public:
-		explicit inline CustomBoxHistoriElement( \
+		explicit inline CustomBoxHistoryElement( \
 			const char * const expression, \
 			const char * const result, \
 			Window::Window * const  window, byte tab, \
@@ -64,7 +73,7 @@ namespace NewHistoriElement {
 			const char * const label2, \
 			const char * const text2 \
 		) noexcept;
-		explicit inline CustomBoxHistoriElement( \
+		explicit inline CustomBoxHistoryElement( \
 			const char * const expression, \
 			const char * const result, \
 			Window::Window * const  window, byte tab, \

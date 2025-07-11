@@ -2,29 +2,45 @@
 #include <QWidget>
 #include <QScrollArea>
 
-namespace CreateHistori {
-	class HistoriVBox : public QVBoxLayout {
+#include "../Window/Window.cpp"
+
+namespace Window {
+	class Window;
+}
+
+class QVBoxLayout;
+class QWidget;
+class QScrollArea;
+
+namespace CreateHistory {
+	class HistoryVBox;
+	class HistoryWidget;
+	class HistoryScroll;
+}
+
+namespace CreateHistory {
+	class HistoryVBox : public QVBoxLayout {
 	public:
-		explicit HistoriVBox( \
+		explicit HistoryVBox( \
 			const char * label, Window::Window *window \
 		);
 	};
-	class HistoriWidget : public QWidget {
+	class HistoryWidget : public QWidget {
 	private:
-		HistoriVBox *_addHistori = nullptr;
+		HistoryVBox *_addHistory = nullptr;
 	public:
-		explicit HistoriWidget( \
+		explicit HistoryWidget( \
 			const char * label, Window::Window * window \
 		);
-		HistoriVBox *getAddHistori(void);
+		HistoryVBox *getAddHistory(void);
 	};
-	class HistoriScroll : public QScrollArea {
+	class HistoryScroll : public QScrollArea {
 	private:
-		HistoriWidget *_resizeHistori = nullptr;
+		HistoryWidget *_resizeHistory = nullptr;
 	public:
-		explicit HistoriScroll( \
+		explicit HistoryScroll( \
 			const char * label, Window::Window * window \
 		);
-		HistoriWidget *getResizeHistori(void);
+		HistoryWidget *getResizeHistory(void);
 	};
 }

@@ -15,6 +15,11 @@ class QVBoxLayout;
 class QWidget;
 
 namespace MainWidget {
+	class MainLayout;
+	class MainWidget;
+}
+
+namespace MainWidget {
 	class MainLayout : public QVBoxLayout {
 	public:
 		inline explicit MainLayout( \

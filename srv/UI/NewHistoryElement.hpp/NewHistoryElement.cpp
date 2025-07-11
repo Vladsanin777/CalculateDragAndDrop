@@ -1,8 +1,8 @@
 #pragma once
 #include "NewHistoryElement.hpp"
 
-namespace NewHistoriElement {
-	inline LabelHistori::LabelHistori( \
+namespace NewHistoryElement {
+	inline LabelHistory::LabelHistory( \
 		const char* label, const char *cssName, \
 		Window::Window *window \
 	) : QLabel(label), _callback{nullptr}, \
@@ -16,7 +16,7 @@ namespace NewHistoriElement {
 		_callback = strdup(label);
 		return;
 	}
-	inline LabelHistori::LabelHistori( \
+	inline LabelHistory::LabelHistory( \
 		const char* label, const char *cssName, \
 		Window::Window *window, const char *customCallback \
 	) : QLabel(label), _callback{customCallback}, \
@@ -29,7 +29,7 @@ namespace NewHistoriElement {
 		this->setFont(QFont(this->font().family(), 20));
 		return;
 	}
-	inline void LabelHistori::mousePressEvent( \
+	inline void LabelHistory::mousePressEvent( \
 		QMouseEvent* event) noexcept {
 		QDrag* drag {new QDrag{this}};
 		QMimeData* mimeData {new QMimeData{}};
@@ -37,74 +37,74 @@ namespace NewHistoriElement {
 		drag->setMimeData(mimeData);
 		drag->exec(Qt::MoveAction);
 	}
-	inline LabelHistori::~LabelHistori(void) {
+	inline LabelHistory::~LabelHistory(void) {
 		delete [] _callback;
 	}
-	inline BaseBoxHistoriElement::\
-	BaseBoxHistoriElement( \
+	inline BaseBoxHistoryElement::\
+	BaseBoxHistoryElement( \
 		const char * expression, Window::Window *window, \
 		const char * result
 	) noexcept : QHBoxLayout() {
 		setSpacing(0);
 		setContentsMargins(0, 0, 0, 0);
-		addWidget(new LabelHistori{expression, "keyboard", window});
+		addWidget(new LabelHistory{expression, "keyboard", window});
 		char * commonCallback {new char[ \
 			strlen(expression)+strlen(result)+2UL]{'\0'}};
 		strcpy(commonCallback, expression);
 		strcat(commonCallback, "=");
 		strcat(commonCallback, result);
-		addWidget(new LabelHistori{new char[]{"="}, "keyboard", \
+		addWidget(new LabelHistory{new char[]{"="}, "keyboard", \
 			window, commonCallback});
-		addWidget(new LabelHistori{result, "keyboard", window});
+		addWidget(new LabelHistory{result, "keyboard", window});
 	}
-	inline BasicBoxHistoriElement:: \
-	BasicBoxHistoriElement( \
+	inline BasicBoxHistoryElement:: \
+	BasicBoxHistoryElement( \
 		const char * expression, Window::Window * window, \
 		const char * result, const char * nameOperation \
 	) noexcept : QVBoxLayout() {
 		setSpacing(0);
 		setContentsMargins(0, 0, 0, 0);
-		addWidget(new LabelHistori{nameOperation, \
+		addWidget(new LabelHistory{nameOperation, \
 			"keyboard", window});
-		addLayout(new BaseBoxHistoriElement{ \
+		addLayout(new BaseBoxHistoryElement{ \
 			expression, window, result});
 	}
-	inline SubCustomBoxHistoriElement:: \
-	SubCustomBoxHistoriElement( \
+	inline SubCustomBoxHistoryElement:: \
+	SubCustomBoxHistoryElement( \
 		Window::Window * window, \
 		const char * label1, const char * text1, \
 		const char * label2, const char * text2 \
 	) noexcept : QHBoxLayout() {
 		setSpacing(0);
 		setContentsMargins(0, 0, 0, 0);
-		addWidget(new LabelHistori{ \
+		addWidget(new LabelHistory{ \
 			label1, "keybord", window});
 		char *customCallback{new char[ \
 			strlen(label1) + strlen(text1) + 2UL]{'\0'}};
 		strcpy(customCallback, label1);
 		strcat(customCallback, "=");
 		strcat(customCallback, text1);
-		addWidget(new LabelHistori{ \
+		addWidget(new LabelHistory{ \
 			new char[]{"="}, "keybord", \
 			window, customCallback});
-		addWidget(new LabelHistori{ \
+		addWidget(new LabelHistory{ \
 			text1, "keyboard", window});
 
-		addWidget(new LabelHistori{ \
+		addWidget(new LabelHistory{ \
 			label2, "keyboard", window});
 		customCallback = new char[ \
 			strlen(label1) + strlen(text1) + 2UL]{'\0'};
 		strcpy(customCallback, label2);
 		strcat(customCallback, "=");
 		strcat(customCallback, text2);
-		addWidget(new LabelHistori{ \
+		addWidget(new LabelHistory{ \
 			new char[]{"="}, "keyboard", \
 			window, customCallback});
-		addWidget(new LabelHistori{ \
+		addWidget(new LabelHistory{ \
 			text2, "keyboard", window});
 	}
-	inline CustomBoxHistoriElement:: \
-	CustomBoxHistoriElement( \
+	inline CustomBoxHistoryElement:: \
+	CustomBoxHistoryElement( \
 		const char * const expression, \
 		const char * const result, \
 		Window::Window * const  window, byte tab, \
@@ -115,14 +115,14 @@ namespace NewHistoriElement {
 	) noexcept : QVBoxLayout() {
 		setSpacing(0);
 		setContentsMargins(0, 0, 0, 0);
-		addLayout(new SubCustomBoxHistoriElement{ \
+		addLayout(new SubCustomBoxHistoryElement{ \
 			window, label1, text1, \
 			label2, text2});
-		addLayout(new BaseBoxHistoriElement{ \
+		addLayout(new BaseBoxHistoryElement{ \
 			expression, window, result});
 	}
-	inline CustomBoxHistoriElement:: \
-	CustomBoxHistoriElement( \
+	inline CustomBoxHistoryElement:: \
+	CustomBoxHistoryElement( \
 		const char * const expression, \
 		const char * const result, \
 		Window::Window * const  window, byte tab, \
@@ -134,12 +134,12 @@ namespace NewHistoriElement {
 	) noexcept : QVBoxLayout() {
 		setSpacing(0);
 		setContentsMargins(0, 0, 0, 0);
-		addWidget(new LabelHistori{ \
+		addWidget(new LabelHistory{ \
 			nameOperation, "keyboard", window});
-		addLayout(new SubCustomBoxHistoriElement{ \
+		addLayout(new SubCustomBoxHistoryElement{ \
 			window, label1, text1, \
 			label2, text2});
-		addLayout(new BaseBoxHistoriElement{ \
+		addLayout(new BaseBoxHistoryElement{ \
 			expression, window, result});
 	}
 }

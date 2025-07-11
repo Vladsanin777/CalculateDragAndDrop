@@ -1,11 +1,5 @@
 #pragma once
 
-#include <QWidget>
-#include <QGradient>
-#include <functional>
-#include <memory>
-#include "GradientStrip.cpp"
-#include "../../Selector/ColorPicker.cpp"
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QCheckBox>
@@ -15,46 +9,63 @@
 #include <QLinearGradient>
 #include <QPainter>
 #include <QHBoxLayout>
+#include <QWidget>
+#include <QGradient>
+
+#include <functional>
+#include <memory>
+
+#include "GradientStrip.cpp"
+#include "../../SelectorColor/ColorPicker.cpp"
 
 class QComboBox;
 class QDoubleSpinBox;
 class QCheckBox;
 class QPushButton;
-class GradientStrip;
 class QLabel;
 
-class GradientEditor : public QWidget {
-public:
-    explicit GradientEditor(QWidget *parent = nullptr);
+namespace SelecterGradient {
+    class GradientStrip;
+}
 
-    using GradientChangedCallback = std::function<void()>;
-    void setGradientChangedCallback(GradientChangedCallback callback);
+namespace SelecterGradient {
+    class GradientEditor;
+}
 
-    QGradientStops gradientStops() const;
-    QGradient::Type gradientType() const;
-    qreal angle() const;
-    bool rotateWithShape() const;
+namespace SelecterGradient {
+    class GradientEditor : public QWidget {
+    public:
+        explicit GradientEditor(QWidget *parent = nullptr);
 
-private:
-    void addStop();
-    void removeStop();
-    void updateColor(const QColor &color);
-    void updateGradient();
-    void setupUI();
-    void updateColorButton(const QColor &color);
+        using GradientChangedCallback = std::function<void()>;
+        void setGradientChangedCallback(GradientChangedCallback callback);
 
-    GradientStrip *gradientStrip;
-    QComboBox *typeCombo;
-    QDoubleSpinBox *angleSpin;
-    QComboBox *centerCombo;
-    QCheckBox *rotateCheck;
-    QPushButton *addButton;
-    QPushButton *removeButton;
-    QPushButton *colorButton;
-    QLabel *previewLabel;
-    QLabel *angleLabel;
-    QLabel *centerLabel;
+        QGradientStops gradientStops() const;
+        QGradient::Type gradientType() const;
+        qreal angle() const;
+        bool rotateWithShape() const;
 
-    QColor currentColor;
-    GradientChangedCallback gradientChangedCallback;
-};
+    private:
+        void addStop();
+        void removeStop();
+        void updateColor(const QColor &color);
+        void updateGradient();
+        void setupUI();
+        void updateColorButton(const QColor &color);
+
+        GradientStrip *gradientStrip;
+        QComboBox *typeCombo;
+        QDoubleSpinBox *angleSpin;
+        QComboBox *centerCombo;
+        QCheckBox *rotateCheck;
+        QPushButton *addButton;
+        QPushButton *removeButton;
+        QPushButton *colorButton;
+        QLabel *previewLabel;
+        QLabel *angleLabel;
+        QLabel *centerLabel;
+
+        QColor currentColor;
+        GradientChangedCallback gradientChangedCallback;
+    };
+}
