@@ -4,7 +4,7 @@
 #include <QSize>
 #include <QPaintEvent>
 #include <QMouseEvent>
-#include <QReact>
+#include <QRect>
 #include <QPoint>
 #include <QColor>
 
@@ -39,18 +39,32 @@ namespace SelecterGradient {
                 _status |= 0b00000001;
             return;
         }
-        bool getIsSelected(void) {
+        bool getIsSelected(void) const {
             return _status & 0b00000001;
         }
 
-        bool getIsEndPoint(void) {
-            return _status & 0b10000000
+        bool getIsEndPoint(void) const {
+            return _status & 0b10000000;
         }
         void setIsSelected(bool isSelect) {
             if (isSelect)
                 _status |= 0b00000001;
             else 
                 _status &= 0b11111110;
+            return;
+        }
+        qreal getPosition(void) const {
+            return _position;
+        }
+        void setPosition(qreal position) {
+            _position = position;
+            return;
+        }
+        QColor getColor(void) const {
+            return _color;
+        }
+        void setColor(QColor color) {
+            _color = color;
             return;
         }
     };
@@ -60,14 +74,14 @@ namespace SelecterGradient {
 
     class GradientStrip : public QWidget {
     private:
-        std::vector<GradientStop> stops;
-        int selectedIndex = -1;
-        bool dragging = false;
-        int dragStartX = 0;
-        qreal dragStartPos = 0.0;
+        std::vector<GradientStop> _stops;
+        int _selectedIndex = -1;
+        bool _dragging = false;
+        int _dragStartX = 0;
+        qreal _dragStartPos = 0.0;
         
-        StopSelectedCallback stopSelectedCallback;
-        StopsChangedCallback stopsChangedCallback;
+        StopSelectedCallback _stopSelectedCallback;
+        StopsChangedCallback _stopsChangedCallback;
     public:
 
         explicit GradientStrip(QWidget *parent = nullptr);

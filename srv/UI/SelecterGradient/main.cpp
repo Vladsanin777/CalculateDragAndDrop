@@ -16,6 +16,6 @@
 
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
-    auto editor = new GradientEditor();
+    auto editor = new SelecterGradient::GradientEditor();
     return a.exec();
 }

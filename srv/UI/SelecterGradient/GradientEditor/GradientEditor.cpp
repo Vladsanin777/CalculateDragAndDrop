@@ -114,7 +114,7 @@ namespace SelecterGradient {
                 this, [this] { updateGradient(); });
         
         connect(colorButton, &QPushButton::clicked, this, [this] {
-            auto menu = new ColorPicker(currentColor, this);
+            auto menu = new SelecterColor::ColorPicker(currentColor, this);
             //menu->setColorSelectedCallback([this](const QColor &color) { \
                 updateColor(color); \
             });

@@ -15,14 +15,18 @@
 #include <functional>
 #include <memory>
 
-#include "GradientStrip.cpp"
-#include "../../SelectorColor/ColorPicker.cpp"
+#include "../GradientStrip/GradientStrip.cpp"
+#include "../../SelecterColor/ColorPicker/ColorPicker.cpp"
 
 class QComboBox;
 class QDoubleSpinBox;
 class QCheckBox;
 class QPushButton;
 class QLabel;
+
+namespace SelecterColor {
+    class ColorPicker;
+}
 
 namespace SelecterGradient {
     class GradientStrip;
