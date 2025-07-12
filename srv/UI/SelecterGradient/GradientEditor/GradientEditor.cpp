@@ -5,7 +5,7 @@
 namespace SelecterGradient {
     GradientEditor::GradientEditor(Gradient &gradient, QWidget *parent) 
         : QWidget(parent), _gradient{gradient}, \
-        _currentColor(Qt::black) {
+        _currentColor(gradient[0].getColor()) {
         setupUI();
         
         // Инициализация градиента
@@ -134,32 +134,30 @@ namespace SelecterGradient {
 
 
     void GradientEditor::addPoint() {
-        int index {_gradientStrip->getSelectedIndex()};
+        size_t index {_gradientStrip->getSelectedIndex()};
         if (index < 0) return;
         
         if (index >= _gradient.size() - 1) return;
         
-        qreal pos = (_gradient[index].getPosition() + gradient[index+1].getPosition()) / 2;
-        QColor color = QColor::fromRgbF(
-            /*TODO: create variable*/
-            (_gradient[index].getColor().redF() + stops[index+1].second.redF()) / 2,
-            (_gradient[index].getColor().greenF() + stops[index+1].second.greenF()) / 2,
-            (_gradient[index].getColor().blueF() + stops[index+1].second.blueF()) / 2
-        );
+        GradientPoint point0 {_gradient[index]};
+        GradientPoint point1 {_gradient[index+1]};
+
+        qreal position = (point0.getPosition() + point1.getPosition()) / 2;
+        QColor color0 {point0.getColor()};
+        QColor color1 {point1.getColor()};
+        QColor color {QColor::fromRgbF(
+            (color0.redF() + color1.redF()) / 2,
+            (color0.greenF() + color1.greenF()) / 2,
+            (color0.blueF() + color1.blueF()) / 2
+        )};
         
-        stops.insert(stops.begin() + index + 1, qMakePair(pos, color));
-        gradientStrip->setGradientStops(stops);
-        if (_gradientChangedCallback) _gradientChangedCallback();
+        _gradient.insert(_gradient.begin() + index + 1, {position, color});
+        // if (_gradientChangedCallback) _gradientChangedCallback();
     }
 
-    void GradientEditor::removeStop() {
-        int index = _gradientStrip->selectedStop();
-        if (index <= 0 || index >= _gradientStrip->gradientStops().size() - 1) return;
-        
-        auto stops = _gradientStrip->gradientStops();
-        stops.erase(stops.begin() + index);
-        gradientStrip->setGradientStops(stops);
-        if (gradientChangedCallback) gradientChangedCallback();
+    void GradientEditor::removePoint() {
+        int index = _gradientStrip->getSelectedIndex();
+        _gradientStrip->removePoint(index);
     }
 
     void GradientEditor::updateColor(const QColor &color) {

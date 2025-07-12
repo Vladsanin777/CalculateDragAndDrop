@@ -54,7 +54,7 @@ namespace SelecterGradient {
         QLabel *_angleLabel{nullptr};
         QLabel *_centerLabel{nullptr};
 
-        QColor _currentColor;
+        QColor &_currentColor;
         GradientChangedCallback _gradientChangedCallback;
     public:
         explicit GradientEditor(Gradient &gradient, QWidget *parent = nullptr);

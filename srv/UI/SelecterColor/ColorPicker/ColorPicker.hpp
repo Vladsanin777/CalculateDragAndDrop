@@ -2,7 +2,7 @@
 
 #include <QWidget>
 #include <QColor>
-#include <function>
+#include <functional>
 
 #include "../HueSlider/HueSlider.cpp"
 #include "../AlphaSlider/AlphaSlider.cpp"

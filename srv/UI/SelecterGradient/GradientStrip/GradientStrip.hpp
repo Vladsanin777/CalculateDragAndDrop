@@ -8,6 +8,7 @@
 #include <QPoint>
 #include <QColor>
 
+#include <cstddef>
 #include <functional>
 #include <vector>
 
@@ -15,7 +16,7 @@ class QWidget;
 class QSize;
 class QPaintEvent;
 class QMouseEvent;
-class QReact;
+class QRect;
 class QPoint;
 class QColor;
 
@@ -24,38 +25,36 @@ namespace SelecterGradient {
     private:
         qreal _position;
         QColor _color;
-        bool _isSelected;
     public:
-        inline explicit GradientPoint( \
-            qreal position, QColor color, \
-            bool isSelected \
-        ) : _position{position}, _color{color}, \
-        _isSelected{isSelected} { return; }
+        inline GradientPoint( \
+            qreal position, QColor color \
+        ) : _position{position}, _color{color} \
+        { return; }
 
-        bool getIsSelected(void) const {
-            return _isSelected;
-        }
-        void setIsSelected(bool isSelected) {
-            _isSelected = isSelected;
-            return;
-        }
-        qreal getPosition(void) const {
+        inline qreal &getPosition(void) {
             return _position;
         }
-        void setPosition(qreal position) {
+        inline qreal getPosition(void) const {
+            return _position;
+        }
+        inline void setPosition(qreal position) {
             _position = position;
             return;
         }
-        QColor getColor(void) const {
+        inline QColor &getColor(void) {
             return _color;
         }
-        void setColor(QColor color) {
+        inline QColor getColor(void) const {
+            return _color;
+        }
+        inline void setColor(QColor color) {
             _color = color;
             return;
         }
     };
 
     using GradientPoints = std::vector<GradientPoint>;
+    using GradientPointsIt = GradientPoints::iterator;
     class Gradient {
     private:
         GradientPoints _gradient{};
@@ -95,7 +94,7 @@ namespace SelecterGradient {
         inline Gradient &operator<<(GradientPoint point) {
             _gradient.push_back(point); return *this;
         }
-        inline GradientPoint operator[](size_t index) {
+        inline GradientPoint& operator[](size_t index) {
             return _gradient[index];
         }
         inline size_t size(void) {
@@ -107,6 +106,25 @@ namespace SelecterGradient {
         inline std::vector<GradientPoint>::iterator end(void) {
             return _gradient.end();
         }
+        inline void insert(GradientPointsIt it, \
+            GradientPoint point) {
+            _gradient.insert(it, point); return;
+        }
+        inline void insert(GradientPointsIt it) {
+            _gradient.erase(it); return;
+        }
+        inline size_t addPoint(GradientPoint point, \
+            size_t index) {
+            insert(begin() + index, point);
+            return index;
+        }
+        inline bool removePoint(size_t index) {
+            if (index < size()) {
+                _gradient.erase(begin()+index);
+                return true;
+            }
+            return false;
+        }
     };
 
     using StopSelectedCallback = std::function<void(int)>;
@@ -115,24 +133,21 @@ namespace SelecterGradient {
     class GradientStrip : public QWidget {
     private:
         Gradient &_gradient;
-        int _selectedIndex = -1;
+        size_t _selectedIndex = 0;
         bool _dragging = false;
         int _dragStartX = 0;
         qreal _dragStartPos = 0.0;
         
-        StopSelectedCallback _stopSelectedCallback;
-        StopsChangedCallback _stopsChangedCallback;
+        //StopSelectedCallback _stopSelectedCallback;
+        //StopsChangedCallback _stopsChangedCallback;
     public:
 
         explicit GradientStrip(Gradient &gradient, QWidget *parent = nullptr);
         
-        QSize sizeHint() const override;
-        QGradientStops gradientStops() const;
-        void setGradientStops(const QGradientStops &stops);
-        int getSelectedIndex() const;
-        
-        void setStopSelectedCallback(StopSelectedCallback callback);
-        void setStopsChangedCallback(StopsChangedCallback callback);
+        QSize sizeHint(void) const override;
+        size_t getSelectedIndex(void) const;
+        size_t addPoint(const GradientPoint point, bool after);
+        void removePoint(size_t index);
 
     protected:
         void paintEvent(QPaintEvent *event) override;
@@ -141,8 +156,9 @@ namespace SelecterGradient {
         void mouseReleaseEvent(QMouseEvent *event) override;
 
     private:
-        void updateStopPositions();
-        QRect stopRect(int index) const;
-        int stopAtPosition(const QPoint &pos) const;
+        void setSelectedIndex(unsigned int selectedIndex);
+        void updatePointPositions();
+        QRect pointRect(int index) const;
+        int pointAtPosition(const QPoint &pos) const;
     };
 }

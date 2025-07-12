@@ -4,7 +4,7 @@
 #include <QResizeEvent>
 #include <QPoint>
 #include <QImage>
-#include <function>
+#include <functional>
 
 class QWidget;
 class QColor;

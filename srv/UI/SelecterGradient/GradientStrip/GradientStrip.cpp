@@ -9,58 +9,33 @@ const int TOTAL_HEIGHT = STRIP_HEIGHT + 2 * POINT_EXTRA; // Общая высо�
 
 namespace SelecterGradient {
     GradientStrip::GradientStrip(Gradient &gradient, QWidget *parent) 
-        : QWidget(parent), _gradient{gradient}, _selectedIndex(-1), \
+        : QWidget{parent}, _gradient{gradient}, _selectedIndex(-1), \
         _dragging(false) {
         setMinimumHeight(TOTAL_HEIGHT);
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     }
 
-    QSize GradientStrip::sizeHint() const {
+    QSize GradientStrip::sizeHint(void) const {
         return QSize(300, TOTAL_HEIGHT);
     }
 
-    /*
-    QGradientStops GradientStrip::gradientStops() const {
-        QGradientStops result;
-        for (const auto &stop : _stops) {
-            result << qMakePair(stop.getPosition(), stop.getColor());
-        }
-        return result;
-    }
-
-    void GradientStrip::setGradientStops(const QGradientStops &newStops) {
-        _stops.clear();
-        for (int i = 0; i < newStops.size(); ++i) {
-            _stops.emplace_back(
-                newStops[i].first,
-                newStops[i].second,
-                i == 0 || i == newStops.size() - 1,
-                false
-            );
-        }
-        
-        if (_selectedIndex >= static_cast<int>(_stops.size())) {
-            _selectedIndex = -1;
-        } else if (_selectedIndex >= 0) {
-            _stops[_selectedIndex].setIsSelected(true);
-        }
-        
-        update();
-        if (_stopsChangedCallback) _stopsChangedCallback();
-    }
-
-    int GradientStrip::getSelectedPoint() const {
+    size_t GradientStrip::getSelectedIndex(void) const {
         return _selectedIndex;
     }
 
-    void GradientStrip::setStopSelectedCallback(StopSelectedCallback callback) {
-        _stopSelectedCallback = callback;
+    size_t GradientStrip::addPoint(const GradientPoint point, bool after) {
+        size_t index {_gradient.addPoint(point, \
+            after ? getSelectedIndex() + 1 : getSelectedIndex())};
+        
+        if (after) setSelectedIndex(index);
+        return index;
     }
 
-    void GradientStrip::setStopsChangedCallback(StopsChangedCallback callback) {
-        _stopsChangedCallback = callback;
+    void GradientStrip::removePoint(void) {
+        size_t index {getSelectedIndex()};
+        
+        _gradient->erase(begin() + index);
     }
-    */
 
     void GradientStrip::paintEvent(QPaintEvent *) {
         QPainter painter(this);
@@ -77,8 +52,8 @@ namespace SelecterGradient {
 
         size_t size {_gradient.size()};
         // Отрисовка контрольных точек по центру градиента
-        for (size_t i = 0; i < size; ++i) {
-            const auto &point = _gradient[i];
+        for (size_t index {0}; index < size; ++index) {
+            const GradientPoint &point = _gradient[index];
             int x = point.getPosition() * width() - HANDLE_SIZE / 2;
             int y = TOTAL_HEIGHT / 2 - HANDLE_SIZE / 2;
             
@@ -102,13 +77,13 @@ namespace SelecterGradient {
                 */
                 // Круг
                 painter.setBrush(point.getColor());
-                painter.setPen(point.getIsSelected() ? Qt::white : Qt::black);
+                painter.setPen(getSelectedIndex() == index ? Qt::white : Qt::black);
                 painter.drawEllipse(rect);
             //}
         }
     }
 
-    QRect GradientStrip::stopRect(int index) const {
+    QRect GradientStrip::pointRect(int index) const {
         if (index < 0 || index >= static_cast<int>(_gradient.size())) 
             return QRect();
         
@@ -131,9 +106,9 @@ namespace SelecterGradient {
         return QRect(x, y, HANDLE_SIZE, HANDLE_SIZE);
     }
 
-    int GradientStrip::stopAtPosition(const QPoint &pos) const {
+    int GradientStrip::pointAtPosition(const QPoint &pos) const {
         for (size_t i = 0; i < _gradient.size(); ++i) {
-            if (stopRect(i).contains(pos)) {
+            if (pointRect(i).contains(pos)) {
                 return i;
             }
         }
@@ -142,26 +117,18 @@ namespace SelecterGradient {
 
     void GradientStrip::mousePressEvent(QMouseEvent *event) {
         if (event->button() == Qt::LeftButton) {
-            int index = stopAtPosition(event->pos());
+            int index = pointAtPosition(event->pos());
             if (index >= 0) {
-                // Сброс предыдущего выбора
-                if (_selectedIndex >= 0 && _selectedIndex < static_cast<int>(_gradient.size())) {
-                    _gradient[_selectedIndex].setIsSelected(false);
-                }
                 
                 // Установка нового выбора
                 _selectedIndex = index;
-                _gradient[_selectedIndex].setIsSelected(true);
                 
-                /*
-                // Начало перетаскивания (только для средних точек)
-                if (!_gradient[_selectedIndex].getIsEndPoint()) {
-                    _dragging = true;
-                    _dragStartX = event->pos().x();
-                    _dragStartPos = _stops[_selectedIndex].getPosition();
-                }
-                */
-                if (_stopSelectedCallback) _stopSelectedCallback(_selectedIndex);
+                // Начало перетаскивания
+                _dragging = true;
+                _dragStartX = event->pos().x();
+                _dragStartPos = _gradient[getSelectedIndex()].getPosition();
+
+                // if (_stopSelectedCallback) _stopSelectedCallback(_selectedIndex);
                 update();
             }
         }
@@ -188,7 +155,7 @@ namespace SelecterGradient {
             
             _gradient[_selectedIndex].setPosition(newPos);
             update();
-            if (_stopsChangedCallback) _stopsChangedCallback();
+            // if (_stopsChangedCallback) _stopsChangedCallback();
         }
     }
 
@@ -226,7 +193,6 @@ namespace SelecterGradient {
                 
                 // Обновляем список
                 _stops = newStops;
-                */
                 
                 // Обновляем выбранный индекс
                 for (int i = 0; i < static_cast<int>(_gradient.size()); ++i) {
@@ -235,9 +201,9 @@ namespace SelecterGradient {
                         break;
                     }
                 }
-                
+                */
                 update();
-                if (_stopsChangedCallback) _stopsChangedCallback();
+                // if (_stopsChangedCallback) _stopsChangedCallback();
             //}
         }
     }
