@@ -36,12 +36,29 @@ namespace SelecterGradient {
     class GradientEditor;
 }
 
+using GradientChangedCallback = std::function<void()>;
+
 namespace SelecterGradient {
     class GradientEditor : public QWidget {
-    public:
-        explicit GradientEditor(QWidget *parent = nullptr);
+    private:
+        Gradient &_gradient;
+        GradientStrip *_gradientStrip{nullptr};
+        QComboBox *_typeCombo{nullptr};
+        QDoubleSpinBox *_angleSpin{nullptr};
+        QComboBox *_centerCombo{nullptr};
+        QCheckBox *_rotateCheck{nullptr};
+        QPushButton *_addButton{nullptr};
+        QPushButton *_removeButton{nullptr};
+        QPushButton *_colorButton{nullptr};
+        QLabel *_previewLabel{nullptr};
+        QLabel *_angleLabel{nullptr};
+        QLabel *_centerLabel{nullptr};
 
-        using GradientChangedCallback = std::function<void()>;
+        QColor _currentColor;
+        GradientChangedCallback _gradientChangedCallback;
+    public:
+        explicit GradientEditor(Gradient &gradient, QWidget *parent = nullptr);
+
         void setGradientChangedCallback(GradientChangedCallback callback);
 
         QGradientStops gradientStops() const;
@@ -50,26 +67,11 @@ namespace SelecterGradient {
         bool rotateWithShape() const;
 
     private:
-        void addStop();
-        void removeStop();
+        void addPoint();
+        void removePoint();
         void updateColor(const QColor &color);
         void updateGradient();
         void setupUI();
         void updateColorButton(const QColor &color);
-
-        GradientStrip *gradientStrip;
-        QComboBox *typeCombo;
-        QDoubleSpinBox *angleSpin;
-        QComboBox *centerCombo;
-        QCheckBox *rotateCheck;
-        QPushButton *addButton;
-        QPushButton *removeButton;
-        QPushButton *colorButton;
-        QLabel *previewLabel;
-        QLabel *angleLabel;
-        QLabel *centerLabel;
-
-        QColor currentColor;
-        GradientChangedCallback gradientChangedCallback;
     };
 }

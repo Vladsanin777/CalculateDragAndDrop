@@ -3,16 +3,15 @@
 
 
 namespace SelecterGradient {
-    GradientEditor::GradientEditor(QWidget *parent) 
-        : QWidget(parent), currentColor(Qt::black) {
+    GradientEditor::GradientEditor(Gradient &gradient, QWidget *parent) 
+        : QWidget(parent), _gradient{gradient}, \
+        _currentColor(Qt::black) {
         setupUI();
         
         // Инициализация градиента
-        QGradientStops initialStops;
-        initialStops << QGradientStop(0.0, Qt::red)
-                    << QGradientStop(1.0, Qt::blue);
-        gradientStrip->setGradientStops(initialStops);
+        //_gradientStrip = new GradientStrip{_gradient};
         
+        /*
         gradientStrip->setStopSelectedCallback([this](int index) {
             if (index >= 0 && index < gradientStrip->gradientStops().size()) {
                 currentColor = gradientStrip->gradientStops().at(index).second;
@@ -21,100 +20,104 @@ namespace SelecterGradient {
                                         index != gradientStrip->gradientStops().size() - 1);
             }
         });
+        */
         
+        /*
         gradientStrip->setStopsChangedCallback([this] {
             updateGradient();
         });
+        */
         show();
     }
 
     void GradientEditor::setGradientChangedCallback(GradientChangedCallback callback) {
-        gradientChangedCallback = callback;
+        _gradientChangedCallback = callback;
     }
 
     void GradientEditor::setupUI() {
         QGridLayout *layout = new QGridLayout(this);
         
         // Тип градиента
-        typeCombo = new QComboBox(this);
-        typeCombo->addItem(QObject::tr("Линейный"), QGradient::LinearGradient);
-        typeCombo->addItem(QObject::tr("Радиальный"), QGradient::RadialGradient);
-        layout->addWidget(new QLabel(QObject::tr("Тип:")), 0, 0);
-        layout->addWidget(typeCombo, 0, 1);
+        layout->addWidget(new QLabel(QObject::tr("Type:")), 0, 0);
+        _typeCombo = new QComboBox(this);
+        _typeCombo->addItem(QObject::tr("Linear"), QGradient::LinearGradient);
+        _typeCombo->addItem(QObject::tr("Radial"), QGradient::RadialGradient);
+        _typeCombo->addItem(QObject::tr("Conical"), QGradient::ConicalGradient);
+        _typeCombo->addItem(QObject::tr("No"), QGradient::NoGradient);
+        layout->addWidget(_typeCombo, 1, 0);
         
         // Угол (для линейного градиента)
-        angleLabel = new QLabel(QObject::tr("Угол:"), this);
-        angleSpin = new QDoubleSpinBox(this);
-        angleSpin->setRange(0, 360);
-        angleSpin->setValue(90);
-        angleSpin->setSuffix("°");
-        layout->addWidget(angleLabel, 0, 2);
-        layout->addWidget(angleSpin, 0, 3);
+        _angleLabel = new QLabel(QObject::tr("Angle:"), this);
+        layout->addWidget(_angleLabel, 0, 1);
+
+        _angleSpin = new QDoubleSpinBox(this);
+        _angleSpin->setRange(0, 360);
+        _angleSpin->setValue(90);
+        _angleSpin->setSuffix("°");
+        layout->addWidget(_angleSpin, 1, 1);
         
         // Центр (для радиального градиента)
-        centerLabel = new QLabel(QObject::tr("Центр:"), this);
-        centerCombo = new QComboBox(this);
-        centerCombo->addItem(QObject::tr("центр"), "center");
-        centerCombo->addItem(QObject::tr("верх-лево"), "top-left");
-        centerCombo->addItem(QObject::tr("верх-право"), "top-right");
-        centerCombo->addItem(QObject::tr("низ-лево"), "bottom-left");
-        centerCombo->addItem(QObject::tr("низ-право"), "bottom-right");
-        layout->addWidget(centerLabel, 0, 2); // Та же позиция, что и angleLabel
-        layout->addWidget(centerCombo, 0, 3); // Та же позиция, что и angleSpin
+        _centerLabel = new QLabel(QObject::tr("Center:"), this);
+        layout->addWidget(_centerLabel, 0, 1); // Та же позиция, что и angleLabel
+
+        _centerCombo = new QComboBox(this);
+        _centerCombo->addItem(QObject::tr("center"), "center");
+        _centerCombo->addItem(QObject::tr("top-left"), "top-left");
+        _centerCombo->addItem(QObject::tr("top-right"), "top-right");
+        _centerCombo->addItem(QObject::tr("bottom-left"), "bottom-left");
+        _centerCombo->addItem(QObject::tr("bottom-right"), "bottom-right");
+        layout->addWidget(_centerCombo, 1, 1); // Та же позиция, что и angleSpin
         
         // Предпросмотр
-        previewLabel = new QLabel(this);
-        previewLabel->setMinimumSize(150, 150); // Увеличим для лучшего отображения
+        _previewLabel = new QLabel(this);
+        _previewLabel->setMinimumSize(150, 150); // Увеличим для лучшего отображения
         layout->addWidget(new QLabel(QObject::tr("Предварительный просмотр:")), 0, 4);
-        layout->addWidget(previewLabel, 0, 5);
-        
-        // Полоса градиента
-        gradientStrip = new GradientStrip(this);
-        layout->addWidget(gradientStrip, 1, 0, 1, 6);
+        layout->addWidget(_previewLabel, 0, 3);
         
         // Кнопки управления
-        addButton = new QPushButton(QObject::tr("Добавить"), this);
-        removeButton = new QPushButton(QObject::tr("Удалить"), this);
-        removeButton->setEnabled(false);
+        _addButton = new QPushButton(QObject::tr("Добавить"), this);
+        _removeButton = new QPushButton(QObject::tr("Удалить"), this);
+        _removeButton->setEnabled(false);
         
         QHBoxLayout *buttonsLayout = new QHBoxLayout;
-        buttonsLayout->addWidget(addButton);
-        buttonsLayout->addWidget(removeButton);
+        buttonsLayout->addWidget(_addButton);
+        buttonsLayout->addWidget(_removeButton);
         layout->addLayout(buttonsLayout, 2, 0, 1, 2);
         
         // Кнопка выбора цвета
-        colorButton = new QPushButton(this);
-        colorButton->setFixedSize(30, 30);
+        _colorButton = new QPushButton(this);
+        _colorButton->setFixedSize(30, 30);
         updateColorButton(Qt::black);
         layout->addWidget(new QLabel(QObject::tr("Цвет:")), 2, 2);
-        layout->addWidget(colorButton, 2, 3);
+        layout->addWidget(_colorButton, 2, 3);
         
-        // Поворот с фигурой
-        rotateCheck = new QCheckBox(QObject::tr("Повернуть вместе с фигурой"), this);
-        layout->addWidget(rotateCheck, 3, 0, 1, 6);
+        // Полоса градиента
+        _gradientStrip = new GradientStrip(_gradient, this);
+        layout->addWidget(_gradientStrip, 1, 0, 1, 6);
+        
         
         // Соединения
-        connect(addButton, &QPushButton::clicked, this, [this] { addStop(); });
-        connect(removeButton, &QPushButton::clicked, this, [this] { removeStop(); });
-        connect(typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+        connect(_addButton, &QPushButton::clicked, this, [this] { addPoint(); });
+        connect(_removeButton, &QPushButton::clicked, this, [this] { removePoint(); });
+        connect(_typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 this, [this] { 
-                    bool isLinear = (typeCombo->currentData().toInt() == QGradient::LinearGradient);
+                    bool isLinear = (_typeCombo->currentData().toInt() == QGradient::LinearGradient);
                     
                     // Переключаем видимость настроек
-                    angleLabel->setVisible(isLinear);
-                    angleSpin->setVisible(isLinear);
-                    centerLabel->setVisible(!isLinear);
-                    centerCombo->setVisible(!isLinear);
+                    _angleLabel->setVisible(isLinear);
+                    _angleSpin->setVisible(isLinear);
+                    _centerLabel->setVisible(!isLinear);
+                    _centerCombo->setVisible(!isLinear);
                     
                     updateGradient(); 
                 });
-        connect(angleSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+        connect(_angleSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
                 this, [this] { updateGradient(); });
-        connect(centerCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+        connect(_centerCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 this, [this] { updateGradient(); });
         
-        connect(colorButton, &QPushButton::clicked, this, [this] {
-            auto menu = new SelecterColor::ColorPicker(currentColor, this);
+        connect(_colorButton, &QPushButton::clicked, this, [this] {
+            auto menu = new SelecterColor::ColorPicker(_currentColor, this);
             //menu->setColorSelectedCallback([this](const QColor &color) { \
                 updateColor(color); \
             });
@@ -122,52 +125,52 @@ namespace SelecterGradient {
         });
         
         // Инициализация видимости
-        bool isLinear = (typeCombo->currentData().toInt() == QGradient::LinearGradient);
-        angleLabel->setVisible(isLinear);
-        angleSpin->setVisible(isLinear);
-        centerLabel->setVisible(!isLinear);
-        centerCombo->setVisible(!isLinear);
+        bool isLinear = (_typeCombo->currentData().toInt() == QGradient::LinearGradient);
+        _angleLabel->setVisible(isLinear);
+        _angleSpin->setVisible(isLinear);
+        _centerLabel->setVisible(!isLinear);
+        _centerCombo->setVisible(!isLinear);
     }
 
 
-    void GradientEditor::addStop() {
-        int index = gradientStrip->selectedStop();
+    void GradientEditor::addPoint() {
+        int index {_gradientStrip->getSelectedIndex()};
         if (index < 0) return;
         
-        auto stops = gradientStrip->gradientStops();
-        if (index >= stops.size() - 1) return;
+        if (index >= _gradient.size() - 1) return;
         
-        qreal pos = (stops[index].first + stops[index+1].first) / 2;
+        qreal pos = (_gradient[index].getPosition() + gradient[index+1].getPosition()) / 2;
         QColor color = QColor::fromRgbF(
-            (stops[index].second.redF() + stops[index+1].second.redF()) / 2,
-            (stops[index].second.greenF() + stops[index+1].second.greenF()) / 2,
-            (stops[index].second.blueF() + stops[index+1].second.blueF()) / 2
+            /*TODO: create variable*/
+            (_gradient[index].getColor().redF() + stops[index+1].second.redF()) / 2,
+            (_gradient[index].getColor().greenF() + stops[index+1].second.greenF()) / 2,
+            (_gradient[index].getColor().blueF() + stops[index+1].second.blueF()) / 2
         );
         
         stops.insert(stops.begin() + index + 1, qMakePair(pos, color));
         gradientStrip->setGradientStops(stops);
-        if (gradientChangedCallback) gradientChangedCallback();
+        if (_gradientChangedCallback) _gradientChangedCallback();
     }
 
     void GradientEditor::removeStop() {
-        int index = gradientStrip->selectedStop();
-        if (index <= 0 || index >= gradientStrip->gradientStops().size() - 1) return;
+        int index = _gradientStrip->selectedStop();
+        if (index <= 0 || index >= _gradientStrip->gradientStops().size() - 1) return;
         
-        auto stops = gradientStrip->gradientStops();
+        auto stops = _gradientStrip->gradientStops();
         stops.erase(stops.begin() + index);
         gradientStrip->setGradientStops(stops);
         if (gradientChangedCallback) gradientChangedCallback();
     }
 
     void GradientEditor::updateColor(const QColor &color) {
-        currentColor = color;
+        _currentColor = color;
         updateColorButton(color);
         
-        int index = gradientStrip->selectedStop();
+        int index = _gradientStrip->selectedPoint();
         if (index >= 0) {
-            auto stops = gradientStrip->gradientStops();
-            if (index < stops.size()) {
-                stops[index].second = color;
+            auto stops = _gradientStrip->gradientStops();
+            if (index < _gradient.size()) {
+                gradient[index].setcolor;
                 gradientStrip->setGradientStops(stops);
                 if (gradientChangedCallback) gradientChangedCallback();
             }

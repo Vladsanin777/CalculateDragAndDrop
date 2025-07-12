@@ -1,9 +1,6 @@
 #pragma once
 
 #include "GradientStrip.hpp"
-#include <QPainter>
-#include <QMouseEvent>
-#include <algorithm>
 
 const int STRIP_HEIGHT = 24;  // Увеличена высота для размещения точек
 const int POINT_EXTRA = 3;    // Выступ точек сверху и снизу
@@ -11,20 +8,18 @@ const int HANDLE_SIZE = 16;   // Размер квадратной части т
 const int TOTAL_HEIGHT = STRIP_HEIGHT + 2 * POINT_EXTRA; // Общая высота с учетом выступа
 
 namespace SelecterGradient {
-    GradientStrip::GradientStrip(QWidget *parent) 
-        : QWidget(parent), _selectedIndex(-1), _dragging(false) {
+    GradientStrip::GradientStrip(Gradient &gradient, QWidget *parent) 
+        : QWidget(parent), _gradient{gradient}, _selectedIndex(-1), \
+        _dragging(false) {
         setMinimumHeight(TOTAL_HEIGHT);
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        
-        // Начальные точки
-        _stops.emplace_back(0.0, Qt::red, false, true);
-        _stops.emplace_back(1.0, Qt::blue, false, true);
     }
 
     QSize GradientStrip::sizeHint() const {
         return QSize(300, TOTAL_HEIGHT);
     }
 
+    /*
     QGradientStops GradientStrip::gradientStops() const {
         QGradientStops result;
         for (const auto &stop : _stops) {
@@ -54,7 +49,7 @@ namespace SelecterGradient {
         if (_stopsChangedCallback) _stopsChangedCallback();
     }
 
-    int GradientStrip::selectedStop() const {
+    int GradientStrip::getSelectedPoint() const {
         return _selectedIndex;
     }
 
@@ -65,28 +60,31 @@ namespace SelecterGradient {
     void GradientStrip::setStopsChangedCallback(StopsChangedCallback callback) {
         _stopsChangedCallback = callback;
     }
+    */
 
     void GradientStrip::paintEvent(QPaintEvent *) {
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
         
         // Отрисовка градиента (с отступом для точек)
-        QLinearGradient grad(0, POINT_EXTRA, width(), POINT_EXTRA);
-        for (const auto &stop : _stops) {
-            grad.setColorAt(stop.getPosition(), stop.getColor());
+        QLinearGradient gradient(0, POINT_EXTRA, width(), POINT_EXTRA);
+        for (const auto &point : _gradient) {
+            gradient.setColorAt(point.getPosition(), point.getColor());
         }
         
         // Рисуем полосу градиента с отступами сверху и снизу
-        painter.fillRect(0, POINT_EXTRA, width(), STRIP_HEIGHT, grad);
-        
+        painter.fillRect(0, POINT_EXTRA, width(), STRIP_HEIGHT, gradient);
+
+        size_t size {_gradient.size()};
         // Отрисовка контрольных точек по центру градиента
-        for (size_t i = 0; i < _stops.size(); ++i) {
-            const auto &stop = _stops[i];
-            int x = stop.getPosition() * width() - HANDLE_SIZE / 2;
+        for (size_t i = 0; i < size; ++i) {
+            const auto &point = _gradient[i];
+            int x = point.getPosition() * width() - HANDLE_SIZE / 2;
             int y = TOTAL_HEIGHT / 2 - HANDLE_SIZE / 2;
             
             QRect rect(x, y, HANDLE_SIZE, HANDLE_SIZE);
             
+            /*
             // Выбор формы
             if (stop.getIsEndPoint()) {
                 // Прямоугольник с выступами
@@ -101,23 +99,25 @@ namespace SelecterGradient {
                 painter.setPen(stop.getIsSelected() ? Qt::white : Qt::black);
                 painter.drawRect(extendedRect);
             } else {
+                */
                 // Круг
-                painter.setBrush(stop.getColor());
-                painter.setPen(stop.getIsSelected() ? Qt::white : Qt::black);
+                painter.setBrush(point.getColor());
+                painter.setPen(point.getIsSelected() ? Qt::white : Qt::black);
                 painter.drawEllipse(rect);
-            }
+            //}
         }
     }
 
     QRect GradientStrip::stopRect(int index) const {
-        if (index < 0 || index >= static_cast<int>(_stops.size())) 
+        if (index < 0 || index >= static_cast<int>(_gradient.size())) 
             return QRect();
         
-        const auto& stop = _stops[index];
-        int x = stop.getPosition() * width() - HANDLE_SIZE / 2;
+        const auto& point = _gradient[index];
+        int x = point.getPosition() * width() - HANDLE_SIZE / 2;
         int y = TOTAL_HEIGHT / 2 - HANDLE_SIZE / 2;
         
-        if (stop.getIsEndPoint()) {
+        /*
+        if (point.getIsEndPoint()) {
             // Прямоугольник с выступами
             return QRect(
                 x - POINT_EXTRA, 
@@ -126,13 +126,13 @@ namespace SelecterGradient {
                 HANDLE_SIZE + 2 * POINT_EXTRA
             );
         }
-        
+        */
         // Круг
         return QRect(x, y, HANDLE_SIZE, HANDLE_SIZE);
     }
 
     int GradientStrip::stopAtPosition(const QPoint &pos) const {
-        for (int i = 0; i < static_cast<int>(_stops.size()); ++i) {
+        for (size_t i = 0; i < _gradient.size(); ++i) {
             if (stopRect(i).contains(pos)) {
                 return i;
             }
@@ -145,21 +145,22 @@ namespace SelecterGradient {
             int index = stopAtPosition(event->pos());
             if (index >= 0) {
                 // Сброс предыдущего выбора
-                if (_selectedIndex >= 0 && _selectedIndex < static_cast<int>(_stops.size())) {
-                    _stops[_selectedIndex].setIsSelected(false);
+                if (_selectedIndex >= 0 && _selectedIndex < static_cast<int>(_gradient.size())) {
+                    _gradient[_selectedIndex].setIsSelected(false);
                 }
                 
                 // Установка нового выбора
                 _selectedIndex = index;
-                _stops[_selectedIndex].setIsSelected(true);
+                _gradient[_selectedIndex].setIsSelected(true);
                 
+                /*
                 // Начало перетаскивания (только для средних точек)
-                if (!_stops[_selectedIndex].getIsEndPoint()) {
+                if (!_gradient[_selectedIndex].getIsEndPoint()) {
                     _dragging = true;
                     _dragStartX = event->pos().x();
                     _dragStartPos = _stops[_selectedIndex].getPosition();
                 }
-                
+                */
                 if (_stopSelectedCallback) _stopSelectedCallback(_selectedIndex);
                 update();
             }
@@ -175,17 +176,17 @@ namespace SelecterGradient {
             newPos = qBound(0.0, newPos, 1.0);
             
             // Проверка на пересечение с другими точками
-            for (int i = 0; i < static_cast<int>(_stops.size()); ++i) {
-                if (i != _selectedIndex && qAbs(_stops[i].getPosition() - newPos) < 0.01) {
+            for (size_t i = 0; i < _gradient.size(); ++i) {
+                if (i != _selectedIndex && qAbs(_gradient[i].getPosition() - newPos) < 0.01) {
                     // Небольшое смещение для визуального разделения
-                    if (newPos > _stops[i].getPosition()) newPos = _stops[i].getPosition() + 0.01;
-                    else newPos = _stops[i].getPosition() - 0.01;
+                    if (newPos > _gradient[i].getPosition()) newPos = _gradient[i].getPosition() + 0.01;
+                    else newPos = _gradient[i].getPosition() - 0.01;
                     newPos = qBound(0.0, newPos, 1.0);
                     break;
                 }
             }
             
-            _stops[_selectedIndex].setPosition(newPos);
+            _gradient[_selectedIndex].setPosition(newPos);
             update();
             if (_stopsChangedCallback) _stopsChangedCallback();
         }
@@ -196,6 +197,7 @@ namespace SelecterGradient {
         if (_dragging) {
             _dragging = false;
             
+            /*
             // Пересортировка точек при отпускании
             if (!_stops.empty() && _stops.size() > 2) {
                 // Сохраняем крайние точки
@@ -203,7 +205,7 @@ namespace SelecterGradient {
                 GradientStop lastStop = _stops.back();
                 
                 // Копируем средние точки
-                std::vector<GradientStop> middleStops;
+                GradientPoints middleStops;
                 for (size_t i = 1; i < _stops.size() - 1; ++i) {
                     middleStops.push_back(_stops[i]);
                 }
@@ -224,10 +226,11 @@ namespace SelecterGradient {
                 
                 // Обновляем список
                 _stops = newStops;
+                */
                 
                 // Обновляем выбранный индекс
-                for (int i = 0; i < static_cast<int>(_stops.size()); ++i) {
-                    if (_stops[i].getIsSelected()) {
+                for (int i = 0; i < static_cast<int>(_gradient.size()); ++i) {
+                    if (_gradient[i].getIsSelected()) {
                         _selectedIndex = i;
                         break;
                     }
@@ -235,7 +238,7 @@ namespace SelecterGradient {
                 
                 update();
                 if (_stopsChangedCallback) _stopsChangedCallback();
-            }
+            //}
         }
     }
 }
