@@ -44,21 +44,21 @@ namespace SelecterGradient {
         _typeCombo->addItem(QObject::tr("Radial"), QGradient::RadialGradient);
         _typeCombo->addItem(QObject::tr("Conical"), QGradient::ConicalGradient);
         _typeCombo->addItem(QObject::tr("No"), QGradient::NoGradient);
-        layout->addWidget(_typeCombo, 1, 0);
+        layout->addWidget(_typeCombo, 0, 1);
         
         // Угол (для линейного градиента)
         _angleLabel = new QLabel(QObject::tr("Angle:"), this);
-        layout->addWidget(_angleLabel, 0, 1);
+        layout->addWidget(_angleLabel, 0, 2);
 
         _angleSpin = new QDoubleSpinBox(this);
         _angleSpin->setRange(0, 360);
         _angleSpin->setValue(90);
         _angleSpin->setSuffix("°");
-        layout->addWidget(_angleSpin, 1, 1);
+        layout->addWidget(_angleSpin, 0, 3);
         
         // Центр (для радиального градиента)
         _centerLabel = new QLabel(QObject::tr("Center:"), this);
-        layout->addWidget(_centerLabel, 0, 1); // Та же позиция, что и angleLabel
+        layout->addWidget(_centerLabel, 0, 2); // Та же позиция, что и angleLabel
 
         _centerCombo = new QComboBox(this);
         _centerCombo->addItem(QObject::tr("center"), "center");
@@ -66,38 +66,41 @@ namespace SelecterGradient {
         _centerCombo->addItem(QObject::tr("top-right"), "top-right");
         _centerCombo->addItem(QObject::tr("bottom-left"), "bottom-left");
         _centerCombo->addItem(QObject::tr("bottom-right"), "bottom-right");
-        layout->addWidget(_centerCombo, 1, 1); // Та же позиция, что и angleSpin
+        layout->addWidget(_centerCombo, 0, 3); // Та же позиция, что и angleSpin
         
         // Предпросмотр
         _previewLabel = new QLabel(this);
         _previewLabel->setMinimumSize(150, 150); // Увеличим для лучшего отображения
         layout->addWidget(new QLabel(QObject::tr("Предварительный просмотр:")), 0, 4);
-        layout->addWidget(_previewLabel, 0, 3);
+        layout->addWidget(_previewLabel, 0, 4);
         
         // Кнопки управления
-        _addButton = new QPushButton(QObject::tr("Добавить"), this);
+        _addButtonLeft = new QPushButton(QObject::tr("Addition left"), this);
+        _addButtonRight = new QPushButton(QObject::tr("Addition right"), this);
         _removeButton = new QPushButton(QObject::tr("Удалить"), this);
         _removeButton->setEnabled(false);
         
         QHBoxLayout *buttonsLayout = new QHBoxLayout;
-        buttonsLayout->addWidget(_addButton);
+        buttonsLayout->addWidget(_addButtonLeft);
+        buttonsLayout->addWidget(_addButtonRight);
         buttonsLayout->addWidget(_removeButton);
-        layout->addLayout(buttonsLayout, 2, 0, 1, 2);
+        layout->addLayout(buttonsLayout, 1, 0, 1, 3);
         
         // Кнопка выбора цвета
         _colorButton = new QPushButton(this);
         _colorButton->setFixedSize(30, 30);
         updateColorButton(Qt::black);
-        layout->addWidget(new QLabel(QObject::tr("Цвет:")), 2, 2);
-        layout->addWidget(_colorButton, 2, 3);
+        layout->addWidget(new QLabel(QObject::tr("Цвет:")), 1, 3);
+        layout->addWidget(_colorButton, 1, 4);
         
         // Полоса градиента
         _gradientStrip = new GradientStrip(_gradient, this);
-        layout->addWidget(_gradientStrip, 1, 0, 1, 6);
+        layout->addWidget(_gradientStrip, 2, 0, 1, 6);
         
         
         // Соединения
-        connect(_addButton, &QPushButton::clicked, this, [this] { addPoint(); });
+        connect(_addButtonLeft, &QPushButton::clicked, this, [this] { addPoint(false); });
+        connect(_addButtonRight, &QPushButton::clicked, this, [this] { addPoint(true); });
         connect(_removeButton, &QPushButton::clicked, this, [this] { removePoint(); });
         connect(_typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 this, [this] { 
@@ -133,63 +136,29 @@ namespace SelecterGradient {
     }
 
 
-    void GradientEditor::addPoint() {
-        size_t index {_gradientStrip->getSelectedIndex()};
-        if (index < 0) return;
-        
-        if (index >= _gradient.size() - 1) return;
-        
-        GradientPoint point0 {_gradient[index]};
-        GradientPoint point1 {_gradient[index+1]};
-
-        qreal position = (point0.getPosition() + point1.getPosition()) / 2;
-        QColor color0 {point0.getColor()};
-        QColor color1 {point1.getColor()};
-        QColor color {QColor::fromRgbF(
-            (color0.redF() + color1.redF()) / 2,
-            (color0.greenF() + color1.greenF()) / 2,
-            (color0.blueF() + color1.blueF()) / 2
-        )};
-        
-        _gradient.insert(_gradient.begin() + index + 1, {position, color});
-        // if (_gradientChangedCallback) _gradientChangedCallback();
-    }
-
     void GradientEditor::removePoint() {
-        int index = _gradientStrip->getSelectedIndex();
-        _gradientStrip->removePoint(index);
+        _gradientStrip->removePoint();
     }
 
-    void GradientEditor::updateColor(const QColor &color) {
-        _currentColor = color;
-        updateColorButton(color);
-        
-        int index = _gradientStrip->selectedPoint();
-        if (index >= 0) {
-            auto stops = _gradientStrip->gradientStops();
-            if (index < _gradient.size()) {
-                gradient[index].setcolor;
-                gradientStrip->setGradientStops(stops);
-                if (gradientChangedCallback) gradientChangedCallback();
-            }
-        }
+    inline void GradientEditor::addPoint( \
+        bool after) {
+        return _gradientStrip->addPoint(after);
     }
 
     void GradientEditor::updateGradient() {
-        if (previewLabel->size().isEmpty()) return;
+        if (_previewLabel->size().isEmpty()) return;
         
-        QPixmap pixmap(previewLabel->size());
+        QPixmap pixmap(_previewLabel->size());
         pixmap.fill(Qt::transparent);
         
         QPainter painter(&pixmap);
         painter.setRenderHint(QPainter::Antialiasing);
         
-        auto type = static_cast<QGradient::Type>(typeCombo->currentData().toInt());
-        QGradientStops stops = gradientStrip->gradientStops();
+        auto type = static_cast<QGradient::Type>(_typeCombo->currentData().toInt());
         
         if (type == QGradient::LinearGradient) {
             // Линейный градиент с углом
-            qreal angle = angleSpin->value();
+            qreal angle = _angleSpin->value();
             qreal radians = qDegreesToRadians(angle);
             
             qreal dx = cos(radians);
@@ -204,9 +173,11 @@ namespace SelecterGradient {
             QPointF start(center.x() - dx * length, center.y() - dy * length);
             QPointF end(center.x() + dx * length, center.y() + dy * length);
             
+            /*
             QLinearGradient grad(start, end);
             grad.setStops(stops);
             painter.fillRect(pixmap.rect(), grad);
+            */
         }
         else if (type == QGradient::RadialGradient) {
             // Радиальный градиент с выбором центра
@@ -215,7 +186,7 @@ namespace SelecterGradient {
             
             // Определяем центр в зависимости от выбора
             QPointF center;
-            QString centerType = centerCombo->currentData().toString();
+            QString centerType = _centerCombo->currentData().toString();
             
             if (centerType == "top-left") {
                 center = QPointF(0, 0);
@@ -243,41 +214,42 @@ namespace SelecterGradient {
                 if (distance > maxRadius) maxRadius = distance;
             }
             
+            /*
             // Создаем радиальный градиент
             QRadialGradient grad(center, maxRadius);
             grad.setStops(stops);
             painter.fillRect(pixmap.rect(), grad);
+            */
         }
         else {
+            /*
             // Запасной вариант
             QLinearGradient grad(0, 0, pixmap.width(), 0);
             grad.setStops(stops);
             painter.fillRect(pixmap.rect(), grad);
+            */
         }
         
-        previewLabel->setPixmap(pixmap);
-        if (gradientChangedCallback) gradientChangedCallback();
+        _previewLabel->setPixmap(pixmap);
+        // if (gradientChangedCallback) gradientChangedCallback();
     }
 
     void GradientEditor::updateColorButton(const QColor &color) {
         QPixmap pm(24, 24);
         pm.fill(color);
-        colorButton->setIcon(QIcon(pm));
+        _colorButton->setIcon(QIcon(pm));
     }
 
-    QGradientStops GradientEditor::gradientStops() const {
-        return gradientStrip->gradientStops();
-    }
 
     QGradient::Type GradientEditor::gradientType() const {
-        return static_cast<QGradient::Type>(typeCombo->currentData().toInt());
+        return static_cast<QGradient::Type>(_typeCombo->currentData().toInt());
     }
 
     qreal GradientEditor::angle() const {
-        return angleSpin->value();
+        return _angleSpin->value();
     }
 
     bool GradientEditor::rotateWithShape() const {
-        return rotateCheck->isChecked();
+        return _rotateCheck->isChecked();
     }
 }

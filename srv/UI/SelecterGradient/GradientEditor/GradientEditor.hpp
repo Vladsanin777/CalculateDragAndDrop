@@ -47,7 +47,8 @@ namespace SelecterGradient {
         QDoubleSpinBox *_angleSpin{nullptr};
         QComboBox *_centerCombo{nullptr};
         QCheckBox *_rotateCheck{nullptr};
-        QPushButton *_addButton{nullptr};
+        QPushButton *_addButtonLeft{nullptr};
+        QPushButton *_addButtonRight{nullptr};
         QPushButton *_removeButton{nullptr};
         QPushButton *_colorButton{nullptr};
         QLabel *_previewLabel{nullptr};
@@ -61,13 +62,12 @@ namespace SelecterGradient {
 
         void setGradientChangedCallback(GradientChangedCallback callback);
 
-        QGradientStops gradientStops() const;
         QGradient::Type gradientType() const;
         qreal angle() const;
         bool rotateWithShape() const;
+        inline void addPoint(bool after);
 
     private:
-        void addPoint();
         void removePoint();
         void updateColor(const QColor &color);
         void updateGradient();

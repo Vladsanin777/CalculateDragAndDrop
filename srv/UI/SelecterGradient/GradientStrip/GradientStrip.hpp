@@ -86,7 +86,7 @@ namespace SelecterGradient {
             _mode = mode; return;
         }
         inline void setPointAt(qreal position, QColor color, bool isSelection) {
-            _gradient.emplace_back(position, color, isSelection); return;
+            _gradient.emplace_back(position, color); return;
         }
         inline void setPointAt(GradientPoint point) {
             _gradient.push_back(point); return;
@@ -100,10 +100,10 @@ namespace SelecterGradient {
         inline size_t size(void) {
             return _gradient.size();
         }
-        inline std::vector<GradientPoint>::iterator begin(void) {
+        inline GradientPointsIt begin(void) {
             return _gradient.begin();
         }
-        inline std::vector<GradientPoint>::iterator end(void) {
+        inline GradientPointsIt end(void) {
             return _gradient.end();
         }
         inline void insert(GradientPointsIt it, \
@@ -118,12 +118,8 @@ namespace SelecterGradient {
             insert(begin() + index, point);
             return index;
         }
-        inline bool removePoint(size_t index) {
-            if (index < size()) {
-                _gradient.erase(begin()+index);
-                return true;
-            }
-            return false;
+        void erase(GradientPointsIt it) {
+            _gradient.erase(it); return;
         }
     };
 
@@ -146,8 +142,8 @@ namespace SelecterGradient {
         
         QSize sizeHint(void) const override;
         size_t getSelectedIndex(void) const;
-        size_t addPoint(const GradientPoint point, bool after);
-        void removePoint(size_t index);
+        void addPoint(bool after);
+        void removePoint(void);
 
     protected:
         void paintEvent(QPaintEvent *event) override;

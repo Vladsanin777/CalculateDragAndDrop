@@ -23,18 +23,29 @@ namespace SelecterGradient {
         return _selectedIndex;
     }
 
-    size_t GradientStrip::addPoint(const GradientPoint point, bool after) {
-        size_t index {_gradient.addPoint(point, \
-            after ? getSelectedIndex() + 1 : getSelectedIndex())};
-        
-        if (after) setSelectedIndex(index);
-        return index;
+    inline void GradientStrip::addPoint(bool after) {
+        size_t index {getSelectedIndex()};
+        if (after) index++;
+
+        GradientPoint &point0 {_gradient[index - 1]};
+        GradientPoint &point1 {_gradient[index]};
+        QColor& color0 {point0.getColor()};
+        QColor& color1 {point1.getColor()};
+        qreal &pos0 {point0.getPosition()};
+        qreal &pos1 {point1.getPosition()};
+        QColor resultColor {(color0.red() + color1.red()) >> 1, \
+            (color0.green() + color1.green()) >> 1, \
+            (color0.blue() + color1.blue()) >> 1};
+        qreal resultPos {pos1 - pos0};
+        GradientPoint resultPoint {resultPos, resultColor};
+        _gradient.addPoint(resultPoint, index);
+        return;
     }
 
     void GradientStrip::removePoint(void) {
         size_t index {getSelectedIndex()};
         
-        _gradient->erase(begin() + index);
+        _gradient.erase(_gradient.begin() + index);
     }
 
     void GradientStrip::paintEvent(QPaintEvent *) {
