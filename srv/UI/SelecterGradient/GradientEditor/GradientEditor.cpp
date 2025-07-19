@@ -89,11 +89,19 @@ namespace SelecterGradient {
         layout->addLayout(buttonsLayout, 1, 0, 1, 2);
         
         // Кнопка выбора цвета
-        _colorButton = new QPushButton(this);
-        _colorButton->setFixedSize(30, 30);
-        updateColorButton(_currentColor);
         layout->addWidget(new QLabel(QObject::tr("Цвет:")), 1, 2);
+        _colorButton = new QPushButton(this);
         layout->addWidget(_colorButton, 1, 3);
+        _colorButton->setFixedSize(30, 30);
+
+        _menu = new QMenu{this};
+        _colorPickerWidgetAction = new QWidgetAction{_menu};
+        _colorPicker = new SelecterColor::ColorPicker{_currentColor};
+        _colorPickerWidgetAction->setDefaultWidget(_colorPicker);
+        _menu->addAction(_colorPickerWidgetAction);
+
+        _colorButton->setMenu(_menu);
+        updateColorButton(_currentColor);
         
         // Полоса градиента
         _gradientStrip = new GradientStrip(_gradient, this);

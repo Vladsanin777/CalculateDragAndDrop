@@ -7,6 +7,8 @@
 #include <QLabel>
 #include <QGridLayout>
 #include <QLinearGradient>
+#include <QMenu>
+#include <QWidgetAction>
 #include <QPainter>
 #include <QHBoxLayout>
 #include <QWidget>
@@ -23,6 +25,8 @@ class QDoubleSpinBox;
 class QCheckBox;
 class QPushButton;
 class QLabel;
+class QWidgetAction;
+class QMenu;
 
 namespace SelecterColor {
     class ColorPicker;
@@ -53,10 +57,10 @@ namespace SelecterGradient {
         QLabel *_previewLabel{nullptr};
         QLabel *_angleLabel{nullptr};
         QLabel *_centerLabel{nullptr};
-
-
+        QMenu *_menu{nullptr};
+        QWidgetAction *_colorPickerWidgetAction{nullptr};
+        SelecterColor::ColorPicker *_colorPicker{nullptr};
         QColor &_currentColor;
-        //GradientChangedCallback _gradientChangedCallback;
     public:
         explicit GradientEditor(Theme::Gradient &gradient, QWidget *parent = nullptr);
 
