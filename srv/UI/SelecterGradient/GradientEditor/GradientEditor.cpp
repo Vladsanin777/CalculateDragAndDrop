@@ -3,7 +3,7 @@
 
 
 namespace SelecterGradient {
-    GradientEditor::GradientEditor(Gradient &gradient, QWidget *parent) 
+    GradientEditor::GradientEditor(Theme::Gradient &gradient, QWidget *parent) 
         : QWidget(parent), _gradient{gradient}, \
         _currentColor(gradient[0].getColor()) {
         setupUI();
@@ -30,9 +30,11 @@ namespace SelecterGradient {
         show();
     }
 
+    /*
     void GradientEditor::setGradientChangedCallback(GradientChangedCallback callback) {
         _gradientChangedCallback = callback;
     }
+    */
 
     void GradientEditor::setupUI() {
         QGridLayout *layout = new QGridLayout(this);
@@ -84,14 +86,14 @@ namespace SelecterGradient {
         buttonsLayout->addWidget(_addButtonLeft);
         buttonsLayout->addWidget(_addButtonRight);
         buttonsLayout->addWidget(_removeButton);
-        layout->addLayout(buttonsLayout, 1, 0, 1, 3);
+        layout->addLayout(buttonsLayout, 1, 0, 1, 2);
         
         // Кнопка выбора цвета
         _colorButton = new QPushButton(this);
         _colorButton->setFixedSize(30, 30);
-        updateColorButton(Qt::black);
-        layout->addWidget(new QLabel(QObject::tr("Цвет:")), 1, 3);
-        layout->addWidget(_colorButton, 1, 4);
+        updateColorButton(_currentColor);
+        layout->addWidget(new QLabel(QObject::tr("Цвет:")), 1, 2);
+        layout->addWidget(_colorButton, 1, 3);
         
         // Полоса градиента
         _gradientStrip = new GradientStrip(_gradient, this);
@@ -249,7 +251,9 @@ namespace SelecterGradient {
         return _angleSpin->value();
     }
 
+    /*
     bool GradientEditor::rotateWithShape() const {
         return _rotateCheck->isChecked();
     }
+    */
 }

@@ -8,11 +8,13 @@ const int HANDLE_SIZE = 16;   // Размер квадратной части т
 const int TOTAL_HEIGHT = STRIP_HEIGHT + 2 * POINT_EXTRA; // Общая высота с учетом выступа
 
 namespace SelecterGradient {
-    GradientStrip::GradientStrip(Gradient &gradient, QWidget *parent) 
-        : QWidget{parent}, _gradient{gradient}, _selectedIndex(-1), \
+    inline GradientStrip::GradientStrip(Theme::Gradient &gradient, \
+        QWidget *parent) 
+        : QWidget{parent}, _gradient{gradient}, _selectedIndex(0), \
         _dragging(false) {
         setMinimumHeight(TOTAL_HEIGHT);
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        setSelectedIndex(0);
     }
 
     QSize GradientStrip::sizeHint(void) const {
@@ -23,12 +25,15 @@ namespace SelecterGradient {
         return _selectedIndex;
     }
 
+    inline void GradientStrip::setSelectedIndex(size_t selectedIndex) {
+        _selectedIndex = selectedIndex; update(); return;
+    }
     inline void GradientStrip::addPoint(bool after) {
         size_t index {getSelectedIndex()};
         if (after) index++;
 
-        GradientPoint &point0 {_gradient[index - 1]};
-        GradientPoint &point1 {_gradient[index]};
+        Theme::GradientPoint &point0 {_gradient[index - 1]};
+        Theme::GradientPoint &point1 {_gradient[index]};
         QColor& color0 {point0.getColor()};
         QColor& color1 {point1.getColor()};
         qreal &pos0 {point0.getPosition()};
@@ -37,7 +42,7 @@ namespace SelecterGradient {
             (color0.green() + color1.green()) >> 1, \
             (color0.blue() + color1.blue()) >> 1};
         qreal resultPos {pos1 - pos0};
-        GradientPoint resultPoint {resultPos, resultColor};
+        Theme::GradientPoint resultPoint {resultPos, resultColor};
         _gradient.addPoint(resultPoint, index);
         return;
     }
@@ -64,7 +69,7 @@ namespace SelecterGradient {
         size_t size {_gradient.size()};
         // Отрисовка контрольных точек по центру градиента
         for (size_t index {0}; index < size; ++index) {
-            const GradientPoint &point = _gradient[index];
+            const Theme::GradientPoint &point = _gradient[index];
             int x = point.getPosition() * width() - HANDLE_SIZE / 2;
             int y = TOTAL_HEIGHT / 2 - HANDLE_SIZE / 2;
             

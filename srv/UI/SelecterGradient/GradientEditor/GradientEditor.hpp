@@ -41,12 +41,11 @@ using GradientChangedCallback = std::function<void()>;
 namespace SelecterGradient {
     class GradientEditor : public QWidget {
     private:
-        Gradient &_gradient;
+        Theme::Gradient &_gradient;
         GradientStrip *_gradientStrip{nullptr};
         QComboBox *_typeCombo{nullptr};
         QDoubleSpinBox *_angleSpin{nullptr};
         QComboBox *_centerCombo{nullptr};
-        QCheckBox *_rotateCheck{nullptr};
         QPushButton *_addButtonLeft{nullptr};
         QPushButton *_addButtonRight{nullptr};
         QPushButton *_removeButton{nullptr};
@@ -55,16 +54,17 @@ namespace SelecterGradient {
         QLabel *_angleLabel{nullptr};
         QLabel *_centerLabel{nullptr};
 
-        QColor &_currentColor;
-        GradientChangedCallback _gradientChangedCallback;
-    public:
-        explicit GradientEditor(Gradient &gradient, QWidget *parent = nullptr);
 
-        void setGradientChangedCallback(GradientChangedCallback callback);
+        QColor &_currentColor;
+        //GradientChangedCallback _gradientChangedCallback;
+    public:
+        explicit GradientEditor(Theme::Gradient &gradient, QWidget *parent = nullptr);
+
+        //void setGradientChangedCallback(GradientChangedCallback callback);
 
         QGradient::Type gradientType() const;
         qreal angle() const;
-        bool rotateWithShape() const;
+        //bool rotateWithShape() const;
         inline void addPoint(bool after);
 
     private:

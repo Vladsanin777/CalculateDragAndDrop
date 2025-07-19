@@ -18,9 +18,9 @@
 
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
-    SelecterGradient::Gradient gradient{};
-    gradient << SelecterGradient::GradientPoint{0.0, Qt::green} \
-    << SelecterGradient::GradientPoint{1.0, Qt::blue};
+    Theme::Gradient gradient{};
+    gradient << Theme::GradientPoint{0.0, Qt::green} \
+    << Theme::GradientPoint{1.0, Qt::blue};
     auto editor = new SelecterGradient::GradientEditor{gradient};
 
 

@@ -7,6 +7,7 @@
 #include <QRect>
 #include <QPoint>
 #include <QColor>
+
 #include "../../Theme/Gradient/Gradient.cpp"
 
 #include <functional>
@@ -20,20 +21,25 @@ class QRect;
 class QPoint;
 class QColor;
 
+namespace Theme {
+    class Gradient;
+}
+
 namespace SelecterGradient {
     class GradientStrip : public QWidget {
     private:
-        Gradient &_gradient;
+        Theme::Gradient &_gradient;
         size_t _selectedIndex = 0;
         bool _dragging = false;
         int _dragStartX = 0;
         qreal _dragStartPos = 0.0;
         
+        
         //StopSelectedCallback _stopSelectedCallback;
         //StopsChangedCallback _stopsChangedCallback;
     public:
 
-        explicit GradientStrip(Gradient &gradient, QWidget *parent = nullptr);
+        explicit GradientStrip(Theme::Gradient &gradient, QWidget *parent = nullptr);
         
         QSize sizeHint(void) const override;
         size_t getSelectedIndex(void) const;
@@ -47,7 +53,7 @@ namespace SelecterGradient {
         void mouseReleaseEvent(QMouseEvent *event) override;
 
     private:
-        void setSelectedIndex(unsigned int selectedIndex);
+        inline void setSelectedIndex(size_t selectedIndex);
         void updatePointPositions();
         QRect pointRect(int index) const;
         int pointAtPosition(const QPoint &pos) const;
