@@ -60,7 +60,7 @@ namespace SelecterGradient {
         QMenu *_menu{nullptr};
         QWidgetAction *_colorPickerWidgetAction{nullptr};
         SelecterColor::ColorPicker *_colorPicker{nullptr};
-        QColor &_currentColor;
+        QColor *_currentColor;
     public:
         explicit GradientEditor(Theme::Gradient &gradient, QWidget *parent = nullptr);
 

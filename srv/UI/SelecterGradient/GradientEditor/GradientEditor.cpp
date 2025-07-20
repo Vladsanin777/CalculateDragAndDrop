@@ -5,7 +5,7 @@
 namespace SelecterGradient {
     GradientEditor::GradientEditor(Theme::Gradient &gradient, QWidget *parent) 
         : QWidget(parent), _gradient{gradient}, \
-        _currentColor(gradient[0].getColor()) {
+        _currentColor(&gradient[0].getColor()) {
         setupUI();
         
         // Инициализация градиента
@@ -101,7 +101,7 @@ namespace SelecterGradient {
         _menu->addAction(_colorPickerWidgetAction);
 
         _colorButton->setMenu(_menu);
-        updateColorButton(_currentColor);
+        //updateColorButton(*_currentColor);
         
         // Полоса градиента
         _gradientStrip = new GradientStrip(_gradient, this);
