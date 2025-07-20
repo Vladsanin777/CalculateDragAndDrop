@@ -1,9 +1,13 @@
+#pragma once
 #include <QWidget>
 #include <QPaintEvent>
 #include <QMouseEvent>
 #include <QResizeEvent>
 #include <QPoint>
 #include <QImage>
+
+#include "../AlphaSlider/AlphaSlider.cpp"
+
 #include <functional>
 
 class QWidget;
@@ -21,23 +25,27 @@ namespace SelecterColor {
 namespace SelecterColor {
     class ColorArea2D : public QWidget {
     private:
-        qreal baseHue = 0.0;     // Основной цвет (устанавливается слайдером)
-        qreal saturation = 1.0;  // Насыщенность (X-координата в области)
-        qreal value = 1.0;       // Яркость (Y-координата в области)
+        QColor * const &_currentColor;
+        //qreal baseHue = 0.0;     // Основной цвет (устанавливается слайдером)
+        //qreal saturation = 1.0;  // Насыщенность (X-координата в области)
+        //qreal value = 1.0;       // Яркость (Y-координата в области)
         QImage background;
         bool backgroundDirty = true;
-        std::function<void(qreal, qreal, qreal)> colorChangedCallback;
+        AlphaSlider * _alphaSlider{nullptr};
+        //std::function<void(qreal, qreal, qreal)> colorChangedCallback;
     public:
-        explicit ColorArea2D(QWidget *parent = nullptr);
-        void setBaseHue(qreal hue);
-        void setSaturationValue(qreal sat, qreal val);
-        qreal getBaseHue() const { return baseHue; };
-        qreal getSaturation() const { return saturation; }
-        qreal getValue() const { return value; }
+        explicit ColorArea2D(QColor * const & color, QWidget *parent = nullptr);
+        void setAlphaSlider(AlphaSlider * alphaSlider);
+        void updateNode(void);
+        //void setBaseHue(qreal hue);
+        //void setSaturationValue(qreal sat, qreal val);
+        //qreal getBaseHue() const { return baseHue; };
+        //qreal getSaturation() const { return saturation; }
+        //qreal getValue() const { return value; }
         
-        void setColorChangedCallback(std::function<void(qreal, qreal, qreal)> callback);
+        // void setColorChangedCallback(std::function<void(qreal, qreal, qreal)> callback);
 
-        QColor getCurrentColor() const;
+        //QColor getCurrentColor() const;
     protected:
         void paintEvent(QPaintEvent *event) override;
         void mousePressEvent(QMouseEvent *event) override;

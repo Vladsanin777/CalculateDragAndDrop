@@ -1,8 +1,9 @@
+#pragma once
 #include "AlphaSlider.hpp"
 
 namespace SelecterColor {
     AlphaSlider::AlphaSlider(int beginValue, \
-        int endValue, int defaultValue, QWidget *parent)
+        int defaultValue, int endValue, QWidget *parent)
         : QSlider(parent) {
         setOrientation(Qt::Vertical);
         setRange(beginValue, endValue);
@@ -66,6 +67,11 @@ namespace SelecterColor {
         gradient.setColorAt(1.0, Qt::transparent);
         
         painter.fillRect(0, 0, width(), height(), gradient);
+    }
+
+    void AlphaSlider::updateNode(void) {
+        _colorPicker->updateNode();
+        update(); return;
     }
 
     void AlphaSlider::paintEvent(QPaintEvent *event) {

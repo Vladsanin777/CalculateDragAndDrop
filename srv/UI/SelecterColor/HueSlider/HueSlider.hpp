@@ -7,6 +7,8 @@
 #include <QResizeEvent>
 #include <QImage>
 
+#include "../ColorArea2D/ColorArea2D.cpp"
+
 class QSlider;
 class QPaintEvent;
 class QMouseEvent;
@@ -23,12 +25,15 @@ namespace SelecterColor {
         QImage gradientImage;
         bool gradientDirty = true;
         const int handleHeight = 7; // Высота белого прямоугольника-ползунка
+        ColorArea2D * _colorArea2D{nullptr};
     public:
         explicit HueSlider(int beginValue, \
-            int endValue, int defaultValue, \
+            int defaultValue, int endValue, \
             QWidget *parent = nullptr);
         
-        void updateGradient();
+        void updateGradient(void);
+        void setHueSlider(HueSlider * hueSlider);
+        void updateNode(void);
     protected:
         void paintEvent(QPaintEvent *event) override;
         void mousePressEvent(QMouseEvent *event) override;

@@ -23,20 +23,20 @@ namespace SelecterColor {
 namespace SelecterColor {
     class ColorPicker : public QWidget {
     private:
-        SelecterColor::HueSlider *hueSlider;      // Вертикальный слайдер для цвета (Hue)
-        SelecterColor::ColorArea2D *colorArea;  // 2D-область для насыщенности и яркости
-        SelecterColor::AlphaSlider *alphaSlider;    // Вертикальный слайдер для прозрачности
-        QColor currentColor;
-        std::function<void(const QColor&)> colorChangedCallback;
+        SelecterColor::HueSlider *_hueSlider;      // Вертикальный слайдер для цвета (Hue)
+        SelecterColor::ColorArea2D *_colorArea;  // 2D-область для насыщенности и яркости
+        SelecterColor::AlphaSlider *_alphaSlider;    // Вертикальный слайдер для прозрачности
+        QColor * &_currentColor;
+        std::function<void(const QColor&)> _colorChangedCallback;
     public:
-        explicit ColorPicker(QColor color, QWidget *parent = nullptr);
-        QColor color() const;
-        void setColorChangedCallback(std::function<void(const QColor&)> callback);
-        void updateAlphaSliderColor();
+        explicit ColorPicker(QColor * &color, QWidget *parent = nullptr);
+        //QColor color() const;
+        //void setColorChangedCallback(std::function<void(const QColor&)> callback);
+        //void updateAlphaSliderColor();
     private:
-        void handleHueChanged(int hueValue);
-        void handleAreaChanged(qreal hue, qreal sat, qreal val);
-        void handleAlphaChanged(int alphaValue);
-        void updateColor();
+        //void handleHueChanged(int hueValue);
+        //void handleAreaChanged(qreal hue, qreal sat, qreal val);
+        //void handleAlphaChanged(int alphaValue);
+        //void updateColor();
     };
 }

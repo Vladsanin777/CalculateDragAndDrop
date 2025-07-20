@@ -7,6 +7,8 @@
 #include <QResizeEvent>
 #include <QSlider>
 
+#include "../ColorPicker/ColorPicker.cpp"
+
 class QColor;
 class QImage;
 class QWidget;
@@ -28,13 +30,16 @@ namespace SelecterColor {
         bool backgroundDirty = true;
         const int checkerSize = 5;   // Размер клетки шахматного паттерна
         const int handleHeight = 7; // Высота белого прямоугольника-ползунка
+        ColorPicker *_colorPicker{nullptr};
     public:
         explicit AlphaSlider(int beginValue, \
-            int endValue, int defaultValue, \
+            int defaultValue, int endValue, \
             QWidget *parent = nullptr);
         
         void setBaseColor(const QColor &color);
         void updateBackground();
+        void updateNode(void);
+        void 
     protected:
         void paintEvent(QPaintEvent *event) override;
         void mousePressEvent(QMouseEvent *event) override;

@@ -1,12 +1,20 @@
+#pragma once
 #include "ColorArea2D.hpp"
+#include <iostream>
 
 namespace SelecterColor {
     // ColorArea2D implementation (без изменений)
-    ColorArea2D::ColorArea2D(QWidget *parent) 
-        : QWidget(parent) {
+    ColorArea2D::ColorArea2D(QColor * const &color, QWidget *parent) 
+        : QWidget(parent), _currentColor{color} {
         setMinimumSize(200, 200);
     }
 
+
+    void ColorArea2D::setAlphaSlider(AlphaSlider * alphaSlider) {
+        _alphaSlider = alphaSlider; return;
+    }
+
+    /*
     void ColorArea2D::setBaseHue(qreal hue) {
         baseHue = qBound(0.0, hue, 1.0);
         backgroundDirty = true;
@@ -32,7 +40,7 @@ namespace SelecterColor {
         color.setHsvF(baseHue, saturation, value);
         return color;
     }
-
+    */
     void ColorArea2D::paintEvent(QPaintEvent *) {
         QPainter painter(this);
         
@@ -43,9 +51,9 @@ namespace SelecterColor {
         
         painter.drawImage(0, 0, background);
         
-        int x = saturation * width();
-        int y = (1 - value) * height();
-        
+        int x = _currentColor->saturationF() * width();
+        int y = (1.0f - _currentColor->valueF()) * height();
+        std::cout << "x: " << x << "y: " << y << std::endl;
         painter.setPen(Qt::white);
         painter.drawEllipse(QPoint(x, y), 8, 8);
         painter.setPen(Qt::black);
@@ -69,25 +77,37 @@ namespace SelecterColor {
     void ColorArea2D::updateBackground() {
         background = QImage(size(), QImage::Format_RGB32);
         
+        QColor color {*_currentColor};
+
+        float hue {color.hueF()};
         for (int y = 0; y < height(); ++y) {
-            qreal val = 1.0 - static_cast<qreal>(y) / height();
+            float val = 1.0f - static_cast<float>(y) / height();
             for (int x = 0; x < width(); ++x) {
-                qreal sat = static_cast<qreal>(x) / width();
-                QColor color;
-                color.setHsvF(baseHue, sat, val);
+                float sat = static_cast<float>(x) / width();
+
+                color.setHsvF(hue, sat, val);
                 background.setPixelColor(x, y, color);
             }
         }
     }
 
     void ColorArea2D::selectColorAt(const QPoint &pos) {
-        qreal sat = qBound(0.0, static_cast<qreal>(pos.x()) / width(), 1.0);
-        qreal val = qBound(0.0, 1.0 - static_cast<qreal>(pos.y()) / height(), 1.0);
+        float hue = _currentColor->hueF();
+        float sat = qBound(0.0, static_cast<float>(pos.x()) / width(), 1.0);
+        float val = qBound(0.0, 1.0 - static_cast<float>(pos.y()) / height(), 1.0);
         
-        setSaturationValue(sat, val);
+        _currentColor->setHsvF(hue, sat, val);
+        update();
         
+        /*
         if (colorChangedCallback) {
             colorChangedCallback(baseHue, sat, val);
         }
+        */
+    }
+
+    void ColorArea2D::updateNode(void) {
+        _alphaSlider->updateNode();
+        update(); return;
     }
 }

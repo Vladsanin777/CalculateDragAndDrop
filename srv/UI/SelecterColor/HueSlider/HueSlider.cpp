@@ -1,16 +1,18 @@
+#pragma once
 #include "HueSlider.hpp"
 
 namespace SelecterColor {
     HueSlider::HueSlider(int beginValue, \
-        int endValue, int defaultValue, QWidget *parent)
+        int defaultValue, int endValue, QWidget *parent)
         : QSlider(parent) {
         setRange(beginValue, endValue);
         setValue(defaultValue);
         setOrientation(Qt::Vertical);
+        //setInvertedAppearance(true);
         setMinimumSize(40, 100);
     }
 
-    void HueSlider::updateGradient() {
+    void HueSlider::updateGradient(void) {
 
         gradientImage = QImage(width(), height(), QImage::Format_RGB32);
         
@@ -23,6 +25,13 @@ namespace SelecterColor {
                 gradientImage.setPixelColor(x, y, color);
             }
         }
+    }
+    void HueSlider::setColorArea2D(ColorArea2D * colorArea2D) {
+        _colorArea2D = colorArea2D; return;
+    }
+    void HueSlider::updateNode(void) {
+        _colorArea2D->updateNode();
+        update(); return;
     }
 
     void HueSlider::paintEvent(QPaintEvent *event) {
