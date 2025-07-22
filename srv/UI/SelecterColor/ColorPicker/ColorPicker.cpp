@@ -1,3 +1,4 @@
+#pragma once
 #include "ColorPicker.hpp"
 
 namespace SelecterColor {
@@ -10,15 +11,15 @@ namespace SelecterColor {
 
         
         // Создаем 2D область для Saturation/Value
-        _colorArea = new ColorArea2D{_currentColor, this};
-        mainLayout->addWidget(_colorArea, 3);
+        _colorArea2D = new ColorArea2D{_currentColor, _alphaSlider, this};
+        mainLayout->addWidget(_colorArea2D, 3);
         
         // Создаем вертикальный слайдер для Alpha
-        _alphaSlider = new AlphaSlider(0, color->alpha(), 100, this);
+        _alphaSlider = new AlphaSlider(0, color->alpha(), 100, this, this);
         mainLayout->addWidget(_alphaSlider);
 
         // Создаем кастомный слайдер для Hue
-        _hueSlider = new HueSlider(0, color->hue(), 359, this);
+        _hueSlider = new HueSlider(0, color->hue(), 359, _colorArea2D, this);
         mainLayout->addWidget(_hueSlider);   
 
         // Начальные значения

@@ -3,8 +3,9 @@
 
 namespace SelecterColor {
     HueSlider::HueSlider(int beginValue, \
-        int defaultValue, int endValue, QWidget *parent)
-        : QSlider(parent) {
+        int defaultValue, int endValue, \
+        ColorArea2D * const &colorArea2D, QWidget *parent)
+        : QSlider{parent}, _colorArea2D{colorArea2D} {
         setRange(beginValue, endValue);
         setValue(defaultValue);
         setOrientation(Qt::Vertical);
@@ -26,9 +27,11 @@ namespace SelecterColor {
             }
         }
     }
+    /*
     void HueSlider::setColorArea2D(ColorArea2D * colorArea2D) {
         _colorArea2D = colorArea2D; return;
     }
+    */
     void HueSlider::updateNode(void) {
         _colorArea2D->updateNode();
         update(); return;

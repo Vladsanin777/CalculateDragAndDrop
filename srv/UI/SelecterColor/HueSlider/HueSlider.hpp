@@ -25,14 +25,15 @@ namespace SelecterColor {
         QImage gradientImage;
         bool gradientDirty = true;
         const int handleHeight = 7; // Высота белого прямоугольника-ползунка
-        ColorArea2D * _colorArea2D{nullptr};
+        ColorArea2D * const &_colorArea2D;
     public:
         explicit HueSlider(int beginValue, \
             int defaultValue, int endValue, \
+            ColorArea2D * const &colorArea2D, \
             QWidget *parent = nullptr);
         
         void updateGradient(void);
-        void setHueSlider(HueSlider * hueSlider);
+        //void setColorArea2D(ColorArea2D * const &colorArea2D);
         void updateNode(void);
     protected:
         void paintEvent(QPaintEvent *event) override;

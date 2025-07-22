@@ -3,14 +3,22 @@
 
 namespace SelecterColor {
     AlphaSlider::AlphaSlider(int beginValue, \
-        int defaultValue, int endValue, QWidget *parent)
-        : QSlider(parent) {
+        int defaultValue, int endValue, \
+        QWidget * const & colorPicker, QWidget *parent)
+        : QSlider{parent}, _colorPicker{colorPicker} {
         setOrientation(Qt::Vertical);
         setRange(beginValue, endValue);
         setValue(defaultValue);
         setMinimumSize(40, 100);
     }
 
+    /*
+    void AlphaSlider::setColorPicker(QWidget * const &colorPicker) {
+        _colorPicker = colorPicker;
+    }
+    */
+
+    /*
     void AlphaSlider::setBaseColor(const QColor &color) {
         // Обновляем только если цвет действительно изменился
         if (baseColor != color) {
@@ -19,6 +27,7 @@ namespace SelecterColor {
             update();
         }
     }
+    */
 
     void AlphaSlider::drawCheckerPattern() {
         const int patternSize = 11; // 5 + 6 = 11
@@ -70,7 +79,7 @@ namespace SelecterColor {
     }
 
     void AlphaSlider::updateNode(void) {
-        _colorPicker->updateNode();
+        _colorPicker->update();
         update(); return;
     }
 
@@ -123,6 +132,7 @@ namespace SelecterColor {
         qreal ratio = static_cast<qreal>(event->pos().y()) / height();
         int alphaValue = (1 - ratio) * maximum();
         setValue(qBound(minimum(), alphaValue, maximum()));
+        updateNode();
     }
 
     void AlphaSlider::mouseMoveEvent(QMouseEvent *event) {
@@ -130,6 +140,7 @@ namespace SelecterColor {
             qreal ratio = static_cast<qreal>(event->pos().y()) / height();
             int alphaValue = (1 - ratio) * maximum();
             setValue(qBound(minimum(), alphaValue, maximum()));
+            updateNode();
         }
     }
 

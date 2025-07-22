@@ -4,16 +4,19 @@
 
 namespace SelecterColor {
     // ColorArea2D implementation (без изменений)
-    ColorArea2D::ColorArea2D(QColor * const &color, QWidget *parent) 
-        : QWidget(parent), _currentColor{color} {
+    ColorArea2D::ColorArea2D(QColor * const &color, \
+        AlphaSlider * const &alphaSlider, QWidget *parent) 
+        : QWidget(parent), _currentColor{color}, \
+        _alphaSlider{alphaSlider} {
         setMinimumSize(200, 200);
     }
 
 
-    void ColorArea2D::setAlphaSlider(AlphaSlider * alphaSlider) {
+    /*
+    void ColorArea2D::setAlphaSlider(AlphaSlider * &alphaSlider) {
         _alphaSlider = alphaSlider; return;
     }
-
+    */
     /*
     void ColorArea2D::setBaseHue(qreal hue) {
         baseHue = qBound(0.0, hue, 1.0);
