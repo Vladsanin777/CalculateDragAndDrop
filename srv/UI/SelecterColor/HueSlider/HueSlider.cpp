@@ -34,12 +34,13 @@ namespace SelecterColor {
     */
     void HueSlider::updateNode(void) {
         _colorArea2D->updateNode();
-        update(); return;
+        return;
     }
 
     void HueSlider::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);
         QPainter painter(this);
+        updateNode();
         
         if (gradientDirty || gradientImage.size() != size()) {
             updateGradient();

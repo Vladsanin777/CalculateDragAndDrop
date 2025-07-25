@@ -1,4 +1,4 @@
-#pragma once
+// #pragma once
 
 #include <QWidget>
 #include <QColor>
@@ -18,7 +18,7 @@ namespace SelecterColor {
 }
 
 namespace SelecterColor {
-    class ColorPiker;
+    class ColorPicker;
 }
 namespace SelecterColor {
     class ColorPicker : public QWidget {

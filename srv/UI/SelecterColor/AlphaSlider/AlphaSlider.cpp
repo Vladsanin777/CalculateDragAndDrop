@@ -4,7 +4,7 @@
 namespace SelecterColor {
     AlphaSlider::AlphaSlider(int beginValue, \
         int defaultValue, int endValue, \
-        QWidget * const & colorPicker, QWidget *parent)
+        ColorPicker * const & colorPicker, QWidget *parent)
         : QSlider{parent}, _colorPicker{colorPicker} {
         setOrientation(Qt::Vertical);
         setRange(beginValue, endValue);
