@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GradientStrip.hpp"
+#include "UI/SelecterGradient/GradientStrip/GradientStrip.hpp"
 
 const int STRIP_HEIGHT = 24;  // Увеличена высота для размещения точек
 const int POINT_EXTRA = 3;    // Выступ точек сверху и снизу

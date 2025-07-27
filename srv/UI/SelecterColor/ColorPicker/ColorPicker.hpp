@@ -1,12 +1,9 @@
-// #pragma once
+#pragma once
 
 #include <QWidget>
 #include <QColor>
 #include <functional>
 
-#include "../HueSlider/HueSlider.cpp"
-#include "../AlphaSlider/AlphaSlider.cpp"
-#include "../ColorArea2D/ColorArea2D.cpp"
 
 class QWidget;
 class QColor;
@@ -27,7 +24,7 @@ namespace SelecterColor {
         SelecterColor::ColorArea2D *_colorArea2D;  // 2D-область для насыщенности и яркости
         SelecterColor::AlphaSlider *_alphaSlider;    // Вертикальный слайдер для прозрачности
         QColor * &_currentColor;
-        std::function<void(const QColor&)> _colorChangedCallback;
+        //std::function<void(const QColor&)> _colorChangedCallback;
     public:
         explicit ColorPicker(QColor * &color, QWidget *parent = nullptr);
         //void updateNode(void);

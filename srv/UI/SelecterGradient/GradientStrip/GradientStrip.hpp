@@ -8,7 +8,7 @@
 #include <QPoint>
 #include <QColor>
 
-#include "../../Theme/Gradient/Gradient.cpp"
+#include "UI/Theme/Gradient/Gradient.cpp"
 
 #include <functional>
 #include <vector>

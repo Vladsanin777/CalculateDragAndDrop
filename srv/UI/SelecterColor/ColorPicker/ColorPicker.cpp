@@ -1,6 +1,9 @@
 #pragma once
-#include "ColorPicker.hpp"
+#include "UI/SelecterColor/ColorPicker/ColorPicker.hpp"
 
+#include "UI/SelecterColor/HueSlider/HueSlider.cpp"
+#include "UI/SelecterColor/AlphaSlider/AlphaSlider.cpp"
+#include "UI/SelecterColor/ColorArea2D/ColorArea2D.cpp"
 namespace SelecterColor {
     // ColorPicker implementation (с изменениями для HueSlider)
     ColorPicker::ColorPicker(QColor * &color, QWidget *parent) 
@@ -9,17 +12,17 @@ namespace SelecterColor {
         mainLayout->setSpacing(15);
         
 
+        // Создаем вертикальный слайдер для Alpha
+        _alphaSlider = new AlphaSlider(0, color, 100, this, this);
         
         // Создаем 2D область для Saturation/Value
-        _colorArea2D = new ColorArea2D{_currentColor, _alphaSlider, this};
-        mainLayout->addWidget(_colorArea2D, 3);
+        _colorArea2D = new ColorArea2D{color, _alphaSlider, this};
+        mainLayout->addWidget(_colorArea2D);
         
-        // Создаем вертикальный слайдер для Alpha
-        _alphaSlider = new AlphaSlider(0, color->alpha(), 100, this, this);
         mainLayout->addWidget(_alphaSlider);
 
         // Создаем кастомный слайдер для Hue
-        _hueSlider = new HueSlider(0, color->hue(), 359, _colorArea2D, this);
+        _hueSlider = new HueSlider(0, color, 359, _colorArea2D, this);
         mainLayout->addWidget(_hueSlider);   
 
         // Начальные значения

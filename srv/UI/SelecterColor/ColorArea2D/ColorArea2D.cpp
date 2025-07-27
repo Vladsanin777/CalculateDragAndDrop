@@ -1,11 +1,11 @@
 #pragma once
-#include "ColorArea2D.hpp"
+#include "UI/SelecterColor/ColorArea2D/ColorArea2D.hpp"
 #include <iostream>
 
 namespace SelecterColor {
     // ColorArea2D implementation (без изменений)
     ColorArea2D::ColorArea2D(QColor * const &color, \
-        AlphaSlider * const &alphaSlider, QWidget *parent) 
+        AlphaSlider * const alphaSlider, QWidget *parent) 
         : QWidget(parent), _currentColor{color}, \
         _alphaSlider{alphaSlider} {
         setMinimumSize(200, 200);
@@ -46,11 +46,8 @@ namespace SelecterColor {
     */
     void ColorArea2D::paintEvent(QPaintEvent *) {
         QPainter painter(this);
-        
-        if (backgroundDirty || background.size() != size()) {
-            updateBackground();
-            backgroundDirty = false;
-        }
+        printf("kl");
+        updateBackground();
         
         painter.drawImage(0, 0, background);
         
@@ -61,9 +58,11 @@ namespace SelecterColor {
         painter.drawEllipse(QPoint(x, y), 8, 8);
         painter.setPen(Qt::black);
         painter.drawEllipse(QPoint(x, y), 9, 9);
+        _alphaSlider->update();
     }
 
     void ColorArea2D::mousePressEvent(QMouseEvent *event) {
+        //printf("mousePressEvent ColorArea2D");
         selectColorAt(event->pos());
     }
 
@@ -73,9 +72,11 @@ namespace SelecterColor {
         }
     }
 
+    /*
     void ColorArea2D::resizeEvent(QResizeEvent *) {
         backgroundDirty = true;
     }
+    */
 
     void ColorArea2D::updateBackground() {
         background = QImage(size(), QImage::Format_RGB32);
@@ -98,8 +99,10 @@ namespace SelecterColor {
         float hue = _currentColor->hueF();
         float sat = qBound(0.0, static_cast<float>(pos.x()) / width(), 1.0);
         float val = qBound(0.0, 1.0 - static_cast<float>(pos.y()) / height(), 1.0);
+        int alpha{_currentColor->alpha()};
         
         _currentColor->setHsvF(hue, sat, val);
+        _currentColor->setAlpha(alpha);
         update();
         
         /*
@@ -109,8 +112,10 @@ namespace SelecterColor {
         */
     }
 
+    /*
     void ColorArea2D::updateNode(void) {
         _alphaSlider->updateNode();
         update(); return;
     }
+    */
 }

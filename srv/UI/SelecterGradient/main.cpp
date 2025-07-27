@@ -11,8 +11,7 @@
 #include <QLabel>
 #include <functional>
 #include <iostream>
-#include "GradientEditor/GradientEditor.cpp"
-#include "GradientStrip/GradientStrip.hpp"
+#include "UI/SelecterGradient/GradientEditor/GradientEditor.cpp"
 #include <QGradient>
 
 

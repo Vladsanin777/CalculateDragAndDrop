@@ -6,7 +6,7 @@
 #include <QPoint>
 #include <QImage>
 
-#include "../AlphaSlider/AlphaSlider.cpp"
+#include "UI/SelecterColor/AlphaSlider/AlphaSlider.cpp"
 
 #include <functional>
 
@@ -30,15 +30,14 @@ namespace SelecterColor {
         //qreal saturation = 1.0;  // Насыщенность (X-координата в области)
         //qreal value = 1.0;       // Яркость (Y-координата в области)
         QImage background;
-        bool backgroundDirty = true;
-        AlphaSlider * const &_alphaSlider;
+        AlphaSlider * const _alphaSlider;
         //std::function<void(qreal, qreal, qreal)> colorChangedCallback;
     public:
         explicit ColorArea2D(QColor * const & color, \
-            AlphaSlider * const &alphaSlider, \
+            AlphaSlider * const alphaSlider, \
             QWidget *parent = nullptr);
         //void setAlphaSlider(AlphaSlider * const &alphaSlider);
-        void updateNode(void);
+        //void updateNode(void);
         //void setBaseHue(qreal hue);
         //void setSaturationValue(qreal sat, qreal val);
         //qreal getBaseHue() const { return baseHue; };
@@ -52,7 +51,7 @@ namespace SelecterColor {
         void paintEvent(QPaintEvent *event) override;
         void mousePressEvent(QMouseEvent *event) override;
         void mouseMoveEvent(QMouseEvent *event) override;
-        void resizeEvent(QResizeEvent *event) override;
+        //void resizeEvent(QResizeEvent *event) override;
 
     private:
         void updateBackground();

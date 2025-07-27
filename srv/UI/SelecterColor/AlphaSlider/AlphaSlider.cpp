@@ -1,14 +1,16 @@
 #pragma once
-#include "AlphaSlider.hpp"
+#include "UI/SelecterColor/AlphaSlider/AlphaSlider.hpp"
 
+#include "UI/SelecterColor/ColorPicker/ColorPicker.hpp"
 namespace SelecterColor {
     AlphaSlider::AlphaSlider(int beginValue, \
-        int defaultValue, int endValue, \
-        ColorPicker * const & colorPicker, QWidget *parent)
-        : QSlider{parent}, _colorPicker{colorPicker} {
+        QColor * const &color, int endValue, \
+        ColorPicker * const colorPicker, QWidget *parent)
+        : QSlider{parent}, _colorPicker{colorPicker}, \
+        _currentColor{color} {
         setOrientation(Qt::Vertical);
         setRange(beginValue, endValue);
-        setValue(defaultValue);
+        setValue(color->alpha());
         setMinimumSize(40, 100);
     }
 
@@ -70,7 +72,7 @@ namespace SelecterColor {
         
         // Рисуем градиент альфа-канала поверх паттерна
         QLinearGradient gradient(0, 0, 0, height());
-        QColor opaqueColor = baseColor;
+        QColor opaqueColor = *_currentColor;
         opaqueColor.setAlpha(255);
         gradient.setColorAt(0.0, opaqueColor);
         gradient.setColorAt(1.0, Qt::transparent);
@@ -78,20 +80,19 @@ namespace SelecterColor {
         painter.fillRect(0, 0, width(), height(), gradient);
     }
 
+    /*
     void AlphaSlider::updateNode(void) {
+        update();
         _colorPicker->update();
-        update(); return;
+        return;
     }
-
+    */
     void AlphaSlider::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);
         QPainter painter(this);
         
         // Обновляем фон при необходимости
-        if (backgroundDirty || backgroundImage.size() != size()) {
-            updateBackground();
-            backgroundDirty = false;
-        }
+        updateBackground();
         
         // Рисуем подготовленный фон
         painter.drawImage(5, 3, backgroundImage.copy(1, 0, width() - 9, height()-6));
@@ -125,27 +126,27 @@ namespace SelecterColor {
         painter.drawLine(x-1,     y, x-1,     y + h);
         // Правая линия (без углов)
         painter.drawLine(x + w + 1, y, x + w + 1, y + h);
+        _colorPicker->update();
     }
 
     void AlphaSlider::mousePressEvent(QMouseEvent *event) {
         // Преобразуем позицию Y в значение альфа
         qreal ratio = static_cast<qreal>(event->pos().y()) / height();
-        int alphaValue = (1 - ratio) * maximum();
-        setValue(qBound(minimum(), alphaValue, maximum()));
-        updateNode();
+        int alpha{(int)((1 - ratio) * maximum())};
+        setValue(qBound(minimum(), alpha, maximum()));
+        _currentColor->setAlpha(alpha);
     }
 
     void AlphaSlider::mouseMoveEvent(QMouseEvent *event) {
         if (event->buttons() & Qt::LeftButton) {
             qreal ratio = static_cast<qreal>(event->pos().y()) / height();
-            int alphaValue = (1 - ratio) * maximum();
-            setValue(qBound(minimum(), alphaValue, maximum()));
-            updateNode();
+            int alpha{(int)((1 - ratio) * maximum())};
+            setValue(qBound(minimum(), alpha, maximum()));
+            _currentColor->setAlpha(alpha);
         }
     }
 
     void AlphaSlider::resizeEvent(QResizeEvent *event) {
         QSlider::resizeEvent(event);
-        backgroundDirty = true;
     }
 }

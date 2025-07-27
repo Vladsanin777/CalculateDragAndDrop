@@ -1,5 +1,5 @@
 #pragma once
-#include "GradientEditor.hpp"
+#include "UI/SelecterGradient/GradientEditor/GradientEditor.hpp"
 
 
 namespace SelecterGradient {

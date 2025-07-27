@@ -17,8 +17,8 @@
 #include <functional>
 #include <memory>
 
-#include "../GradientStrip/GradientStrip.cpp"
-#include "../../SelecterColor/ColorPicker/ColorPicker.cpp"
+#include "UI/SelecterGradient/GradientStrip/GradientStrip.cpp"
+#include "UI/SelecterColor/ColorPicker/ColorPicker.cpp"
 
 class QComboBox;
 class QDoubleSpinBox;

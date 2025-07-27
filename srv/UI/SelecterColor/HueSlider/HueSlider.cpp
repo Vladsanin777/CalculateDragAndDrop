@@ -3,11 +3,12 @@
 
 namespace SelecterColor {
     HueSlider::HueSlider(int beginValue, \
-        int defaultValue, int endValue, \
-        ColorArea2D * const &colorArea2D, QWidget *parent)
-        : QSlider{parent}, _colorArea2D{colorArea2D} {
+        QColor * const &color, int endValue, \
+        ColorArea2D * const colorArea2D, QWidget *parent)
+        : QSlider{parent}, _colorArea2D{colorArea2D}, \
+        _currentColor{color} {
         setRange(beginValue, endValue);
-        setValue(defaultValue);
+        setValue(color->hue());
         setOrientation(Qt::Vertical);
         //setInvertedAppearance(true);
         setMinimumSize(40, 100);
@@ -31,16 +32,16 @@ namespace SelecterColor {
     void HueSlider::setColorArea2D(ColorArea2D * colorArea2D) {
         _colorArea2D = colorArea2D; return;
     }
-    */
     void HueSlider::updateNode(void) {
         _colorArea2D->updateNode();
         return;
     }
+    */
 
     void HueSlider::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);
         QPainter painter(this);
-        updateNode();
+        printf("hjk");
         
         if (gradientDirty || gradientImage.size() != size()) {
             updateGradient();
@@ -78,20 +79,38 @@ namespace SelecterColor {
         painter.drawLine(x-1,     y, x-1,     y + h);
         // Правая линия (без углов)
         painter.drawLine(x + w + 1, y, x + w + 1, y + h);
+        _colorArea2D->update();
     }
 
     void HueSlider::mousePressEvent(QMouseEvent *event) {
-        // Преобразуем позицию Y в значение слайдера
-        int value = maximum() - (event->pos().y() * maximum() / height());
-        setValue(qBound(minimum(), value, maximum()));
+        selectColorAt(event->pos());
     }
 
     void HueSlider::mouseMoveEvent(QMouseEvent *event) {
         if (event->buttons() & Qt::LeftButton) {
-            int value = maximum() - (event->pos().y() * maximum() / height());
-            setValue(qBound(minimum(), value, maximum()));
+            selectColorAt(event->pos());
         }
     }
+    void HueSlider::selectColorAt(const QPoint &pos) {
+
+        int hue{maximum() - (pos.y() * maximum() / height())};
+        setValue(qBound(minimum(), hue, maximum()));
+        int saturation{_currentColor->saturation()};
+        int value{_currentColor->value()};
+
+        int alpha{_currentColor->alpha()};
+        
+        _currentColor->setHsv(hue, saturation, value);
+        _currentColor->setAlpha(alpha);
+        update();
+        
+        /*
+        if (colorChangedCallback) {
+            colorChangedCallback(baseHue, sat, val);
+        }
+        */
+    }
+
 
     void HueSlider::resizeEvent(QResizeEvent *event) {
         QSlider::resizeEvent(event);
