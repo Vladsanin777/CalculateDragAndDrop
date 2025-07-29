@@ -58,7 +58,6 @@ namespace SelecterColor {
         painter.drawEllipse(QPoint(x, y), 8, 8);
         painter.setPen(Qt::black);
         painter.drawEllipse(QPoint(x, y), 9, 9);
-        _alphaSlider->update();
     }
 
     void ColorArea2D::mousePressEvent(QMouseEvent *event) {
@@ -94,6 +93,11 @@ namespace SelecterColor {
             }
         }
     }
+    void ColorArea2D::updateNode(void) {
+        update();
+        _alphaSlider->update();
+        return;
+    }
 
     void ColorArea2D::selectColorAt(const QPoint &pos) {
         float hue = _currentColor->hueF();
@@ -103,8 +107,7 @@ namespace SelecterColor {
         
         _currentColor->setHsvF(hue, sat, val);
         _currentColor->setAlpha(alpha);
-        update();
-        
+        updateNode();
         /*
         if (colorChangedCallback) {
             colorChangedCallback(baseHue, sat, val);

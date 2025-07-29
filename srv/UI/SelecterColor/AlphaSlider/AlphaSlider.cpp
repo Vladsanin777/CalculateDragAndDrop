@@ -126,26 +126,30 @@ namespace SelecterColor {
         painter.drawLine(x-1,     y, x-1,     y + h);
         // Правая линия (без углов)
         painter.drawLine(x + w + 1, y, x + w + 1, y + h);
-        _colorPicker->update();
     }
 
     void AlphaSlider::mousePressEvent(QMouseEvent *event) {
-        // Преобразуем позицию Y в значение альфа
-        qreal ratio = static_cast<qreal>(event->pos().y()) / height();
-        int alpha{(int)((1 - ratio) * maximum())};
-        setValue(qBound(minimum(), alpha, maximum()));
-        _currentColor->setAlpha(alpha);
+        selectColorAt(event->pos());
     }
 
     void AlphaSlider::mouseMoveEvent(QMouseEvent *event) {
         if (event->buttons() & Qt::LeftButton) {
-            qreal ratio = static_cast<qreal>(event->pos().y()) / height();
-            int alpha{(int)((1 - ratio) * maximum())};
-            setValue(qBound(minimum(), alpha, maximum()));
-            _currentColor->setAlpha(alpha);
+            selectColorAt(event->pos());
         }
     }
-
+    void AlphaSlider::updateNode(void) {
+        update();
+        _colorPicker->update();
+    }
+    void AlphaSlider::selectColorAt(const QPoint &pos) {
+        // Преобразуем позицию Y в значение альфа
+        qreal ratio = static_cast<qreal>(pos.y()) / height();
+        int alphaInter{(int)((1 - ratio) * maximum())};
+        int alpha{qBound(minimum(), alpha, maximum())};
+        setValue(alpha);
+        _currentColor->setAlpha(alpha);
+        updateNode();
+    }
     void AlphaSlider::resizeEvent(QResizeEvent *event) {
         QSlider::resizeEvent(event);
     }

@@ -42,6 +42,7 @@ namespace SelecterColor {
         void mouseMoveEvent(QMouseEvent *event) override;
         void resizeEvent(QResizeEvent *event) override;
     private:
+        void updateNode(void);
         void selectColorAt(const QPoint &pos);
     };
 }

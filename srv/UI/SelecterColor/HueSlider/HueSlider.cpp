@@ -79,7 +79,6 @@ namespace SelecterColor {
         painter.drawLine(x-1,     y, x-1,     y + h);
         // Правая линия (без углов)
         painter.drawLine(x + w + 1, y, x + w + 1, y + h);
-        _colorArea2D->update();
     }
 
     void HueSlider::mousePressEvent(QMouseEvent *event) {
@@ -91,19 +90,24 @@ namespace SelecterColor {
             selectColorAt(event->pos());
         }
     }
+    void HueSlider::updateNode(void) {
+        update();
+        _colorArea2D->updateNode();
+    }
     void HueSlider::selectColorAt(const QPoint &pos) {
 
-        int hue{maximum() - (pos.y() * maximum() / height())};
-        setValue(qBound(minimum(), hue, maximum()));
+        int hueInter{pos.y() * maximum() / height()};
+        int hue{qBound(minimum(), maximum() - hueInter, maximum())};
+        setValue(hue);
         int saturation{_currentColor->saturation()};
         int value{_currentColor->value()};
 
         int alpha{_currentColor->alpha()};
         
-        _currentColor->setHsv(hue, saturation, value);
+        _currentColor->setHsv(hueInter, saturation, value);
         _currentColor->setAlpha(alpha);
-        update();
         
+        updateNode();
         /*
         if (colorChangedCallback) {
             colorChangedCallback(baseHue, sat, val);

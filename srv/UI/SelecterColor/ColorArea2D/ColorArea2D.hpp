@@ -36,6 +36,7 @@ namespace SelecterColor {
         explicit ColorArea2D(QColor * const & color, \
             AlphaSlider * const alphaSlider, \
             QWidget *parent = nullptr);
+        void updateNode(void);
         //void setAlphaSlider(AlphaSlider * const &alphaSlider);
         //void updateNode(void);
         //void setBaseHue(qreal hue);

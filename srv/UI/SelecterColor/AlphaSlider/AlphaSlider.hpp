@@ -44,6 +44,7 @@ namespace SelecterColor {
         //void setColorPicker(QWidget * const &colorPicker);
         //void setBaseColor(const QColor &color);
         void updateBackground();
+        void updateNode(void);
         //void updateNode(void);
     protected:
         void paintEvent(QPaintEvent *event) override;
@@ -52,5 +53,6 @@ namespace SelecterColor {
         void resizeEvent(QResizeEvent *event) override;
     private:
         void drawCheckerPattern();
+        void selectColorAt(const QPoint &pos);
     };
 }
