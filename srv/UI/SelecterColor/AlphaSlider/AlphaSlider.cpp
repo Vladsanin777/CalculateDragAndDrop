@@ -89,6 +89,7 @@ namespace SelecterColor {
     */
     void AlphaSlider::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);
+        std::cout << _currentColor->alpha() << std::endl;
         QPainter painter(this);
         
         // Обновляем фон при необходимости
@@ -145,8 +146,9 @@ namespace SelecterColor {
         // Преобразуем позицию Y в значение альфа
         qreal ratio = static_cast<qreal>(pos.y()) / height();
         int alphaInter{(int)((1 - ratio) * maximum())};
-        int alpha{qBound(minimum(), alpha, maximum())};
+        int alpha{qBound(minimum(), alphaInter, maximum())};
         setValue(alpha);
+        std::cout << "al" << alpha << "   " << alphaInter  << maximum() << minimum()<< std::endl;
         _currentColor->setAlpha(alpha);
         updateNode();
     }
