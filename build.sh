@@ -1,3 +1,14 @@
 #!/bin/bash
-cmake . -DCMAKE_BUILD_TYPE=Release
-cmake --build . -j$(nproc)
+rm -rf build/
+# Создаем папку сборки (если её нет)
+mkdir -p build && cd build || exit
+
+# Генерируем Makefile (указываем путь к Qt6, если CMake его не находит)
+cmake .. -DCMAKE_PREFIX_PATH="/usr/include/qt6/"
+
+# Собираем проект (только цель SelecterGradient)
+cmake --build . --target SelecterGradient
+
+# Запускаем
+./SelecterGradient
+cd ../
