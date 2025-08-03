@@ -6,9 +6,8 @@
 #include <QPoint>
 #include <QImage>
 
-#include "UI/SelecterColor/AlphaSlider/AlphaSlider.cpp"
+#include "UI/SelecterColor/AlphaSlider/AlphaSlider.hpp"
 
-#include <functional>
 
 class QWidget;
 class QColor;

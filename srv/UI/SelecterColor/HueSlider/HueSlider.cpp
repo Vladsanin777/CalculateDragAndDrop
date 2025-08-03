@@ -1,5 +1,6 @@
-#pragma once
-#include "HueSlider.hpp"
+#include "UI/SelecterColor/HueSlider/HueSlider.hpp"
+#include <QPen>
+#include <QPainter>
 
 namespace SelecterColor {
     HueSlider::HueSlider(int beginValue, \

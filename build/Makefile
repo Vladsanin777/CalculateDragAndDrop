@@ -323,6 +323,54 @@ srv/UI/SelecterGradient/GradientStrip/GradientStrip.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/SelecterGradient.dir/build.make CMakeFiles/SelecterGradient.dir/srv/UI/SelecterGradient/GradientStrip/GradientStrip.cpp.s
 .PHONY : srv/UI/SelecterGradient/GradientStrip/GradientStrip.cpp.s
 
+srv/UI/Theme/Gradient/Gradient.o: srv/UI/Theme/Gradient/Gradient.cpp.o
+.PHONY : srv/UI/Theme/Gradient/Gradient.o
+
+# target to build an object file
+srv/UI/Theme/Gradient/Gradient.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SelecterGradient.dir/build.make CMakeFiles/SelecterGradient.dir/srv/UI/Theme/Gradient/Gradient.cpp.o
+.PHONY : srv/UI/Theme/Gradient/Gradient.cpp.o
+
+srv/UI/Theme/Gradient/Gradient.i: srv/UI/Theme/Gradient/Gradient.cpp.i
+.PHONY : srv/UI/Theme/Gradient/Gradient.i
+
+# target to preprocess a source file
+srv/UI/Theme/Gradient/Gradient.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SelecterGradient.dir/build.make CMakeFiles/SelecterGradient.dir/srv/UI/Theme/Gradient/Gradient.cpp.i
+.PHONY : srv/UI/Theme/Gradient/Gradient.cpp.i
+
+srv/UI/Theme/Gradient/Gradient.s: srv/UI/Theme/Gradient/Gradient.cpp.s
+.PHONY : srv/UI/Theme/Gradient/Gradient.s
+
+# target to generate assembly for a file
+srv/UI/Theme/Gradient/Gradient.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SelecterGradient.dir/build.make CMakeFiles/SelecterGradient.dir/srv/UI/Theme/Gradient/Gradient.cpp.s
+.PHONY : srv/UI/Theme/Gradient/Gradient.cpp.s
+
+srv/UI/Theme/GradientPoint/GradientPoint.o: srv/UI/Theme/GradientPoint/GradientPoint.cpp.o
+.PHONY : srv/UI/Theme/GradientPoint/GradientPoint.o
+
+# target to build an object file
+srv/UI/Theme/GradientPoint/GradientPoint.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SelecterGradient.dir/build.make CMakeFiles/SelecterGradient.dir/srv/UI/Theme/GradientPoint/GradientPoint.cpp.o
+.PHONY : srv/UI/Theme/GradientPoint/GradientPoint.cpp.o
+
+srv/UI/Theme/GradientPoint/GradientPoint.i: srv/UI/Theme/GradientPoint/GradientPoint.cpp.i
+.PHONY : srv/UI/Theme/GradientPoint/GradientPoint.i
+
+# target to preprocess a source file
+srv/UI/Theme/GradientPoint/GradientPoint.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SelecterGradient.dir/build.make CMakeFiles/SelecterGradient.dir/srv/UI/Theme/GradientPoint/GradientPoint.cpp.i
+.PHONY : srv/UI/Theme/GradientPoint/GradientPoint.cpp.i
+
+srv/UI/Theme/GradientPoint/GradientPoint.s: srv/UI/Theme/GradientPoint/GradientPoint.cpp.s
+.PHONY : srv/UI/Theme/GradientPoint/GradientPoint.s
+
+# target to generate assembly for a file
+srv/UI/Theme/GradientPoint/GradientPoint.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SelecterGradient.dir/build.make CMakeFiles/SelecterGradient.dir/srv/UI/Theme/GradientPoint/GradientPoint.cpp.s
+.PHONY : srv/UI/Theme/GradientPoint/GradientPoint.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -355,6 +403,12 @@ help:
 	@echo "... srv/UI/SelecterGradient/GradientStrip/GradientStrip.o"
 	@echo "... srv/UI/SelecterGradient/GradientStrip/GradientStrip.i"
 	@echo "... srv/UI/SelecterGradient/GradientStrip/GradientStrip.s"
+	@echo "... srv/UI/Theme/Gradient/Gradient.o"
+	@echo "... srv/UI/Theme/Gradient/Gradient.i"
+	@echo "... srv/UI/Theme/Gradient/Gradient.s"
+	@echo "... srv/UI/Theme/GradientPoint/GradientPoint.o"
+	@echo "... srv/UI/Theme/GradientPoint/GradientPoint.i"
+	@echo "... srv/UI/Theme/GradientPoint/GradientPoint.s"
 .PHONY : help
 
 

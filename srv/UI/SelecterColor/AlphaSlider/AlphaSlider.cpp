@@ -1,7 +1,10 @@
-#pragma once
 #include "UI/SelecterColor/AlphaSlider/AlphaSlider.hpp"
 
 #include "UI/SelecterColor/ColorPicker/ColorPicker.hpp"
+
+#include <QPainter>
+#include <QPen>
+
 namespace SelecterColor {
     AlphaSlider::AlphaSlider(int beginValue, \
         QColor * const &color, int endValue, \
@@ -89,7 +92,6 @@ namespace SelecterColor {
     */
     void AlphaSlider::paintEvent(QPaintEvent *event) {
         Q_UNUSED(event);
-        std::cout << _currentColor->alpha() << std::endl;
         QPainter painter(this);
         
         // Обновляем фон при необходимости
@@ -148,7 +150,6 @@ namespace SelecterColor {
         int alphaInter{(int)((1 - ratio) * maximum())};
         int alpha{qBound(minimum(), alphaInter, maximum())};
         setValue(alpha);
-        std::cout << "al" << alpha << "   " << alphaInter  << maximum() << minimum()<< std::endl;
         _currentColor->setAlpha(alpha);
         updateNode();
     }

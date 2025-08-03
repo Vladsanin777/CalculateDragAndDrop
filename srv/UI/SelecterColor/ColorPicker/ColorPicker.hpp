@@ -2,8 +2,10 @@
 
 #include <QWidget>
 #include <QColor>
-#include <functional>
 
+#include "UI/SelecterColor/AlphaSlider/AlphaSlider.hpp"
+#include "UI/SelecterColor/HueSlider/HueSlider.hpp"
+#include "UI/SelecterColor/ColorArea2D/ColorArea2D.hpp"
 
 class QWidget;
 class QColor;

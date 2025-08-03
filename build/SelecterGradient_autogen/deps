@@ -15,6 +15,10 @@ SelecterGradient_autogen/timestamp: \
 	/home/nikifri_niki/CalculateDragAndDrop/srv/UI/SelecterGradient/GradientEditor/GradientEditor.hpp \
 	/home/nikifri_niki/CalculateDragAndDrop/srv/UI/SelecterGradient/GradientStrip/GradientStrip.cpp \
 	/home/nikifri_niki/CalculateDragAndDrop/srv/UI/SelecterGradient/GradientStrip/GradientStrip.hpp \
+	/home/nikifri_niki/CalculateDragAndDrop/srv/UI/Theme/Gradient/Gradient.cpp \
+	/home/nikifri_niki/CalculateDragAndDrop/srv/UI/Theme/Gradient/Gradient.hpp \
+	/home/nikifri_niki/CalculateDragAndDrop/srv/UI/Theme/GradientPoint/GradientPoint.cpp \
+	/home/nikifri_niki/CalculateDragAndDrop/srv/UI/Theme/GradientPoint/GradientPoint.hpp \
 	/usr/lib/cmake/Qt6/3rdparty/kwin/FindXKB.cmake \
 	/usr/lib/cmake/Qt6/FindWrapAtomic.cmake \
 	/usr/lib/cmake/Qt6/FindWrapOpenGL.cmake \

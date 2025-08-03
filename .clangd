@@ -1,7 +1,7 @@
 CompileFlags:
   Add: 
     - -std=c++23
-    - -I./srv
+    - -Isrv
     - -I/usr/include/qt6
     - -I/usr/include/qt6/QtCore
     - -I/usr/include/qt6/QtGui

@@ -1,4 +1,4 @@
-#include "GradientPoint.hpp"
+#include "UI/Theme/GradientPoint/GradientPoint.hpp"
 
 namespace Theme {
     inline GradientPoint::GradientPoint( \

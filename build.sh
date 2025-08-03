@@ -7,7 +7,7 @@ mkdir -p build && cd build || exit
 cmake .. -DCMAKE_PREFIX_PATH="/usr/include/qt6/"
 
 # Собираем проект (только цель SelecterGradient)
-cmake --build . --target SelecterGradient
+cmake --build . --target SelecterGradient -- -j24
 
 # Запускаем
 ./SelecterGradient

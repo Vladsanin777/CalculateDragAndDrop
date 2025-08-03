@@ -7,7 +7,7 @@
 #include <QResizeEvent>
 #include <QImage>
 
-#include "UI/SelecterColor/ColorArea2D/ColorArea2D.cpp"
+#include "UI/SelecterColor/ColorArea2D/ColorArea2D.hpp"
 
 class QSlider;
 class QPaintEvent;

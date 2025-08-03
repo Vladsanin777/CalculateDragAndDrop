@@ -1,5 +1,4 @@
-#pragma once
-#include "Gradient.hpp"
+#include "UI/Theme/Gradient/Gradient.hpp"
 namespace Theme {
     inline Gradient::Gradient(QGradient::Type \
         type, QGradient::Spread spread, QGradient::CoordinateMode mode)

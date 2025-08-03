@@ -1,4 +1,3 @@
-#pragma once
 #include "UI/SelecterGradient/GradientEditor/GradientEditor.hpp"
 
 

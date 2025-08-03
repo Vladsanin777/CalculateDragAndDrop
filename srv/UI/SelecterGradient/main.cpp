@@ -9,8 +9,6 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <functional>
-#include <iostream>
 #include "UI/SelecterGradient/GradientEditor/GradientEditor.cpp"
 #include <QGradient>
 

@@ -3,7 +3,7 @@
 
 #include <QGradient>
 
-#include "../GradientPoint/GradientPoint.cpp"
+#include "UI/Theme/GradientPoint/GradientPoint.hpp"
 
 
 namespace Theme {

@@ -1,6 +1,7 @@
-#pragma once
+
 #include "UI/SelecterColor/ColorArea2D/ColorArea2D.hpp"
-#include <iostream>
+#include "UI/SelecterColor/AlphaSlider/AlphaSlider.hpp"
+#include <QPainter>
 
 namespace SelecterColor {
     // ColorArea2D implementation (без изменений)
@@ -53,7 +54,6 @@ namespace SelecterColor {
         
         int x = _currentColor->saturationF() * width();
         int y = (1.0f - _currentColor->valueF()) * height();
-        std::cout << "x: " << x << "y: " << y << std::endl;
         painter.setPen(Qt::white);
         painter.drawEllipse(QPoint(x, y), 8, 8);
         painter.setPen(Qt::black);

@@ -1,9 +1,8 @@
-#pragma once
 #include "UI/SelecterColor/ColorPicker/ColorPicker.hpp"
-
-#include "UI/SelecterColor/HueSlider/HueSlider.cpp"
-#include "UI/SelecterColor/AlphaSlider/AlphaSlider.cpp"
-#include "UI/SelecterColor/ColorArea2D/ColorArea2D.cpp"
+//#include "UI/SelecterColor/HueSlider/HueSlider.cpp"
+//#include "UI/SelecterColor/AlphaSlider/AlphaSlider.cpp"
+//#include "UI/SelecterColor/ColorArea2D/ColorArea2D.cpp"
+#include <QHBoxLayout>
 namespace SelecterColor {
     // ColorPicker implementation (с изменениями для HueSlider)
     ColorPicker::ColorPicker(QColor * &color, QWidget *parent) 
