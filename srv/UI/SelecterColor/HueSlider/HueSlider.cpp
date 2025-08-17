@@ -52,7 +52,7 @@ namespace SelecterColor {
         // Рисуем градиент с отступами по бокам
         painter.drawImage(4, 3, gradientImage.copy(1, 0, width() - 9, height()-6));
         
-        qreal ratio = static_cast<qreal>(value()) / (maximum() - minimum());
+        qreal ratio = 1.0f - _currentColor->hueF();
         int yPos = (1 - ratio) * height();
         yPos = qBound(0, yPos - handleHeight/2, height() - handleHeight);
         

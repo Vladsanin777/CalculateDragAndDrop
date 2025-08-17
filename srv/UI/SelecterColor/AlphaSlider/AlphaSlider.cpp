@@ -101,8 +101,8 @@ namespace SelecterColor {
         painter.drawImage(5, 3, backgroundImage.copy(1, 0, width() - 9, height()-6));
         
         // Рассчитываем позицию белого прямоугольника
-        qreal ratio = static_cast<qreal>(value()) / (maximum() - minimum());
-        int yPos = (1 - ratio) * height();
+        qreal ratio = 1.0f - _currentColor->alphaF();
+        int yPos = ratio * height();
         yPos = qBound(0, yPos - handleHeight/2, height() - handleHeight);
         
         // Рисуем ползунок на всю ширину виджета (включая отступы)
@@ -147,9 +147,10 @@ namespace SelecterColor {
     void AlphaSlider::selectColorAt(const QPoint &pos) {
         // Преобразуем позицию Y в значение альфа
         qreal ratio = static_cast<qreal>(pos.y()) / height();
-        int alphaInter{(int)((1 - ratio) * maximum())};
+        int alphaInter{(int)((1-ratio) * maximum())};
         int alpha{qBound(minimum(), alphaInter, maximum())};
         setValue(alpha);
+        printf("\n%i\n", alpha);
         _currentColor->setAlpha(alpha);
         updateNode();
     }

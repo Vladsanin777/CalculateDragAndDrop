@@ -12,7 +12,7 @@ namespace SelecterColor {
         
 
         // Создаем вертикальный слайдер для Alpha
-        _alphaSlider = new AlphaSlider(0, color, 100, this, this);
+        _alphaSlider = new AlphaSlider(0, color, 255, this, this);
         
         // Создаем 2D область для Saturation/Value
         _colorArea2D = new ColorArea2D{color, _alphaSlider, this};
