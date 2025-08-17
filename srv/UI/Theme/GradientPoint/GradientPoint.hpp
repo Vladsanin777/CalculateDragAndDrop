@@ -1,3 +1,4 @@
+#pragma once
 #include <QColor>
 
 namespace Theme {
@@ -6,15 +7,15 @@ namespace Theme {
         qreal _position;
         QColor _color;
     public:
-        inline GradientPoint( \
+        GradientPoint( \
             qreal position, QColor color \
         );
 
-        inline qreal &getPosition(void);
-        inline qreal getPosition(void) const;
-        inline void setPosition(qreal position);
-        inline QColor &getColor(void);
-        inline QColor getColor(void) const;
-        inline void setColor(QColor color);
+        qreal &getPosition(void);
+        qreal getPosition(void) const;
+        void setPosition(qreal position);
+        QColor &getColor(void);
+        QColor getColor(void) const;
+        void setColor(QColor color);
     };
 }

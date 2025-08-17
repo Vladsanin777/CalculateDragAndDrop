@@ -1,0 +1,5 @@
+/home/nikifri_niki/CalculateDragAndDrop/CMakeFiles/SelecterGradient.dir
+/home/nikifri_niki/CalculateDragAndDrop/CMakeFiles/edit_cache.dir
+/home/nikifri_niki/CalculateDragAndDrop/CMakeFiles/rebuild_cache.dir
+/home/nikifri_niki/CalculateDragAndDrop/CMakeFiles/SelecterGradient_autogen_timestamp_deps.dir
+/home/nikifri_niki/CalculateDragAndDrop/CMakeFiles/SelecterGradient_autogen.dir

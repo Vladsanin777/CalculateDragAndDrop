@@ -19,27 +19,27 @@ namespace Theme {
         QGradient::CoordinateMode _mode{QGradient::LogicalMode};
 
     public:
-        inline Gradient(QGradient::Type type = QGradient::LinearGradient, \
+        Gradient(QGradient::Type type = QGradient::LinearGradient, \
             QGradient::Spread spread = QGradient::PadSpread, \
             QGradient::CoordinateMode mode = QGradient::LogicalMode);
-        inline QGradient::Type getType(void);
-        inline void setType(QGradient::Type type);
-        inline QGradient::Spread getSpread(void);
-        inline void setSpread(QGradient::Spread spread);
-        inline QGradient::CoordinateMode getMode(void);
-        inline void setMode(QGradient::CoordinateMode mode);
-        inline void setPointAt(qreal position, QColor color, bool isSelection);
-        inline void setPointAt(GradientPoint point);
-        inline Gradient &operator<<(GradientPoint point);
-        inline GradientPoint& operator[](size_t index);
-        inline size_t size(void);
-        inline GradientPointsIt begin(void);
-        inline GradientPointsIt end(void);
-        inline void insert(GradientPointsIt it, \
+        QGradient::Type getType(void);
+        void setType(QGradient::Type type);
+        QGradient::Spread getSpread(void);
+        void setSpread(QGradient::Spread spread);
+        QGradient::CoordinateMode getMode(void);
+        void setMode(QGradient::CoordinateMode mode);
+        void setPointAt(qreal position, QColor color, bool isSelection);
+        void setPointAt(GradientPoint point);
+        Gradient &operator<<(GradientPoint point);
+        GradientPoint& operator[](size_t index);
+        size_t size(void);
+        GradientPointsIt begin(void);
+        GradientPointsIt end(void);
+        void insert(GradientPointsIt it, \
             GradientPoint point);
-        inline void insert(GradientPointsIt it);
-        inline void erase(GradientPointsIt it);
-        inline size_t addPoint(GradientPoint point, \
+        void insert(GradientPointsIt it);
+        void erase(GradientPointsIt it);
+        size_t addPoint(GradientPoint point, \
             size_t index);
     };
 }

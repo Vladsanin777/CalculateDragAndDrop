@@ -1,3 +1,5 @@
+#include "UI/Theme/Gradient/Gradient.hpp"
+#include "UI/Theme/GradientPoint/GradientPoint.hpp"
 #include "UI/SelecterGradient/GradientEditor/GradientEditor.hpp"
 
 
@@ -103,7 +105,7 @@ namespace SelecterGradient {
         //updateColorButton(*_currentColor);
         
         // Полоса градиента
-        _gradientStrip = new GradientStrip(_gradient, this);
+        _gradientStrip = new GradientStrip(_gradient, _currentColor, this);
         layout->addWidget(_gradientStrip, 2, 0, 1, 6);
         
         
@@ -129,11 +131,7 @@ namespace SelecterGradient {
                 this, [this] { updateGradient(); });
         
         connect(_colorButton, &QPushButton::clicked, this, [this] {
-            auto menu = new SelecterColor::ColorPicker(_currentColor, this);
-            //menu->setColorSelectedCallback([this](const QColor &color) { \
-                updateColor(color); \
-            });
-            //menu->popup(colorButton->mapToGlobal(QPoint(0, colorButton->height())));
+            new SelecterColor::ColorPicker(_currentColor, this);
         });
         
         // Инициализация видимости

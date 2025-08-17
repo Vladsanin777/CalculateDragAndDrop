@@ -4,6 +4,5 @@
 *.out
 *.d
 *.d.*
-CalculateDragAndDrop_autogen
-CMakeFiles
+build
 .qt

@@ -8,10 +8,10 @@ const int HANDLE_SIZE = 16;   // Размер квадратной части т
 const int TOTAL_HEIGHT = STRIP_HEIGHT + 2 * POINT_EXTRA; // Общая высота с учетом выступа
 
 namespace SelecterGradient {
-    inline GradientStrip::GradientStrip(Theme::Gradient &gradient, \
-        QWidget *parent) 
+    GradientStrip::GradientStrip(Theme::Gradient &gradient, \
+        QColor *&currentColor, QWidget *parent) 
         : QWidget{parent}, _gradient{gradient}, _selectedIndex(0), \
-        _dragging(false) {
+        _dragging(false), _currentColor{currentColor} {
         setMinimumHeight(TOTAL_HEIGHT);
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         setSelectedIndex(0);
@@ -25,10 +25,13 @@ namespace SelecterGradient {
         return _selectedIndex;
     }
 
-    inline void GradientStrip::setSelectedIndex(size_t selectedIndex) {
-        _selectedIndex = selectedIndex; update(); return;
+    void GradientStrip::setSelectedIndex(size_t selectedIndex) {
+        _selectedIndex = selectedIndex; 
+        _currentColor = &_gradient[selectedIndex].getColor();
+        printf("jklsdk");
+        update(); return;
     }
-    inline void GradientStrip::addPoint(bool after) {
+    void GradientStrip::addPoint(bool after) {
         size_t index {getSelectedIndex()};
         if (after) index++;
 
@@ -137,7 +140,7 @@ namespace SelecterGradient {
             if (index >= 0) {
                 
                 // Установка нового выбора
-                _selectedIndex = index;
+                setSelectedIndex(index);
                 
                 // Начало перетаскивания
                 _dragging = true;

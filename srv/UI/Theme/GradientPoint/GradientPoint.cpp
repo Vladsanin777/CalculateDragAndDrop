@@ -1,28 +1,28 @@
 #include "UI/Theme/GradientPoint/GradientPoint.hpp"
 
 namespace Theme {
-    inline GradientPoint::GradientPoint( \
+    GradientPoint::GradientPoint( \
         qreal position, QColor color \
     ) : _position{position}, _color{color} \
     { return; }
 
-    inline qreal &GradientPoint::getPosition(void) {
+    qreal &GradientPoint::getPosition(void) {
         return _position;
     }
-    inline qreal GradientPoint::getPosition(void) const {
+    qreal GradientPoint::getPosition(void) const {
         return _position;
     }
-    inline void GradientPoint::setPosition(qreal position) {
+    void GradientPoint::setPosition(qreal position) {
         _position = position;
         return;
     }
-    inline QColor &GradientPoint::getColor(void) {
+    QColor &GradientPoint::getColor(void) {
         return _color;
     }
-    inline QColor GradientPoint::getColor(void) const {
+    QColor GradientPoint::getColor(void) const {
         return _color;
     }
-    inline void GradientPoint::setColor(QColor color) {
+    void GradientPoint::setColor(QColor color) {
         _color = color;
         return;
     }

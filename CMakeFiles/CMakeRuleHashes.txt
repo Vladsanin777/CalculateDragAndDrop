@@ -1,0 +1,4 @@
+# Hashes of file build rules.
+fa0ded5d357dcd3baadd95b0435183e9 CMakeFiles/SelecterGradient_autogen
+2991ef4d0c1b1313c20f8b018a210d59 CalculateDragAndDrop_autogen/timestamp
+9d0cda8a1c174375c31de3e1d7a2ac6b SelecterGradient_autogen/timestamp

@@ -9,18 +9,22 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
-#include "UI/SelecterGradient/GradientEditor/GradientEditor.cpp"
+#include "UI/SelecterGradient/GradientEditor/GradientEditor.hpp"
+#include "UI/Theme/Gradient/Gradient.hpp"
+
+#include "UI/Theme/GradientPoint/GradientPoint.hpp"
 #include <QGradient>
+ 
 
 
-int main(int argc, char *argv[]) {
-    QApplication a(argc, argv);
+int main(int argc, char **argv) {
+    QApplication a{argc, argv};
     Theme::Gradient gradient{};
     gradient << Theme::GradientPoint{0.0, QColor{130, 15, 8}} \
     << Theme::GradientPoint{0.3, QColor{0, 255, 0}} \
     << Theme::GradientPoint{0.5, Qt::red} \
     << Theme::GradientPoint{1.0, Qt::blue};
-    auto editor = new SelecterGradient::GradientEditor{gradient};
+    new SelecterGradient::GradientEditor{gradient};
 
 
     return a.exec();

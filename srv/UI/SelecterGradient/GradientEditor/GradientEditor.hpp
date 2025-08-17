@@ -17,28 +17,8 @@
 #include <functional>
 #include <memory>
 
-#include "UI/SelecterGradient/GradientStrip/GradientStrip.cpp"
-#include "UI/SelecterColor/ColorPicker/ColorPicker.cpp"
-
-class QComboBox;
-class QDoubleSpinBox;
-class QCheckBox;
-class QPushButton;
-class QLabel;
-class QWidgetAction;
-class QMenu;
-
-namespace SelecterColor {
-    class ColorPicker;
-}
-
-namespace SelecterGradient {
-    class GradientStrip;
-}
-
-namespace SelecterGradient {
-    class GradientEditor;
-}
+#include "UI/SelecterGradient/GradientStrip/GradientStrip.hpp"
+#include "UI/SelecterColor/ColorPicker/ColorPicker.hpp"
 
 using GradientChangedCallback = std::function<void()>;
 

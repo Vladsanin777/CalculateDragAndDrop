@@ -1,0 +1,43 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/CalculateDragAndDrop.dir/link.d"
+  "CMakeFiles/CalculateDragAndDrop_autogen.dir/AutogenUsed.txt"
+  "CMakeFiles/CalculateDragAndDrop_autogen.dir/ParseCache.txt"
+  "CalculateDragAndDrop_autogen"
+  "CMakeFiles/CalculateDragAndDrop.dir/CalculateDragAndDrop_autogen/mocs_compilation.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/CalculateDragAndDrop_autogen/mocs_compilation.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/UI/Application/Application.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/UI/Application/Application.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/UI/Button/Button.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/UI/Button/Button.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/UI/CreateHistory/CreateHistory.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/UI/CreateHistory/CreateHistory.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/UI/Window/Window.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/UI/Window/Window.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/main.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/main.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_f/alphaslider.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_f/alphaslider.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_f/colorpicker.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_f/colorpicker.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_f/hueslider.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_f/hueslider.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_f/main.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_f/main.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_g/gradientSettings.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_g/gradientSettings.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_g/gradient_editor.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_g/gradient_editor.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_g/gradient_strip.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_g/gradient_strip.cpp.o.d"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_g/main.cpp.o"
+  "CMakeFiles/CalculateDragAndDrop.dir/srv/test_g/main.cpp.o.d"
+  "CalculateDragAndDrop"
+  "CalculateDragAndDrop.pdb"
+  "CalculateDragAndDrop_autogen/mocs_compilation.cpp"
+  "CalculateDragAndDrop_autogen/timestamp"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/CalculateDragAndDrop.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
