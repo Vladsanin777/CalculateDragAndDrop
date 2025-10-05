@@ -45,7 +45,7 @@ QT_LDFLAGS = $(shell pkg-config --libs Qt6Core Qt6Gui Qt6Widgets)
 
 # Флаги компилятора, включая путь поиска для srv/
 # Это позволяет использовать #include "UI/..." в исходниках
-CXXFLAGS = -g -Wall $(CXXSTD) -I. -I./srv $(QT_CFLAGS) -fPIC
+CXXFLAGS = -g -Wall $(CXXSTD) -I. -I./srv $(QT_CFLAGS) -fPIC -g
 
 # Флаги линковщика
 LDFLAGS = $(QT_LDFLAGS)

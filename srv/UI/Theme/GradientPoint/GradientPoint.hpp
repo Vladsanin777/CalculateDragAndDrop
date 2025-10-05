@@ -8,7 +8,7 @@ namespace Theme {
         QColor _color;
     public:
         GradientPoint( \
-            qreal position, QColor color \
+            qreal position = 0.0, QColor color = QColor(0, 0, 0, 0) \
         );
 
         qreal &getPosition(void);

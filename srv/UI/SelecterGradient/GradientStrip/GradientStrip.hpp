@@ -45,8 +45,9 @@ namespace SelecterGradient {
         
         QSize sizeHint(void) const override;
         size_t getSelectedIndex(void) const;
-        void addPoint(bool after);
         void removePoint(void);
+        void addPointBefore(void);
+        void addPointAfter(void);
 
     protected:
         void paintEvent(QPaintEvent *event) override;
@@ -55,6 +56,7 @@ namespace SelecterGradient {
         void mouseReleaseEvent(QMouseEvent *event) override;
 
     private:
+        void addPointIndex(size_t index);
         void setSelectedIndex(size_t selectedIndex);
         void updatePointPositions();
         QRect pointRect(int index) const;

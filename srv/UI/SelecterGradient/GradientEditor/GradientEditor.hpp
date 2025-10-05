@@ -49,7 +49,13 @@ namespace SelecterGradient {
         QGradient::Type gradientType() const;
         qreal angle() const;
         //bool rotateWithShape() const;
-        inline void addPoint(bool after);
+        void addPointAfter(void);
+        void addPointBefore(void);
+        //void addPoint(bool after);
+        /*
+        void isVisibleAddButtonLeft(bool isVisible);
+        void isVisibleAddButtonRight(bool isVisible);
+        */
 
     private:
         void removePoint();

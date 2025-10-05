@@ -31,22 +31,42 @@ namespace SelecterGradient {
         printf("jklsdk");
         update(); return;
     }
-    void GradientStrip::addPoint(bool after) {
-        size_t index {getSelectedIndex()};
-        if (after) index++;
-
-        Theme::GradientPoint &point0 {_gradient[index - 1]};
-        Theme::GradientPoint &point1 {_gradient[index]};
-        QColor& color0 {point0.getColor()};
-        QColor& color1 {point1.getColor()};
-        qreal &pos0 {point0.getPosition()};
-        qreal &pos1 {point1.getPosition()};
-        QColor resultColor {(color0.red() + color1.red()) >> 1, \
-            (color0.green() + color1.green()) >> 1, \
-            (color0.blue() + color1.blue()) >> 1};
-        qreal resultPos {pos1 - pos0};
-        Theme::GradientPoint resultPoint {resultPos, resultColor};
+    void GradientStrip::addPointIndex(size_t index) {
+        Theme::GradientPoint resultPoint{};
+        printf("index: %lu\n", index);
+        if (index == 0 || index == _gradient.size()) {
+            if (index) index--;
+            Theme::GradientPoint &point {_gradient[index]};
+            QColor &color { point.getColor() };
+            qreal pos { point.getPosition() / 2 };
+            resultPoint.setColor(color);
+            resultPoint.setPosition(pos);
+        } else {
+            Theme::GradientPoint &point0 {_gradient[index - 1]};
+            Theme::GradientPoint &point1 {_gradient[index]};
+            QColor& color0 {point0.getColor()};
+            QColor& color1 {point1.getColor()};
+            qreal &pos0 {point0.getPosition()};
+            qreal &pos1 {point1.getPosition()};
+            QColor resultColor {(color0.red() + color1.red()) >> 1, \
+                (color0.green() + color1.green()) >> 1, \
+                (color0.blue() + color1.blue()) >> 1};
+            qreal resultPos { (pos1 + pos0) / 2 };
+            resultPoint.setColor(resultColor);
+            resultPoint.setPosition(resultPos);
+        }
         _gradient.addPoint(resultPoint, index);
+        update();
+        return;
+    }
+
+    void GradientStrip::addPointAfter(void) {
+        addPointIndex(getSelectedIndex() + 1);
+        return;
+    }
+
+    void GradientStrip::addPointBefore(void) {
+        addPointIndex(getSelectedIndex());
         return;
     }
 

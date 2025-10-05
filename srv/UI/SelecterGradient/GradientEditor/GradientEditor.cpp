@@ -110,9 +110,12 @@ namespace SelecterGradient {
         
         
         // Соединения
-        connect(_addButtonLeft, &QPushButton::clicked, this, [this] { addPoint(false); });
-        connect(_addButtonRight, &QPushButton::clicked, this, [this] { addPoint(true); });
-        connect(_removeButton, &QPushButton::clicked, this, [this] { removePoint(); });
+        connect(_addButtonLeft, &QPushButton::clicked, this, [this] \
+                { printf("Before add point"); addPointBefore(); });
+        connect(_addButtonRight, &QPushButton::clicked, this, [this] \
+                { addPointAfter(); });
+        connect(_removeButton, &QPushButton::clicked, this, [this] \
+                { removePoint(); });
         connect(_typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 this, [this] { 
                     bool isLinear = (_typeCombo->currentData().toInt() == QGradient::LinearGradient);
@@ -141,15 +144,27 @@ namespace SelecterGradient {
         _centerLabel->setVisible(!isLinear);
         _centerCombo->setVisible(!isLinear);
     }
-
+    /*
+    void GradientEditor::isVisibleAddButtonRight(bool isVisible) {
+        _addButtonRight.isVisible(isVisible);
+    }
+    void GradientEditor::isVisibleAddButtonLeft(bool isVisible) {
+        _addButtonLeft.isVisible(isVisible);
+    }
+    */
 
     void GradientEditor::removePoint() {
         _gradientStrip->removePoint();
     }
 
-    inline void GradientEditor::addPoint( \
-        bool after) {
-        return _gradientStrip->addPoint(after);
+    void GradientEditor::addPointBefore(void) {
+        printf("Before add point");
+        return _gradientStrip->addPointBefore();
+    }
+
+    void GradientEditor::addPointAfter(void) {
+        printf("After add point\n");
+        return _gradientStrip->addPointAfter();
     }
 
     void GradientEditor::updateGradient() {

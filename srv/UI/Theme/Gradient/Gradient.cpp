@@ -32,6 +32,7 @@ namespace Theme {
         _gradient.push_back(point); return *this;
     }
     GradientPoint& Gradient::operator[](size_t index) {
+        printf("Gradient operator[] \n");
         return _gradient[index];
     }
     size_t Gradient::size(void) {
@@ -55,6 +56,7 @@ namespace Theme {
     }
     size_t Gradient::addPoint(GradientPoint point, \
         size_t index) {
+        printf("index addPoint in Theme Gradient: %lu", index);
         insert(begin() + index, point);
         return index;
     }
