@@ -1,4 +1,5 @@
 
+#include <algorithm>
 #include "UI/SelecterGradient/GradientStrip/GradientStrip.hpp"
 #include <QPainter>
 
@@ -34,13 +35,19 @@ namespace SelecterGradient {
     void GradientStrip::addPointIndex(size_t index) {
         Theme::GradientPoint resultPoint{};
         printf("index: %lu\n", index);
-        if (index == 0 || index == _gradient.size()) {
-            if (index) index--;
-            Theme::GradientPoint &point {_gradient[index]};
-            QColor &color { point.getColor() };
+        if (index == 0) {
+            Theme::GradientPoint &point { _gradient[index] };
             qreal pos { point.getPosition() / 2 };
-            resultPoint.setColor(color);
+            resultPoint.setColor(point.getColor());
             resultPoint.setPosition(pos);
+        } else if (index == _gradient.size()) {
+            index--;
+            printf("index %lu addPointIndex\n", index);
+            Theme::GradientPoint &point { _gradient[index] };
+            qreal pos { (1.0 + point.getPosition()) / 2 };
+            resultPoint.setColor(point.getColor());
+            resultPoint.setPosition(pos);
+
         } else {
             Theme::GradientPoint &point0 {_gradient[index - 1]};
             Theme::GradientPoint &point1 {_gradient[index]};
@@ -174,76 +181,55 @@ namespace SelecterGradient {
     }
 
     void GradientStrip::mouseMoveEvent(QMouseEvent *event) {
-        if (_dragging && _selectedIndex >= 0) {
-            int dx = event->pos().x() - _dragStartX;
-            qreal newPos = _dragStartPos + static_cast<qreal>(dx) / width();
-            
-            // Убираем ограничения - можно перемещать по всей длине
-            newPos = qBound(0.0, newPos, 1.0);
-            
-            // Проверка на пересечение с другими точками
-            for (size_t i = 0; i < _gradient.size(); ++i) {
-                if (i != _selectedIndex && qAbs(_gradient[i].getPosition() - newPos) < 0.01) {
-                    // Небольшое смещение для визуального разделения
-                    if (newPos > _gradient[i].getPosition()) newPos = _gradient[i].getPosition() + 0.01;
-                    else newPos = _gradient[i].getPosition() - 0.01;
-                    newPos = qBound(0.0, newPos, 1.0);
-                    break;
-                }
-            }
-            
-            _gradient[_selectedIndex].setPosition(newPos);
-            update();
-            // if (_stopsChangedCallback) _stopsChangedCallback();
-        }
-    }
 
+        if (!_dragging) return;
+
+        int dx = event->pos().x() - _dragStartX;
+        qreal newPos { qBound(0.0, _dragStartPos + \
+                static_cast<qreal>(dx) / width(), 1.0) };
+
+        _gradient[_selectedIndex].setPosition(newPos);
+
+        if (_selectedIndex != 0 && _selectedIndex < \
+                _gradient.size() - 1) {
+
+
+            Theme::GradientPoint & pointSelect \
+                { _gradient[_selectedIndex] }, \
+                & pointPreced { _gradient[_selectedIndex - 1] }, \
+                & pointNext { _gradient[_selectedIndex + 1] };
+
+            if (newPos < pointPreced.getPosition()) {
+                std::swap(pointSelect, pointPreced);
+                _selectedIndex--;
+            } else if (newPos > pointNext.getPosition()) {
+                std::swap(pointSelect, pointNext);
+                _selectedIndex++;
+            }
+        } else if (_selectedIndex == 0) {
+            Theme::GradientPoint & pointSelect \
+                { _gradient[_selectedIndex] }, \
+                & pointNext { _gradient[_selectedIndex + 1] };
+            if (newPos > pointNext.getPosition()) {
+                std::swap(pointSelect, pointNext);
+                _selectedIndex++;
+            }
+        } else {
+            Theme::GradientPoint & pointSelect \
+                { _gradient[_selectedIndex] }, \
+                & pointPreced { _gradient[_selectedIndex - 1] };
+            if (newPos < pointPreced.getPosition()) {
+                std::swap(pointSelect, pointPreced);
+                _selectedIndex--;
+            }
+        }
+        update();
+    }
 
     void GradientStrip::mouseReleaseEvent(QMouseEvent *) {
         if (_dragging) {
             _dragging = false;
-            
-            /*
-            // Пересортировка точек при отпускании
-            if (!_stops.empty() && _stops.size() > 2) {
-                // Сохраняем крайние точки
-                GradientStop firstStop = _stops.front();
-                GradientStop lastStop = _stops.back();
-                
-                // Копируем средние точки
-                GradientPoints middleStops;
-                for (size_t i = 1; i < _stops.size() - 1; ++i) {
-                    middleStops.push_back(_stops[i]);
-                }
-                
-                // Сортируем средние точки по позиции
-                std::sort(middleStops.begin(), middleStops.end(), 
-                    [](const GradientStop& a, const GradientStop& b) {
-                        return a.getPosition() < b.getPosition();
-                    });
-                
-                // Собираем новый список
-                std::vector<GradientStop> newStops;
-                newStops.push_back(firstStop);
-                for (auto& stop : middleStops) {
-                    newStops.push_back(stop);
-                }
-                newStops.push_back(lastStop);
-                
-                // Обновляем список
-                _stops = newStops;
-                
-                // Обновляем выбранный индекс
-                for (int i = 0; i < static_cast<int>(_gradient.size()); ++i) {
-                    if (_gradient[i].getIsSelected()) {
-                        _selectedIndex = i;
-                        break;
-                    }
-                }
-                */
-                update();
-                // if (_stopsChangedCallback) _stopsChangedCallback();
-            //}
+            update();
         }
     }
 }
