@@ -1,5 +1,11 @@
 #include "UI/Theme/GradientPoint/GradientPoint.hpp"
 
+
+std::ostream &operator<<(std::ostream &out, QColor &color) {
+    out << "r: " << color.red() << "g: " << color.green() << "b: " << color.blue();
+    return out;
+}
+
 namespace Theme {
     GradientPoint::GradientPoint( \
         qreal position, QColor color \

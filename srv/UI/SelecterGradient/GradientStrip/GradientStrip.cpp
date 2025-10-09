@@ -1,4 +1,4 @@
-
+#include <iostream>
 #include <algorithm>
 #include "UI/SelecterGradient/GradientStrip/GradientStrip.hpp"
 #include <QPainter>
@@ -12,7 +12,8 @@ namespace SelecterGradient {
     GradientStrip::GradientStrip(Theme::Gradient &gradient, \
         QColor *&currentColor, QWidget *parent) 
         : QWidget{parent}, _gradient{gradient}, _selectedIndex(0), \
-        _dragging(false), _currentColor{currentColor} {
+        _dragging(false), _currentColor{currentColor}, \
+        _isGoToNextPoint{true} {
         setMinimumHeight(TOTAL_HEIGHT);
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         setSelectedIndex(0);
@@ -26,6 +27,10 @@ namespace SelecterGradient {
         return _selectedIndex;
     }
 
+    size_t GradientStrip::size(void) {
+        return _gradient.size();
+    }
+
     void GradientStrip::setSelectedIndex(size_t selectedIndex) {
         _selectedIndex = selectedIndex; 
         _currentColor = &_gradient[selectedIndex].getColor();
@@ -34,6 +39,7 @@ namespace SelecterGradient {
     }
     void GradientStrip::addPointIndex(size_t index) {
         Theme::GradientPoint resultPoint{};
+        std::cout << _gradient << std::endl;
         printf("index: %lu\n", index);
         if (index == 0) {
             Theme::GradientPoint &point { _gradient[index] };
@@ -41,13 +47,12 @@ namespace SelecterGradient {
             resultPoint.setColor(point.getColor());
             resultPoint.setPosition(pos);
         } else if (index == _gradient.size()) {
-            index--;
+
             printf("index %lu addPointIndex\n", index);
-            Theme::GradientPoint &point { _gradient[index] };
+            Theme::GradientPoint &point { _gradient[index - 1] };
             qreal pos { (1.0 + point.getPosition()) / 2 };
             resultPoint.setColor(point.getColor());
             resultPoint.setPosition(pos);
-
         } else {
             Theme::GradientPoint &point0 {_gradient[index - 1]};
             Theme::GradientPoint &point1 {_gradient[index]};
@@ -69,18 +74,31 @@ namespace SelecterGradient {
 
     void GradientStrip::addPointAfter(void) {
         addPointIndex(getSelectedIndex() + 1);
+        if (_isGoToNextPoint)
+            setSelectedIndex(getSelectedIndex()+1);
         return;
     }
 
+    bool GradientStrip::getIsGoToNextPoint(void) {
+        return _isGoToNextPoint;
+    }
+
+    void GradientStrip::setIsGoToNextPoint(bool newIsGoToNextPoint) {
+        _isGoToNextPoint = newIsGoToNextPoint;
+        std::cout << "setIsGoToNextPoint: " << _isGoToNextPoint << std::endl;
+        return;
+    }
     void GradientStrip::addPointBefore(void) {
         addPointIndex(getSelectedIndex());
+        if (!_isGoToNextPoint)
+            setSelectedIndex(getSelectedIndex() + 1);
         return;
     }
 
     void GradientStrip::removePoint(void) {
-        size_t index {getSelectedIndex()};
-        
-        _gradient.erase(_gradient.begin() + index);
+        _gradient.erase(_gradient.begin() + _selectedIndex);
+        if (_selectedIndex == size()) _selectedIndex--;
+        return;
     }
 
     void GradientStrip::paintEvent(QPaintEvent *) {
@@ -207,6 +225,7 @@ namespace SelecterGradient {
                 _selectedIndex++;
             }
         } else if (_selectedIndex == 0) {
+            if (_gradient.size() < 2) { update(); return; }
             Theme::GradientPoint & pointSelect \
                 { _gradient[_selectedIndex] }, \
                 & pointNext { _gradient[_selectedIndex + 1] };

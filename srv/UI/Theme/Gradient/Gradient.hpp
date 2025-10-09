@@ -1,10 +1,13 @@
 #pragma once
+#include <iostream>
 #include <vector>
 
 #include <QGradient>
 
 #include "UI/Theme/GradientPoint/GradientPoint.hpp"
 
+
+std::ostream &operator<<(std::ostream &out, std::vector<Theme::GradientPoint> &vec);
 
 namespace Theme {
     using GradientPoints = std::vector<GradientPoint>;
@@ -41,5 +44,10 @@ namespace Theme {
         void erase(GradientPointsIt it);
         size_t addPoint(GradientPoint point, \
             size_t index);
+
+        friend std::ostream& operator<<(std::ostream &out, Theme::Gradient &grad) {
+            out << "Address: " << &grad << std::endl << grad._gradient;
+            return out;
+        }
     };
 }

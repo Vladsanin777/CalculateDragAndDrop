@@ -1,4 +1,13 @@
 #include "UI/Theme/Gradient/Gradient.hpp"
+#include <iostream>
+
+std::ostream &operator<<(std::ostream &out, std::vector<Theme::GradientPoint> &vec) {
+    for (auto element : vec)
+        out << element << ' ';
+    out << std::endl;
+    return out;
+}
+
 namespace Theme {
     Gradient::Gradient(QGradient::Type \
         type, QGradient::Spread spread, QGradient::CoordinateMode mode)

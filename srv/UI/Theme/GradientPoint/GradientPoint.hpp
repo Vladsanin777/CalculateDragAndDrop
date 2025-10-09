@@ -1,6 +1,8 @@
 #pragma once
 #include <QColor>
 
+std::ostream &operator<<(std::ostream &out, QColor &color);
+
 namespace Theme {
     class GradientPoint {
     private:
@@ -17,5 +19,9 @@ namespace Theme {
         QColor &getColor(void);
         QColor getColor(void) const;
         void setColor(QColor color);
+        friend std::ostream &operator<<(std::ostream &out, GradientPoint &point) {
+            out << "color: " << point._color << "position: " << point._position;
+            return out;
+        }
     };
 }

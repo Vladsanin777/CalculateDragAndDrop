@@ -34,6 +34,7 @@ namespace SelecterGradient {
         QPushButton *_addButtonRight{nullptr};
         QPushButton *_removeButton{nullptr};
         QPushButton *_colorButton{nullptr};
+        QPushButton *_isGoToNextPointButton{nullptr};
         QLabel *_previewLabel{nullptr};
         QLabel *_angleLabel{nullptr};
         QLabel *_centerLabel{nullptr};
@@ -51,6 +52,8 @@ namespace SelecterGradient {
         //bool rotateWithShape() const;
         void addPointAfter(void);
         void addPointBefore(void);
+        void setIsGoToNextPoint(bool newIsGoToNextPoint);
+        bool getIsGoToNextPoint(void);
         //void addPoint(bool after);
         /*
         void isVisibleAddButtonLeft(bool isVisible);

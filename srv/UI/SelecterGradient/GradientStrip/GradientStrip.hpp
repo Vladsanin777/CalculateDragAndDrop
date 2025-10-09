@@ -34,6 +34,7 @@ namespace SelecterGradient {
         int _dragStartX = 0;
         qreal _dragStartPos = 0.0;
         QColor *&_currentColor;
+        bool _isGoToNextPoint;
         
         
         //StopSelectedCallback _stopSelectedCallback;
@@ -45,9 +46,12 @@ namespace SelecterGradient {
         
         QSize sizeHint(void) const override;
         size_t getSelectedIndex(void) const;
+        bool getIsGoToNextPoint(void);
+        void setIsGoToNextPoint(bool newIsGoToNextPoint);
         void removePoint(void);
         void addPointBefore(void);
         void addPointAfter(void);
+        size_t size(void);
 
     protected:
         void paintEvent(QPaintEvent *event) override;

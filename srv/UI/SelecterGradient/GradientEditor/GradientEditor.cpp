@@ -81,12 +81,14 @@ namespace SelecterGradient {
         _addButtonLeft = new QPushButton(QObject::tr("Addition left"), this);
         _addButtonRight = new QPushButton(QObject::tr("Addition right"), this);
         _removeButton = new QPushButton(QObject::tr("Удалить"), this);
-        _removeButton->setEnabled(false);
+        _isGoToNextPointButton = new QPushButton(QObject::tr("is go to next point"), this);
         
         QHBoxLayout *buttonsLayout = new QHBoxLayout;
         buttonsLayout->addWidget(_addButtonLeft);
         buttonsLayout->addWidget(_addButtonRight);
         buttonsLayout->addWidget(_removeButton);
+        buttonsLayout->addWidget(_isGoToNextPointButton);
+
         layout->addLayout(buttonsLayout, 1, 0, 1, 2);
         
         // Кнопка выбора цвета
@@ -115,7 +117,9 @@ namespace SelecterGradient {
         connect(_addButtonRight, &QPushButton::clicked, this, [this] \
                 { addPointAfter(); });
         connect(_removeButton, &QPushButton::clicked, this, [this] \
-                { removePoint(); });
+                { printf("remove button\n"); removePoint(); });
+        connect(_isGoToNextPointButton, &QPushButton::clicked, this, [this] \
+                { std::cout << "click is go to next point" << std::endl; setIsGoToNextPoint(!getIsGoToNextPoint()); });
         connect(_typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 this, [this] { 
                     bool isLinear = (_typeCombo->currentData().toInt() == QGradient::LinearGradient);
@@ -153,18 +157,36 @@ namespace SelecterGradient {
     }
     */
 
+    bool GradientEditor::getIsGoToNextPoint(void) {
+        return _gradientStrip->getIsGoToNextPoint();
+    }
+    void GradientEditor::setIsGoToNextPoint(bool newIsGoToNextPoint) {
+        std::cout << "GradientEditor::setIsGoToNextPoint: " << newIsGoToNextPoint << std::endl;
+        _gradientStrip->setIsGoToNextPoint(newIsGoToNextPoint);
+        return;
+    }
+
     void GradientEditor::removePoint() {
         _gradientStrip->removePoint();
+        if (_gradientStrip->size() < 2)
+            _removeButton->setEnabled(false);
+        return;
     }
 
     void GradientEditor::addPointBefore(void) {
         printf("Before add point");
-        return _gradientStrip->addPointBefore();
+        _gradientStrip->addPointBefore();
+        if (_gradientStrip->size() > 1)
+            _removeButton->setEnabled(true);
+        return;
     }
 
     void GradientEditor::addPointAfter(void) {
         printf("After add point\n");
-        return _gradientStrip->addPointAfter();
+        _gradientStrip->addPointAfter();
+        if (_gradientStrip->size() > 1)
+            _removeButton->setEnabled(true);
+        return;
     }
 
     void GradientEditor::updateGradient() {
@@ -253,7 +275,6 @@ namespace SelecterGradient {
         }
         
         _previewLabel->setPixmap(pixmap);
-        // if (gradientChangedCallback) gradientChangedCallback();
     }
 
     void GradientEditor::updateColorButton(const QColor &color) {
@@ -270,10 +291,4 @@ namespace SelecterGradient {
     qreal GradientEditor::angle() const {
         return _angleSpin->value();
     }
-
-    /*
-    bool GradientEditor::rotateWithShape() const {
-        return _rotateCheck->isChecked();
-    }
-    */
 }
