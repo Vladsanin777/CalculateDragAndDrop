@@ -4,40 +4,11 @@
 
 
 namespace SelecterGradient {
-    GradientEditor::GradientEditor(Theme::Gradient &gradient, QWidget *parent) 
-        : QWidget(parent), _gradient{gradient}, \
+    GradientEditor::GradientEditor(QGradient &qgradient, \
+            Theme::Gradient gradient, QWidget *parent) 
+        : QWidget(parent), _qgradient{qgradient}, \
+        _gradient{gradient}, \
         _currentColor(&gradient[0].getColor()) {
-        setupUI();
-        
-        // Инициализация градиента
-        //_gradientStrip = new GradientStrip{_gradient};
-        
-        /*
-        gradientStrip->setStopSelectedCallback([this](int index) {
-            if (index >= 0 && index < gradientStrip->gradientStops().size()) {
-                currentColor = gradientStrip->gradientStops().at(index).second;
-                updateColorButton(currentColor);
-                removeButton->setEnabled(index != 0 && 
-                                        index != gradientStrip->gradientStops().size() - 1);
-            }
-        });
-        */
-        
-        /*
-        gradientStrip->setStopsChangedCallback([this] {
-            updateGradient();
-        });
-        */
-        show();
-    }
-
-    /*
-    void GradientEditor::setGradientChangedCallback(GradientChangedCallback callback) {
-        _gradientChangedCallback = callback;
-    }
-    */
-
-    void GradientEditor::setupUI() {
         QGridLayout *layout = new QGridLayout(this);
         
         // Тип градиента
@@ -148,14 +119,6 @@ namespace SelecterGradient {
         _centerLabel->setVisible(!isLinear);
         _centerCombo->setVisible(!isLinear);
     }
-    /*
-    void GradientEditor::isVisibleAddButtonRight(bool isVisible) {
-        _addButtonRight.isVisible(isVisible);
-    }
-    void GradientEditor::isVisibleAddButtonLeft(bool isVisible) {
-        _addButtonLeft.isVisible(isVisible);
-    }
-    */
 
     bool GradientEditor::getIsGoToNextPoint(void) {
         return _gradientStrip->getIsGoToNextPoint();
@@ -216,12 +179,6 @@ namespace SelecterGradient {
             
             QPointF start(center.x() - dx * length, center.y() - dy * length);
             QPointF end(center.x() + dx * length, center.y() + dy * length);
-            
-            /*
-            QLinearGradient grad(start, end);
-            grad.setStops(stops);
-            painter.fillRect(pixmap.rect(), grad);
-            */
         }
         else if (type == QGradient::RadialGradient) {
             // Радиальный градиент с выбором центра
@@ -258,23 +215,17 @@ namespace SelecterGradient {
                 if (distance > maxRadius) maxRadius = distance;
             }
             
-            /*
-            // Создаем радиальный градиент
-            QRadialGradient grad(center, maxRadius);
-            grad.setStops(stops);
-            painter.fillRect(pixmap.rect(), grad);
-            */
-        }
-        else {
-            /*
-            // Запасной вариант
-            QLinearGradient grad(0, 0, pixmap.width(), 0);
-            grad.setStops(stops);
-            painter.fillRect(pixmap.rect(), grad);
-            */
         }
         
         _previewLabel->setPixmap(pixmap);
+    }
+
+    void GradientEditor::paintEvent(QPaintEvent *event) {
+        Q_UNUSED(event);
+        
+        _qgradient = QGradient();
+        _qgradient.type(_gradient.getType());
+        for (
     }
 
     void GradientEditor::updateColorButton(const QColor &color) {

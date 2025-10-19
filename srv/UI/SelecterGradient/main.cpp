@@ -24,8 +24,8 @@ int main(int argc, char **argv) {
     << Theme::GradientPoint{0.3, QColor{0, 255, 0}} \
     << Theme::GradientPoint{0.5, Qt::red} \
     << Theme::GradientPoint{1.0, Qt::blue};
-    new SelecterGradient::GradientEditor{gradient};
-
+    QGradient qgradient{};
+    SelecterGradient::GradientEditor{gradient, qgradient};
 
     return a.exec();
 }
