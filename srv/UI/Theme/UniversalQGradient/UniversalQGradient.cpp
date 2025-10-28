@@ -59,9 +59,21 @@ namespace Theme {
     }
 
     bool UniversalQGradient::operator!=( \
-            const UnionQGrdient &gradient) const {
-        return m_gradient.gradient.operator!=( \
-            gradient.gradient);
+            const UniversalQGradient &gradient) const {
+        QGradient::Type type_first{type};
+        if (type_first != gradient.type()) return false;
+        switch (type_first) {
+            case QLinerGradient:
+                return m_gradient.linearGradient \
+                    == gradient.m_gradient.linearGradient;
+            case QRadialGradient:
+                return m_gradient.radialGradient \
+                    == gradient.m_gradient,radialGradient;
+            case QConicalGradient:
+                return m_gradient.conicalGradient \
+                    == gradient.m_gradient.conicalGradient\);
+        }
+        return false;
     }
 
     bool UniversalQGradient::operator==( \
