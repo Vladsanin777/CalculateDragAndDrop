@@ -69,4 +69,12 @@ namespace Theme {
         insert(begin() + index, point);
         return index;
     }
+    void Gradient::update(void) {
+        if (_qgradient) delete _qgradient;
+        switch (_type) {
+            QGradient::LinearGradient:
+                _qgradient = new QLinearGradient{
+                /* TODO */
+        }
+    }
 }

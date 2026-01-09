@@ -5,7 +5,7 @@
 
 namespace SelecterGradient {
     GradientEditor::GradientEditor(QGradient &qgradient, \
-            Theme::Gradient gradient, QWidget *parent) 
+            Theme::Gradient *gradient, QWidget *parent) 
         : QWidget(parent), _qgradient{qgradient}, \
         _gradient{gradient}, \
         _currentColor(&gradient[0].getColor()) {
@@ -44,9 +44,11 @@ namespace SelecterGradient {
         
         // Предпросмотр
         _previewLabel = new QLabel(this);
-        _previewLabel->setMinimumSize(150, 150); // Увеличим для лучшего отображения
+        _previewLabel->setMinimumSize(150, 20); // Увеличим для лучшего отображения
         layout->addWidget(new QLabel(QObject::tr("Предварительный просмотр:")), 0, 4);
-        layout->addWidget(_previewLabel, 0, 4);
+        layout->addWidget(_previewLabel, 0, 4, 150, 150);
+
+        _preview = new Preview(gradient, this);
         
         // Кнопки управления
         _addButtonLeft = new QPushButton(QObject::tr("Addition left"), this);

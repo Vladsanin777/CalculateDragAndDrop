@@ -10,12 +10,9 @@
 std::ostream &operator<<(std::ostream &out, std::vector<Theme::GradientPoint> &vec);
 
 namespace Theme {
-    using GradientPoints = std::vector<GradientPoint>;
-    using GradientPointsIt = GradientPoints::iterator;
-
     class Gradient {
     private:
-
+        QGradient *_qgradient{};
         GradientPoints _gradient{};
         QGradient::Type _type{QGradient::LinearGradient};
         QGradient::Spread _spread{QGradient::PadSpread};
@@ -49,5 +46,7 @@ namespace Theme {
             out << "Address: " << &grad << std::endl << grad._gradient;
             return out;
         }
+    private:
+        void update(void);
     };
 }

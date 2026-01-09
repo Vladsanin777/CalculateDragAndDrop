@@ -26,7 +26,7 @@ namespace SelecterGradient {
     class GradientEditor : public QWidget {
     private:
         QGradient &_qgradient;
-        Theme::Gradient _gradient;
+        Theme::Gradient &_gradient;
         GradientStrip *_gradientStrip{nullptr};
         QComboBox *_typeCombo{nullptr};
         QDoubleSpinBox *_angleSpin{nullptr};
@@ -45,7 +45,7 @@ namespace SelecterGradient {
         QColor *_currentColor;
     public:
         explicit GradientEditor(QGradient &qgradient, \
-                Theme::Gradient gradient, \
+                Theme::Gradient *gradient, \
                 QWidget *parent = nullptr);
         QGradient::Type gradientType() const;
         qreal angle() const;
