@@ -4,10 +4,6 @@
 std::ostream &operator<<(std::ostream &out, QColor &color);
 
 namespace Theme {
-    class GradientPoint;
-    using GradientPoints = std::vector<GradientPoint>;
-    using GradientPointsIt = GradientPoints::iterator;
-
     class GradientPoint {
     private:
         qreal _position;
