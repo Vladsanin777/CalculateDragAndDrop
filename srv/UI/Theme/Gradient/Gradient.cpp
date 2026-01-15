@@ -83,7 +83,7 @@ namespace Theme {
         m_spread = spread; return;
     }
 
-    const QGradient::CoordinateMode & Gradient::\
+    const QGradient::CoordinateMode & Gradient:: \
             coordinateMode(void) const {
         return m_coordinateMode;
     }
@@ -93,71 +93,111 @@ namespace Theme {
         m_coordinateMode = coordinateMode; return;
     }
 
-    void Gradient::setPointAt(QGradientStop point) {
-        _gradient.push_back(point); return;
+    const QGradient::InterpolationMode & Gradient:: \
+            interpolationMode(void) const {
+        return m_interpolationMode;
     }
 
-    Gradient &Gradient::operator<<(GradientPoint point) {
-        _gradient.push_back(point); return *this;
+    void setInterpolationMode(QGradient::InterpolationMode \
+            interpolationMode) {
+        m_interpolationMode = interpolationMode; return;
     }
 
-    GradientPoint& Gradient::operator[](size_t index) {
-        printf("Gradient operator[%lu] \n", index);
-        return _gradient[index];
+    // QLinearGradient
+
+    QPointF startLinear(void) const {
+        return m_pointStartLinear;
     }
 
-    size_t Gradient::size(void) {
-        return _gradient.size();
+    void setStartLinear(const QPointF &start) {
+        m_pointStartLinear = start; return;
     }
 
-    GradientPointsIt Gradient::begin(void) {
-        return _gradient.begin();
+    QPointF finalStopLinear(void) const {
+        return m_pointStopLinear;
     }
 
-    GradientPointsIt Gradient::end(void) {
-        return _gradient.end();
+    void setFinalStopLinear(const QPointF &stop) {
+        m_pointStopLinear = stop; return;
     }
 
-    void Gradient::insert(GradientPointsIt it, \
-        GradientPoint point) {
-        _gradient.insert(it, point); return;
+    // QRadialGradient
+
+    QPointF centerRadial(void) const {
+        return m_radiusCentralRadial;
     }
 
-    void Gradient::insert(GradientPointsIt it) {
-        _gradient.erase(it); return;
+    void setCenterRadial(const QPointF &center) {
+        m_radiusCentralRadial = center; return;
     }
 
-    void Gradient::erase(GradientPointsIt it) {
-        _gradient.erase(it); return;
+    QPointF focalPointRadial(void) const {
+        return m_pointFocalRadial;
     }
 
-    size_t Gradient::addPoint(GradientStop point, \
-        size_t index) {
-        printf("index addPoint in Theme Gradient: %lu", index);
-        insert(begin() + index, point);
-        return index;
+    void setFocalPointRadial(const QPointF &focalPoint) {
+        m_pointFocalRadial = focalPoint; return;
     }
 
-    void Gradient::update(void) {
-        if (_gradient) delete _gradient;
-        switch (_type) {
-            QGradient::LinearGradient:
-                _gradient = new QLinearGradient{ \
-                    qreal(0.0), qreal(0.0), qreal(1.0), qreal(1.0)};
-                break;
-            QGradient::QRadialGradient
-                _gradient = new QRadialGradient{ \
-                    qreal(0.5), qreal(0.5), qreal(0.5), \
-                        qreal(0.5), qreal(0.5)};
-                break;
-            QGradient::QConicalGradient:
-                _gradient = new QConicalGradient{ \
-                    qreal(0.5), qreal(0.5), qreal(0.0)};
-                break;
-            QGradient::NoGradient:
-                _gradient = new QGradient{};
-                break;
-        }
-        _gradient.setStops(stops);
+    qreal radiusRadial(void) const {
+        return m_radiusRadial;
+    }
+
+    void setRadiusRadial(qreal radius) {
+        m_radiusRadial = radius; return;
+    }
+
+    qreal centerRadiusRadial(void) const {
+        return m_radiusCentralRadial;
+    }
+
+    void setCenterRadiusRadial(qreal radius) {
+        m_radiusCentralRadial = radius; return;
+    }
+
+    qreal focalCenterRadiusRadial(void) const {
+        return m_pointFocalRadial;
+    }
+
+    void setFocalRadiusRadial(qreal radius) {
+        m_pointFocalRadial = radius; return;
+    }
+
+    // QConicalGradient
+
+    QPointF centerConical(void) const {
+        return m_pointCenterConical;
+    }
+
+    void setCenterConical(const QPointF &center) {
+        m_pointCenterConical = center; return;
+    }
+
+    qreal angleConical(void) const {
+        return m_angleConical;
+    }
+
+    void setAngleConical(qreal angle) {
+        m_angleConical = angle; return;
+    }
+
+    // Operations Stops
+
+    void createStop(qsizetype index) {
+        m_stops.insert(index, \
+                QPointF{(m_stops[index - 1].position + \
+                m_stops[index].position) / 2, QColor{ \
+                (m_stops[index - 1].color.red() + \
+                m_stops[index].color.red()) / 2, \
+                (m_stops[index - 1].color.green() + \
+                m_stops[index].color.green()) / 2, \
+                (m_stops[index - 1].color.blue() + \
+                m_stops[index].color.blue()) / 2, \
+                (m_stops[index - 1].color.alpha() + \
+                m_stops[index].color.alpha()) / 2}});
+    }
+
+    void removeStop(qsizetype index) {
+        m_stops.remove(index);
     }
 }

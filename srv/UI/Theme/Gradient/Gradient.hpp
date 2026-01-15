@@ -29,6 +29,7 @@ namespace Theme {
         qreal m_radiusCentralRadial{1.0};
         QPointF m_pointFocalRadial{0.0, 0.0};
         qreal m_radiusFocalRadial{0.0};
+        qreal m_radiusRadial{0.0};
         QPointF m_pointCenterConical{0.0, 0.0};
         qreal m_angleConical{0.0};
 
@@ -74,17 +75,50 @@ namespace Theme {
 
         // QLinearGradient
 
-        
+        QPointF startLinear(void) const;
+
+        void setStartLinear(const QPointF &start);
+
+        QPointF finalStopLinear(void) const;
+
+        void setFinalStopLinear(const QPointF &stop);
+
+        // QRadialGradient
+
+        QPointF centerRadial(void) const;
+
+        void setCenterRadial(const QPointF &center);
+
+        QPointF focalPointRadial(void) const;
+
+        void setFocalPointRadial(const QPointF &focalPoint);
+
+        qreal radiusRadial(void) const;
+
+        void setRadiusRadial(qreal radius);
+
+        qreal centerRadiusRadial(void) const;
+
+        void setCenterRadiusRadial(qreal radius);
+
+        qreal focalCenterRadiusRadial(void) const;
+
+        void setFocalRadiusRadial(qreal radius);
+
+        // QConicalGradient
+
+        QPointF centerConical(void) const;
+
+        void setCenterConical(const QPointF &center);
+
+        qreal angleConical(void) const;
+
+        void setAngleConical(qreal angle);
 
         // Operations Stops
 
-        void createStop(size_t index);
+        void createStop(qsizetype index);
 
-        void addStop(GradientStop stop);
-
-        void removeStop(size_t index);
-
-    private:
-        void update(void);
+        void removeStop(qsizetype index);
     };
 }
