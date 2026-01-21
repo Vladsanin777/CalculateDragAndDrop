@@ -10,6 +10,8 @@ std::ostream &operator<<(std::ostream &out, std::vector<Theme::GradientPoint> &v
 
 namespace Theme {
 
+    // constructors
+
     Gradient::Gradient(QGradient::Type type, \
             const QGradientStops & stops) \
         : m_stops{stops}, m_type{type} {return;}
@@ -22,6 +24,8 @@ namespace Theme {
         : m_type{type} {return;}
 
     Gradient::Gradient(void) {return;}
+
+    // Converters
 
     Gradient::operator QGradient(void) const {
         QGradient gradient{};
@@ -67,12 +71,15 @@ namespace Theme {
         return m_interpolationMode;
     }
 
+    // Basic QGradient
+
     QGradient::Type Gradient::type(void) const {
         return m_type;
     }
 
     void Gradient::setType(QGradient::Type type) {
-        m_type = type; return;
+        m_type = type;
+        emit update();
     }
 
     const QGradient::Spread & Gradient::spread(void) const {
@@ -80,7 +87,8 @@ namespace Theme {
     }
 
     void Gradient::setSpread(QGradient::Spread spread) {
-        m_spread = spread; return;
+        m_spread = spread;
+        emit update();
     }
 
     const QGradient::CoordinateMode & Gradient:: \
@@ -90,7 +98,8 @@ namespace Theme {
 
     void Gradient::setCoordinateMode( \
             QGradient::CoordinateMode coordinateMode) const {
-        m_coordinateMode = coordinateMode; return;
+        m_coordinateMode = coordinateMode;
+        emit update();
     }
 
     const QGradient::InterpolationMode & Gradient:: \
@@ -98,92 +107,111 @@ namespace Theme {
         return m_interpolationMode;
     }
 
-    void setInterpolationMode(QGradient::InterpolationMode \
+    void Gradient::setInterpolationMode(QGradient::InterpolationMode \
             interpolationMode) {
-        m_interpolationMode = interpolationMode; return;
+        m_interpolationMode = interpolationMode;
+        emit update();
     }
 
     // QLinearGradient
 
-    QPointF startLinear(void) const {
+    QPointF Gradient::startLinear(void) const {
         return m_pointStartLinear;
     }
 
-    void setStartLinear(const QPointF &start) {
+    void Gradient::setStartLinear(const QPointF &start) {
         m_pointStartLinear = start; return;
+        if (m_type == QGradient::LinerGradient)
+            emit update();
     }
 
-    QPointF finalStopLinear(void) const {
+    QPointF Gradient::finalStopLinear(void) const {
         return m_pointStopLinear;
     }
 
-    void setFinalStopLinear(const QPointF &stop) {
-        m_pointStopLinear = stop; return;
+    void Gradient::setFinalStopLinear(const QPointF &stop) {
+        m_pointStopLinear = stop;
+        if (m_type == QGradient::LinerGradient)
+            emit update();
     }
 
     // QRadialGradient
 
-    QPointF centerRadial(void) const {
+    QPointF Gradient::centerRadial(void) const {
         return m_radiusCentralRadial;
     }
 
-    void setCenterRadial(const QPointF &center) {
-        m_radiusCentralRadial = center; return;
+    void Gradient::setCenterRadial(const QPointF &center) {
+        m_radiusCentralRadial = center;
+        if (m_type == QGradient::RadialGradient)
+            emit update();
     }
 
-    QPointF focalPointRadial(void) const {
+    QPointF Gradient::focalPointRadial(void) const {
         return m_pointFocalRadial;
     }
 
-    void setFocalPointRadial(const QPointF &focalPoint) {
-        m_pointFocalRadial = focalPoint; return;
+    void Gradient::setFocalPointRadial(const QPointF &focalPoint) {
+        m_pointFocalRadial = focalPoint;
+        if (m_type == QGradient::RadialGradient)
+            emit update();
     }
 
-    qreal radiusRadial(void) const {
+    qreal Gradient::radiusRadial(void) const {
         return m_radiusRadial;
     }
 
-    void setRadiusRadial(qreal radius) {
-        m_radiusRadial = radius; return;
+    void Gradient::setRadiusRadial(qreal radius) {
+        m_radiusRadial = radius;
+        if (m_type == QGradient::RadialGradient)
+            emit update();
     }
 
-    qreal centerRadiusRadial(void) const {
+    qreal Gradient::centerRadiusRadial(void) const {
         return m_radiusCentralRadial;
     }
 
-    void setCenterRadiusRadial(qreal radius) {
-        m_radiusCentralRadial = radius; return;
+    void Gradient::setCenterRadiusRadial(qreal radius) {
+        m_radiusCentralRadial = radius;
+        if (m_type == QGradient::RadialGradient)
+            emit update();
     }
 
-    qreal focalCenterRadiusRadial(void) const {
+    qreal Gradient::focalCenterRadiusRadial(void) const {
         return m_pointFocalRadial;
     }
 
-    void setFocalRadiusRadial(qreal radius) {
-        m_pointFocalRadial = radius; return;
+    void Gradient::setFocalRadiusRadial(qreal radius) {
+        m_pointFocalRadial = radius;
+        if (m_type == QGradient::RadialGradient)
+            emit update();
     }
 
     // QConicalGradient
 
-    QPointF centerConical(void) const {
+    QPointF Gradient::centerConical(void) const {
         return m_pointCenterConical;
     }
 
-    void setCenterConical(const QPointF &center) {
-        m_pointCenterConical = center; return;
+    void Gradient::setCenterConical(const QPointF &center) {
+        m_pointCenterConical = center;
+        if (m_type == QGradient::ConicalGradient)
+            emit update();
     }
 
-    qreal angleConical(void) const {
+    qreal Gradient::angleConical(void) const {
         return m_angleConical;
     }
 
-    void setAngleConical(qreal angle) {
-        m_angleConical = angle; return;
+    void Gradient::setAngleConical(qreal angle) {
+        m_angleConical = angle;
+        if (m_type == QGradient::ConicalGradient)
+            emit update();
     }
 
     // Operations Stops
 
-    void createStop(qsizetype index) {
+    void Gradient::createStop(qsizetype index) {
         m_stops.insert(index, \
                 QPointF{(m_stops[index - 1].position + \
                 m_stops[index].position) / 2, QColor{ \
@@ -195,9 +223,11 @@ namespace Theme {
                 m_stops[index].color.blue()) / 2, \
                 (m_stops[index - 1].color.alpha() + \
                 m_stops[index].color.alpha()) / 2}});
+        emit update();
     }
 
-    void removeStop(qsizetype index) {
+    void Gradient::removeStop(qsizetype index) {
         m_stops.remove(index);
+        emit update();
     }
 }

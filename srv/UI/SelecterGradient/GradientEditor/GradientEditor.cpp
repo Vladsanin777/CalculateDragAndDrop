@@ -4,16 +4,18 @@
 
 
 namespace SelecterGradient {
-    GradientEditor::GradientEditor(QGradient &qgradient, \
-            Theme::Gradient *gradient, QWidget *parent) 
-        : QWidget(parent), _qgradient{qgradient}, \
-        _gradient{gradient}, \
-        _currentColor(&gradient[0].getColor()) {
-        QGridLayout *layout = new QGridLayout(this);
+    GradientEditor::GradientEditor(Theme::Gradient &gradient, \
+            QWidget *parent = nullptr) 
+        : QWidget(parent), m_gradient{gradient} {
+        init();
+    }
+
+    void init(void) {
+        QGridLayout m_layoutMain = QGridLayout(this);
         
         // Тип градиента
-        layout->addWidget(new QLabel(QObject::tr("Type:")), 0, 0);
-        _typeCombo = new QComboBox(this);
+        m_layoutMain->addWidget(new QLabel(QObject::tr("Type:")), 0, 0);
+        _typeCombo = QComboBox();
         _typeCombo->addItem(QObject::tr("Linear"), QGradient::LinearGradient);
         _typeCombo->addItem(QObject::tr("Radial"), QGradient::RadialGradient);
         _typeCombo->addItem(QObject::tr("Conical"), QGradient::ConicalGradient);

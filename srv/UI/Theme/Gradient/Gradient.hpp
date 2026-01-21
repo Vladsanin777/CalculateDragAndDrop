@@ -53,6 +53,12 @@ namespace Theme {
 
         operator QGradient::Type(void) const;
 
+        operator QGradient::Spread(void) const;
+
+        operator QGradient::CoordinateMode(void) const;
+        
+        operator QGradient::InterpolationMode(void) const;
+
         // Basic QGradient
 
         QGradient::Type type(void) const;
@@ -120,5 +126,7 @@ namespace Theme {
         void createStop(qsizetype index);
 
         void removeStop(qsizetype index);
+    signals:
+        update();
     };
 }

@@ -25,27 +25,26 @@ using GradientChangedCallback = std::function<void()>;
 namespace SelecterGradient {
     class GradientEditor : public QWidget {
     private:
-        QGradient &_qgradient;
-        Theme::Gradient &_gradient;
-        GradientStrip *_gradientStrip{nullptr};
-        QComboBox *_typeCombo{nullptr};
-        QDoubleSpinBox *_angleSpin{nullptr};
-        QComboBox *_centerCombo{nullptr};
-        QPushButton *_addButtonLeft{nullptr};
-        QPushButton *_addButtonRight{nullptr};
-        QPushButton *_removeButton{nullptr};
-        QPushButton *_colorButton{nullptr};
-        QPushButton *_isGoToNextPointButton{nullptr};
-        QLabel *_previewLabel{nullptr};
-        QLabel *_angleLabel{nullptr};
-        QLabel *_centerLabel{nullptr};
-        QMenu *_menu{nullptr};
-        QWidgetAction *_colorPickerWidgetAction{nullptr};
-        SelecterColor::ColorPicker *_colorPicker{nullptr};
-        QColor *_currentColor;
+        Theme::Gradient &m_gradient;
+        QGridLayout m_layoutMain;
+        QLabel m_
+        GradientStrip m_gradientStrip;
+        QComboBox m_typeCombo;
+        QDoubleSpinBox m_angleSpin;
+        QComboBox m_centerCombo;
+        QPushButton m_addButtonLeft;
+        QPushButton m_addButtonRight;
+        QPushButton m_removeButton;
+        QPushButton m_colorButton;
+        QPushButton m_isGoToNextPointButton;
+        QLabel m_previewLabel;
+        QLabel m_angleLabel;
+        QLabel m_centerLabel;
+        QMenu m_menu;
+        QWidgetAction m_colorPickerWidgetAction;
+        SelecterColor::ColorPicker m_colorPicker;
     public:
-        explicit GradientEditor(QGradient &qgradient, \
-                Theme::Gradient *gradient, \
+        explicit GradientEditor(Theme::Gradient &gradient, \
                 QWidget *parent = nullptr);
         QGradient::Type gradientType() const;
         qreal angle() const;
