@@ -10,13 +10,14 @@ const int TOTAL_HEIGHT = STRIP_HEIGHT + 2 * POINT_EXTRA; // Общая высо�
 
 namespace SelecterGradient {
     GradientStrip::GradientStrip(Theme::Gradient &gradient, \
-        QColor *&currentColor, QWidget *parent) 
+        QWidget *parent) 
         : QWidget{parent}, _gradient{gradient}, _selectedIndex(0), \
         _dragging(false), _currentColor{currentColor}, \
         _isGoToNextPoint{true} {
         setMinimumHeight(TOTAL_HEIGHT);
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         setSelectedIndex(0);
+        connect(&gradient, gradient.update, this, this->update);
     }
 
     QSize GradientStrip::sizeHint(void) const {
@@ -37,39 +38,17 @@ namespace SelecterGradient {
         printf("jklsdk");
         update(); return;
     }
-    void GradientStrip::addPointIndex(size_t index) {
-        Theme::GradientPoint resultPoint{};
-        std::cout << _gradient << std::endl;
-        printf("index: %lu\n", index);
-        if (index == 0) {
-            Theme::GradientPoint &point { _gradient[index] };
-            qreal pos { point.getPosition() / 2 };
-            resultPoint.setColor(point.getColor());
-            resultPoint.setPosition(pos);
-        } else if (index == _gradient.size()) {
 
-            printf("index %lu addPointIndex\n", index);
-            Theme::GradientPoint &point { _gradient[index - 1] };
-            qreal pos { (1.0 + point.getPosition()) / 2 };
-            resultPoint.setColor(point.getColor());
-            resultPoint.setPosition(pos);
-        } else {
-            Theme::GradientPoint &point0 {_gradient[index - 1]};
-            Theme::GradientPoint &point1 {_gradient[index]};
-            QColor& color0 {point0.getColor()};
-            QColor& color1 {point1.getColor()};
-            qreal &pos0 {point0.getPosition()};
-            qreal &pos1 {point1.getPosition()};
-            QColor resultColor {(color0.red() + color1.red()) >> 1, \
-                (color0.green() + color1.green()) >> 1, \
-                (color0.blue() + color1.blue()) >> 1};
-            qreal resultPos { (pos1 + pos0) / 2 };
-            resultPoint.setColor(resultColor);
-            resultPoint.setPosition(resultPos);
-        }
-        _gradient.addPoint(resultPoint, index);
-        update();
-        return;
+    void GradientStrip::addPointAfter(void) {
+        addPointIndex(m_selectedIndex + 1);
+    }
+
+    void GradientStrip::addPointBefore(void) {
+        addPointIndex(m_selectedIndex);
+    }
+
+    void GradientStrip::addPointIndex(size_t index) {
+        m_gradient.createStop(index);
     }
 
     void GradientStrip::addPointAfter(void) {

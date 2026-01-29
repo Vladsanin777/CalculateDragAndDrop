@@ -28,14 +28,11 @@ namespace Theme {
 namespace SelecterGradient {
     class GradientStrip : public QWidget {
     private:
-        Theme::Gradient &_gradient;
-        size_t _selectedIndex = 0;
-        bool _dragging = false;
-        int _dragStartX = 0;
-        qreal _dragStartPos = 0.0;
-        QColor *&_currentColor;
-        bool _isGoToNextPoint;
-        
+        Theme::Gradient &m_gradient;
+        size_t m_selectedIndex = 0;
+        bool m_dragging = false;
+        int m_dragStartX = 0;
+        qreal m_dragStartPos = 0.0;
         
         //StopSelectedCallback _stopSelectedCallback;
         //StopsChangedCallback _stopsChangedCallback;
@@ -46,8 +43,7 @@ namespace SelecterGradient {
         
         QSize sizeHint(void) const override;
         size_t getSelectedIndex(void) const;
-        bool getIsGoToNextPoint(void);
-        void setIsGoToNextPoint(bool newIsGoToNextPoint);
+        void setSelectedIndex(size_t selectedIndex);
         void removePoint(void);
         void addPointBefore(void);
         void addPointAfter(void);
@@ -61,9 +57,10 @@ namespace SelecterGradient {
 
     private:
         void addPointIndex(size_t index);
-        void setSelectedIndex(size_t selectedIndex);
         void updatePointPositions();
         QRect pointRect(int index) const;
         int pointAtPosition(const QPoint &pos) const;
+    slots:
+        void update(void);
     };
 }
